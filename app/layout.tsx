@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "서서갈비 국어 학원",
-  description: "서서갈비 국어 학원 관리 시스템",
+  title: "서정인 수학",
+  description: "서서갈비",
   manifest: "/manifest.json",
 };
 
