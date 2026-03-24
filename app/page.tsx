@@ -10,10 +10,11 @@ async function sendNotif(userId:number,type:string,message:string){await supabas
 /* ═══ LOGIN ═══ */
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
   const[id,setId]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const[ready,setReady]=useState(false);
+  const[reviews,setReviews]=useState<any[]>([]);
+  useEffect(()=>{setTimeout(()=>setReady(true),100);(async()=>{const{data}=await supabase.from("reviews").select("*, users:user_id(name, school)").order("created_at",{ascending:false}).limit(20);if(data)setReviews(data);})();},[]);
   const go=async()=>{setLd(true);setErr(await onLogin(id,pw));setLd(false);};
   const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
-  useEffect(()=>{setTimeout(()=>setReady(true),100);},[]);
   return(<div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
     {/* 배경 — 흐리게 + 어둡게 + 확대 */}
     <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(4px)"}}/>
@@ -69,6 +70,17 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm mt-4 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
       </div>
     </div>
+    {/* 후기 슬라이더 */}
+    {reviews.length>0&&<div className={`fixed bottom-0 left-0 right-0 z-10 py-4 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <div className="relative overflow-hidden"><div className="flex gap-4 animate-marquee" style={{width:`${reviews.length*320*2}px`}}>
+        {[...reviews,...reviews].map((r:any,i:number)=>(<div key={i} className="w-72 flex-shrink-0 bg-white/90 backdrop-blur-xl rounded-2xl p-4 shadow-lg border border-white/50">
+          <div className="flex items-center gap-2 mb-2"><span className="text-xs font-bold text-[#6c63ff]">{r.users?.name?.charAt(0)}**</span><span className="text-[10px] text-slate-400">{r.users?.school||""}</span><div className="ml-auto flex gap-0.5">{[1,2,3,4,5].map(s=>(<svg key={s} viewBox="0 0 20 20" width="12" height="12" fill="#ff6b35"><path d="M10 1l2.39 4.84 5.34.78-3.87 3.77.91 5.33L10 13.28l-4.77 2.44.91-5.33L2.27 6.62l5.34-.78z"/></svg>))}</div></div>
+          {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string)=>(<span key={kw} className="text-[9px] text-[#6c63ff] bg-[#6c63ff]/10 px-1.5 py-0.5 rounded-full">#{kw}</span>))}</div>}
+          <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">{r.content}</p>
+        </div>))}
+      </div></div>
+      <style>{`@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.animate-marquee{animation:marquee ${reviews.length*5}s linear infinite;}.animate-marquee:hover{animation-play-state:paused;}.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}`}</style>
+    </div>}
   </div>);
 }
 
@@ -118,6 +130,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     kor_score:"",kor_grade:"",math_score:"",math_grade:"",eng_score:"",eng_grade:"",sci_score:"",sci_grade:"",soc_score:"",soc_grade:""});
   const[inquiries,setInquiries]=useState<any[]>([]);const[showInqAdd,setShowInqAdd]=useState(false);const[inqForm,setInqForm]=useState({title:"",content:""});const[inqImg,setInqImg]=useState<File|null>(null);const inqImgRef=useRef<HTMLInputElement>(null);
   const[shopItems,setShopItems]=useState<any[]>([]);const[myTokens,setMyTokens]=useState(user.tokens||0);const[purchases,setPurchases]=useState<any[]>([]);
+  const[myReview,setMyReview]=useState<any>(null);const[showReviewForm,setShowReviewForm]=useState(false);const[reviewForm,setReviewForm]=useState({best_grade:"",keywords:[] as string[],content:""});
   const fTokens=async()=>{const{data}=await supabase.from("users").select("tokens").eq("id",user.id).single();if(data)setMyTokens(data.tokens||0);};
   useEffect(()=>{if(tab==="notice"){(async()=>{
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
@@ -125,7 +138,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     const gids=cm.map((c:any)=>c.class_group_id);
     const{data}=await supabase.from("class_notices").select("*, class_groups(name)").in("class_group_id",gids).order("created_at",{ascending:false});
     if(data)setNotices(data);
-  })();}if(tab==="myexam"){(async()=>{const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("exam_date",{ascending:false});if(data)setMyExams(data);})();}if(tab==="inquiry"){(async()=>{const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);})();}if(tab==="shop"){(async()=>{const{data}=await supabase.from("shop_items").select("*").eq("active",true).order("created_at");if(data)setShopItems(data);const{data:p}=await supabase.from("purchases").select("*, shop_items(name)").eq("user_id",user.id).order("created_at",{ascending:false});if(p)setPurchases(p);fTokens();})();}},[tab]);
+  })();}if(tab==="myexam"){(async()=>{const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("exam_date",{ascending:false});if(data)setMyExams(data);})();}if(tab==="inquiry"){(async()=>{const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);})();}if(tab==="shop"){(async()=>{const{data}=await supabase.from("shop_items").select("*").eq("active",true).order("created_at");if(data)setShopItems(data);const{data:p}=await supabase.from("purchases").select("*, shop_items(name)").eq("user_id",user.id).order("created_at",{ascending:false});if(p)setPurchases(p);fTokens();})();}if(tab==="review"){(async()=>{const{data}=await supabase.from("reviews").select("*").eq("user_id",user.id).single();if(data){setMyReview(data);setReviewForm({best_grade:data.best_grade||"",keywords:data.keywords?data.keywords.split(","):[],content:data.content||""});}else{setMyReview(null);setReviewForm({best_grade:"",keywords:[],content:""});}})();}},[tab]);
   const addExam=async()=>{
     const isM=examForm.exam_type==="모의고사";
     if(isM&&!examForm.math_score)return;if(!isM&&!examForm.score)return;
@@ -138,9 +151,10 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const delExam=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("student_exams").delete().eq("id",id);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);};
   const addInquiry=async()=>{if(!inqForm.content)return;let imgUrl="";if(inqImg){imgUrl=await uploadImage(inqImg,`inquiry_${user.id}`)||"";}await supabase.from("inquiries").insert({user_id:user.id,title:inqForm.title,content:inqForm.content+(imgUrl?`\n[IMG]${imgUrl}[/IMG]`:"")});setInqForm({title:"",content:""});setInqImg(null);setShowInqAdd(false);const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);};
   const buyItem=async(item:any)=>{if(myTokens<item.price){alert("서서갈비가 부족합니다!");return;}if(!confirm(`${item.name}을(를) ${item.price} 서서갈비로 구매할까요?`))return;await supabase.from("users").update({tokens:myTokens-item.price}).eq("id",user.id);await supabase.from("purchases").insert({user_id:user.id,item_id:item.id,price:item.price});await supabase.from("token_logs").insert({user_id:user.id,amount:-item.price,reason:`상점 구매: ${item.name}`});fTokens();const{data:p}=await supabase.from("purchases").select("*, shop_items(name)").eq("user_id",user.id).order("created_at",{ascending:false});if(p)setPurchases(p);};
+  const saveReview=async()=>{if(!reviewForm.content)return;const payload={user_id:user.id,best_grade:reviewForm.best_grade,keywords:reviewForm.keywords.join(","),content:reviewForm.content};if(myReview){await supabase.from("reviews").update(payload).eq("id",myReview.id);}else{await supabase.from("reviews").insert(payload);}const{data}=await supabase.from("reviews").select("*").eq("user_id",user.id).single();if(data)setMyReview(data);setShowReviewForm(false);alert("후기가 저장되었습니다!");};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
-  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"myexam",icon:"folder",label:"시험 결과"},{id:"shop",icon:"cart",label:"상점"},{id:"shorts",icon:"play",label:"서서갈비"},{id:"settings",icon:"settings",label:"설정"}];
+  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"myexam",icon:"folder",label:"시험 결과"},{id:"shop",icon:"cart",label:"상점"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"settings",icon:"settings",label:"설정"}];
   return(<div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#6c63ff]/5 flex">
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 bg-white rounded-3xl shadow-lg border border-slate-100/80 p-5 flex flex-col m-2">
@@ -265,10 +279,19 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-[#6c63ff]">🥩 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
         {purchases.length>0&&<div><h3 className="font-semibold text-sm mb-3">구매 내역</h3><div className="space-y-2">{purchases.map((p:any)=>(<div key={p.id} className="bg-slate-50 rounded-xl px-4 py-3 flex justify-between items-center"><span className="text-sm">{p.shop_items?.name||"아이템"}</span><div className="text-right"><span className="text-xs font-bold text-[#6c63ff]">-{p.price} 🥩</span><p className="text-[10px] text-slate-400">{p.created_at?.slice(0,10)}</p></div></div>))}</div></div>}
       </div>}
-      {tab==="shorts"&&<div>
-        <div className="mb-5"><h2 className="text-xl font-bold">🥩 서서갈비</h2><p className="text-xs text-slate-400 mt-1">서정인 수학 유튜브 쇼츠</p></div>
-        <ShortsGrid/>
-        <div className="mt-5 text-center"><a href="https://www.youtube.com/@agreesuh/shorts" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-2xl text-sm font-semibold shadow-md shadow-red-500/20 hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M23.498 6.186a2.832 2.832 0 00-1.991-2.006C19.691 3.592 12 3.592 12 3.592s-7.691 0-9.507.588A2.832 2.832 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a2.832 2.832 0 001.991 2.006C4.309 20.408 12 20.408 12 20.408s7.691 0 9.507-.588a2.832 2.832 0 001.991-2.006C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path d="M9.545 15.568V8.432L15.818 12z" fill="#282828"/></svg>더 많은 영상 보기</a></div>
+      {tab==="review"&&<div>
+        <div className="flex justify-between items-center mb-5"><h2 className="text-xl font-bold">✍️ 수강 후기</h2>{!showReviewForm&&<button onClick={()=>setShowReviewForm(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-2xl text-xs font-semibold shadow-md shadow-[#6c63ff]/20">{myReview?"수정하기":"후기 작성"}</button>}</div>
+        {showReviewForm?<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 space-y-5">
+          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">📈 성적이 제일 많이 올랐을 때는?</label><input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20 transition-all" value={reviewForm.best_grade} onChange={e=>setReviewForm(p=>({...p,best_grade:e.target.value}))} placeholder="예: 1학년 1학기 기말고사, 500등 → 100등"/><p className="text-[10px] text-slate-400 mt-1">예: 60점 → 100점, 혹은 500등 → 100등</p></div>
+          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">⭐ 서정인 쌤의 장점 (키워드)</label><div className="flex flex-wrap gap-2">{["문제풀이","발문해석","재미","친근함","따뜻함","관리","꼼꼼함","열정","소통","실력"].map(kw=>(<button key={kw} onClick={()=>setReviewForm(p=>({...p,keywords:p.keywords.includes(kw)?p.keywords.filter(k=>k!==kw):[...p.keywords,kw]}))} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${reviewForm.keywords.includes(kw)?"bg-[#6c63ff] text-white shadow-md shadow-[#6c63ff]/20":"bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>#{kw}</button>))}</div></div>
+          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">💬 수강 후기</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 resize-none h-32 focus:ring-2 focus:ring-[#6c63ff]/20 transition-all" value={reviewForm.content} onChange={e=>setReviewForm(p=>({...p,content:e.target.value}))} placeholder="서정인 수학을 수강하면서 느낀 점을 자유롭게 적어주세요"/></div>
+          <div className="flex gap-2"><button onClick={saveReview} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">저장</button><button onClick={()=>setShowReviewForm(false)} className="text-xs text-slate-400 px-4 py-2.5">취소</button></div>
+        </div>:myReview?<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50">
+          {myReview.best_grade&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-1">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{myReview.best_grade}</p></div>}
+          {myReview.keywords&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-2">⭐ 장점 키워드</p><div className="flex flex-wrap gap-1.5">{myReview.keywords.split(",").map((kw:string)=>(<span key={kw} className="bg-[#6c63ff]/10 text-[#6c63ff] px-3 py-1 rounded-full text-xs font-semibold">#{kw}</span>))}</div></div>}
+          <div><p className="text-xs font-semibold text-slate-400 mb-1">💬 수강 후기</p><p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{myReview.content}</p></div>
+          <p className="text-[10px] text-slate-300 mt-4">{myReview.created_at?.slice(0,10)} 작성</p>
+        </div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">후기 작성하기</button></div>}
       </div>}
       {tab==="settings"&&<div><h2 className="text-xl font-bold mb-4">설정</h2><div className="bg-slate-50 rounded-2xl p-6 max-w-md"><h3 className="font-semibold text-sm mb-4">비밀번호 변경</h3><div className="space-y-3"><input type="password" className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 focus:outline-none" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 focus:outline-none" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
     </div></main>
@@ -630,17 +653,16 @@ function ShortsGrid(){
   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{shorts.map((s:any)=>(<button key={s.id} onClick={()=>setPlaying(s.video_id)} className="group relative bg-black rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:scale-[1.02]" style={{aspectRatio:"9/16"}}><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt={s.title} className="absolute inset-0 w-full h-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"/><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="#6c63ff"><polygon points="8 5 20 12 8 19"/></svg></div></div>{s.title&&<p className="absolute bottom-2 left-2 right-2 text-[10px] text-white font-semibold leading-tight line-clamp-2">{s.title}</p>}</button>))}</div></>);
 }
 
-/* ═══ ADMIN: SHORTS MANAGER ═══ */
-function AdminShortsManager(){
-  const[shorts,setShorts]=useState<any[]>([]);const[url,setUrl]=useState("");const[title,setTitle]=useState("");
-  const fS=async()=>{const{data}=await supabase.from("shorts").select("*").order("created_at",{ascending:false});if(data)setShorts(data);};
-  useEffect(()=>{fS();},[]);
-  const extractId=(u:string)=>{const m=u.match(/(?:shorts\/|youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/);return m?m[1]:u.trim();};
-  const addShort=async()=>{const vid=extractId(url);if(!vid)return;await supabase.from("shorts").insert({video_id:vid,title});setUrl("");setTitle("");fS();};
-  const delShort=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("shorts").delete().eq("id",id);fS();};
-  return(<div><div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">🥩 서서갈비 관리</h2></div>
-    <div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3"><p className="text-xs text-slate-400">유튜브 쇼츠 URL 또는 영상 ID를 붙여넣기</p><div className="flex gap-2"><input className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0" value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://youtube.com/shorts/xxxxx"/></div><div className="flex gap-2"><input className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0" value={title} onChange={e=>setTitle(e.target.value)} placeholder="제목 (선택)"/><button onClick={addShort} className="bg-[#6c63ff] text-white px-5 py-2.5 rounded-xl text-xs font-semibold">추가</button></div></div>
-    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">{shorts.map((s:any)=>(<div key={s.id} className="relative group"><div className="bg-black rounded-xl overflow-hidden shadow-sm" style={{aspectRatio:"9/16"}}><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt="" className="w-full h-full object-cover"/></div><button onClick={()=>delShort(s.id)} className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">×</button>{s.title&&<p className="text-[10px] text-slate-500 mt-1 truncate">{s.title}</p>}</div>))}</div>
+/* ═══ ADMIN: REVIEW VIEWER ═══ */
+function AdminReviewViewer(){
+  const[reviews,setReviews]=useState<any[]>([]);
+  useEffect(()=>{(async()=>{const{data}=await supabase.from("reviews").select("*, users:user_id(name, school)").order("created_at",{ascending:false});if(data)setReviews(data);})();},[]);
+  return(<div><h2 className="text-lg font-bold mb-4">✍️ 수강 후기 ({reviews.length}건)</h2>
+    {reviews.length>0?<div className="space-y-3">{reviews.map((r:any)=>(<div key={r.id} className="bg-white rounded-2xl p-5 shadow-sm"><div className="flex items-center gap-2 mb-3"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{r.users?.name||"?"}</span><span className="text-xs text-slate-400">{r.users?.school||""}</span><span className="text-xs text-slate-300 ml-auto">{r.created_at?.slice(0,10)}</span></div>
+      {r.best_grade&&<div className="mb-3"><p className="text-[10px] font-semibold text-slate-400">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{r.best_grade}</p></div>}
+      {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-3">{r.keywords.split(",").map((kw:string)=>(<span key={kw} className="bg-[#6c63ff]/10 text-[#6c63ff] px-2.5 py-0.5 rounded-full text-[10px] font-semibold">#{kw}</span>))}</div>}
+      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{r.content}</p>
+    </div>))}</div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">아직 후기가 없습니다</div>}
   </div>);
 }
 
@@ -679,7 +701,7 @@ export default function Home(){
   if(loading)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
-  const mi=[{id:"classes",icon:"folder",label:"반 / 시험"},{id:"students",icon:"users",label:"학생 관리"},{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"settings",icon:"settings",label:"설정"}];
+  const mi=[{id:"classes",icon:"folder",label:"반 / 시험"},{id:"students",icon:"users",label:"학생 관리"},{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"settings",icon:"settings",label:"설정"}];
   const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-1`}>{mi.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);if(mob)setMm(false);if(m.id==="inquiries")fInqCount();if(m.id==="shop")fOrderCount();}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}</nav>);
 
   return(<div className="min-h-screen bg-[#f0f2f8] flex">
@@ -693,7 +715,7 @@ export default function Home(){
       {tab==="tokens"&&<AdminTokenManager users={users} fetchUsers={fU}/>}
       {tab==="shop"&&<AdminShopManager onProcess={fOrderCount}/>}
       {tab==="notices"&&<AdminNoticeManager groups={groups}/>}
-      {tab==="shorts"&&<AdminShortsManager/>}
+      {tab==="reviews"&&<AdminReviewViewer/>}
       {tab==="inquiries"&&<AdminInquiryManager onReply={fInqCount}/>}
       {tab==="site"&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
       {tab==="settings"&&<div><h2 className="text-lg font-bold mb-4">설정</h2><div className="bg-white rounded-2xl p-6 shadow-sm max-w-md"><p className="text-sm text-slate-500">관리자 비밀번호: Supabase에서 변경</p></div></div>}
