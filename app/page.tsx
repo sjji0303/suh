@@ -95,7 +95,7 @@ const dayNames=["일","월","화","수","목","금","토"];
 function fmtDate(d:string){try{const dt=new Date(d+"T00:00:00");return`${d} (${dayNames[dt.getDay()]})`;}catch{return d;}}
 
 function StudentView({user,logout}:{user:any;logout:()=>void}){
-  const[tab,setTab]=useState("grades");const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
+  const[_tab,_setTab]=useState("grades");const setTab=(t:string)=>{_setTab(t);window.scrollTo(0,0);};const tab=_tab;const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
   const[notifs,setNotifs]=useState<any[]>([]);const[showNotif,setShowNotif]=useState(false);
   const unreadCount=notifs.filter(n=>!n.is_read).length;
