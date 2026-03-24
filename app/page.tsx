@@ -20,9 +20,9 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         <div className="w-10 h-0.5 bg-slate-300 mx-auto mb-4"/>{bio&&<div className="text-sm text-slate-500 leading-relaxed whitespace-pre-line">{bio}</div>}
       </div>
       <div className="flex-1 bg-white/95 backdrop-blur-md rounded-3xl p-10 shadow-xl flex flex-col justify-center">
-        <div className="mb-8"><h1 className="text-2xl font-bold text-slate-800 mb-1">맛있게, 확실하게,</h1><h1 className="text-2xl font-bold text-[#6c63ff] mb-3">서서갈비로 수학하기</h1><p className="text-sm text-slate-400">로그인하여 시작하세요</p></div>
+        <div className="mb-8"><h1 className="text-2xl font-bold text-slate-800 mb-1">흐릿한 시작을, 뚜렷한 선택으로</h1><h1 className="text-2xl font-bold text-[#6c63ff] mb-3">서서갈비로 수학하기</h1><p className="text-sm text-slate-400">로그인하여 시작하세요</p></div>
         <div className="space-y-4 max-w-sm">
-          <div><label className="text-xs font-semibold text-slate-500 mb-1 block">아이디</label><input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+          <div><label className="text-xs font-semibold text-slate-500 mb-1 block">아이디</label><input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호 뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
           <div><label className="text-xs font-semibold text-slate-500 mb-1 block">비밀번호</label><input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
           {err&&<p className="text-red-400 text-xs">{err}</p>}
           <button onClick={go} disabled={ld} className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-slate-900 disabled:opacity-50">{ld?"...":"로그인"}</button>
@@ -32,7 +32,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     {/* Mobile */}
     <div className="md:hidden relative z-10 w-full max-w-sm">
       <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-xl">
-        <div className="text-center mb-6"><img src={pi} alt="" className="w-20 h-20 rounded-full mx-auto mb-3 shadow-lg object-cover border-4 border-white"/><h2 className="text-lg font-bold text-slate-800">{nm}</h2><p className="text-xs text-slate-400 mt-1">서서갈비 수학학원</p></div>
+        <div className="text-center mb-6"><img src={pi} alt="" className="w-20 h-20 rounded-full mx-auto mb-3 shadow-lg object-cover border-4 border-white"/><h2 className="text-lg font-bold text-slate-800">{nm}</h2><p className="text-xs text-slate-400 mt-1">서서갈비 수학</p></div>
         <div className="space-y-3"><input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/><input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
         {err&&<p className="text-red-400 text-xs mt-2">{err}</p>}
         <button onClick={go} disabled={ld} className="w-full bg-slate-800 text-white py-3 rounded-xl font-semibold text-sm mt-4">{ld?"...":"로그인"}</button>
@@ -82,7 +82,7 @@ function StudentView({user,logout,settings}:{user:any;logout:()=>void;settings:a
         {tab==="home"&&(<div>
           <div className="text-center py-12">
             <h1 className="text-xl font-bold text-slate-800 mb-2">안녕하세요, {user.name}님!</h1>
-            <p className="text-sm text-slate-400">서서갈비 수학학원에 오신 것을 환영합니다</p>
+            <p className="text-sm text-slate-400">서서갈비 수학에 오신 것을 환영합니다</p>
           </div>
           {info&&<div className="bg-slate-50 rounded-2xl p-5 mb-4">
             <h3 className="font-semibold text-sm mb-3">최근 시험 요약</h3>
