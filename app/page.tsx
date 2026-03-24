@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import html2canvas from "html2canvas";
 
 const Icon=({type,size=20}:{type:string;size?:number})=>{const s:any={width:size,height:size,strokeWidth:1.5,fill:"none",stroke:"currentColor",strokeLinecap:"round",strokeLinejoin:"round"};const i:any={folder:<svg viewBox="0 0 24 24" {...s}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>,test:<svg viewBox="0 0 24 24" {...s}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,settings:<svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09"/></svg>,logout:<svg viewBox="0 0 24 24" {...s}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,user:<svg viewBox="0 0 24 24" {...s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,menu:<svg viewBox="0 0 24 24" {...s}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,close:<svg viewBox="0 0 24 24" {...s}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,left:<svg viewBox="0 0 24 24" {...s}><polyline points="15 18 9 12 15 6"/></svg>,right:<svg viewBox="0 0 24 24" {...s}><polyline points="9 18 15 12 9 6"/></svg>,upload:<svg viewBox="0 0 24 24" {...s}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,plus:<svg viewBox="0 0 24 24" {...s}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,back:<svg viewBox="0 0 24 24" {...s}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,users:<svg viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>,home:<svg viewBox="0 0 24 24" {...s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,search:<svg viewBox="0 0 24 24" {...s}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,bell:<svg viewBox="0 0 24 24" {...s}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,cart:<svg viewBox="0 0 24 24" {...s}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>,msg:<svg viewBox="0 0 24 24" {...s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,coin:<svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8"/></svg>,play:<svg viewBox="0 0 24 24" {...s}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>};return i[type]||null;};
 async function uploadImage(file:File,path:string){const ext=file.name.split(".").pop();const fn=`${path}_${Date.now()}.${ext}`;const{error}=await supabase.storage.from("images").upload(fn,file,{upsert:true});if(error){console.error("Upload error:",error);return null;}return supabase.storage.from("images").getPublicUrl(fn).data.publicUrl;}
@@ -401,6 +400,7 @@ function AdminClassManager({users}:{users:any[]}){
     await new Promise(r=>setTimeout(r,500));
     if(!capRef.current){setCapId(null);return;}
     try{
+      const html2canvas=(await import("html2canvas")).default;
       const canvas=await html2canvas(capRef.current,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false,allowTaint:true});
       const blob:Blob=await new Promise(r=>canvas.toBlob(b=>r(b!),"image/png"));
       if(!blob){setCapId(null);return;}
@@ -731,13 +731,14 @@ export default function Home(){
   const[unansweredInq,setUnansweredInq]=useState(0);
   const[pendingOrders,setPendingOrders]=useState(0);
   const[settings,setSettings]=useState<any>({profile_name:"서정인 수학",profile_bio:"",profile_image:"",background_image:""});
+  const[adminUnlocked,setAdminUnlocked]=useState(false);const[adminPwInput,setAdminPwInput]=useState("");const[adminPwErr,setAdminPwErr]=useState("");
+
   const fU=async()=>{const{data}=await supabase.from("users").select("*").order("created_at",{ascending:false});if(data)setUsers(data);};
   const fG=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
   const fInqCount=async()=>{const{count}=await supabase.from("inquiries").select("*",{count:"exact",head:true}).or("reply.is.null,reply.eq.");if(count)setUnansweredInq(count);else setUnansweredInq(0);};
   const fOrderCount=async()=>{const{count}=await supabase.from("purchases").select("*",{count:"exact",head:true}).or("status.is.null,status.eq.pending");if(count)setPendingOrders(count);else setPendingOrders(0);};
   const fS=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setSettings(s);}};
   useEffect(()=>{fS();
-    // 새로고침 시 로그인 복원
     try{const saved=window.localStorage.getItem("suhsuh_user");if(saved){const u=JSON.parse(saved);if(u&&u.id){(async()=>{const{data}=await supabase.from("users").select("*").eq("id",u.id).single();if(data&&data.status!=="pending"){setUser(data);setTab(data.role==="admin"?"classes":"grades");}setInitializing(false);})();return;}}
     }catch{}setInitializing(false);
   },[]);
@@ -751,7 +752,6 @@ export default function Home(){
   if(loading)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
-  const[adminUnlocked,setAdminUnlocked]=useState(false);const[adminPwInput,setAdminPwInput]=useState("");const[adminPwErr,setAdminPwErr]=useState("");
   const ADMIN_SECRET="써정인1!";
   const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site"];
   const tryUnlock=()=>{if(adminPwInput===ADMIN_SECRET){setAdminUnlocked(true);setAdminPwErr("");}else{setAdminPwErr("비밀번호가 틀렸습니다");}};
