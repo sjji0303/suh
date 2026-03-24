@@ -11,81 +11,76 @@ async function sendNotif(userId:number,type:string,message:string){await supabas
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
   const[id,setId]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const[ready,setReady]=useState(false);
   const[reviews,setReviews]=useState<any[]>([]);
-  useEffect(()=>{setTimeout(()=>setReady(true),100);(async()=>{const{data}=await supabase.from("reviews").select("*, users:user_id(name, school)").order("created_at",{ascending:false}).limit(20);if(data)setReviews(data);})();},[]);
+  useEffect(()=>{setTimeout(()=>setReady(true),100);(async()=>{const{data}=await supabase.from("reviews").select("*").eq("is_featured",true).order("created_at",{ascending:false}).limit(20);if(data)setReviews(data);})();},[]);
   const go=async()=>{setLd(true);setErr(await onLogin(id,pw));setLd(false);};
   const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
-  return(<div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
-    {/* 배경 — 흐리게 + 어둡게 + 확대 */}
+  return(<div className="min-h-screen relative flex flex-col overflow-hidden">
+    {/* 배경 */}
     <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(4px)"}}/>
-    <div className="absolute inset-0 z-0 bg-gradient-to-br from-black/70 via-black/50 to-[#6c63ff]/20"/>
-    {/* 장식 원형 글로우 */}
-    <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#6c63ff]/20 rounded-full blur-3xl z-0"/>
+    <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70"/>
+    <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#6c63ff]/15 rounded-full blur-3xl z-0"/>
     <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#6c63ff]/10 rounded-full blur-3xl z-0"/>
 
-    {/* PC 레이아웃 */}
-    <div className={`hidden md:flex relative z-10 w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-      {/* 왼쪽 프로필 카드 */}
-      <div className="w-[360px] bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl flex-shrink-0 border border-white/20">
-        <div className="text-center mb-4">
-          <div className="relative inline-block mb-4"><img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
-          <h2 className="text-2xl font-bold text-white mb-2">{nm}</h2>
-          <div className="w-10 h-0.5 bg-[#6c63ff] mx-auto mb-3 rounded-full"/>
+    {/* 메인 영역 — 위쪽으로 */}
+    <div className="flex-1 flex items-start justify-center pt-12 md:pt-16 px-4 relative z-10">
+      {/* PC */}
+      <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+        <div className="w-[360px] bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl flex-shrink-0 border border-white/20">
+          <div className="text-center mb-4">
+            <div className="relative inline-block mb-4"><img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
+            <h2 className="text-2xl font-bold text-white mb-2">{nm}</h2>
+            <div className="w-10 h-0.5 bg-[#6c63ff] mx-auto mb-3 rounded-full"/>
+          </div>
+          {bio&&<div className="text-xs text-white/70 leading-relaxed whitespace-pre-line text-center px-4">{bio}</div>}
+          <div className="mt-5 pt-4 border-t border-white/10 text-center"><p className="text-xs text-white/40">수학의 자신감을 키우는 곳</p></div>
         </div>
-        {bio&&<div className="text-xs text-white/70 leading-relaxed whitespace-pre-line text-center px-4">{bio}</div>}
-        <div className="mt-5 pt-4 border-t border-white/10 text-center">
-          <p className="text-xs text-white/40">수학의 자신감을 키우는 곳</p>
+        <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col justify-center">
+          <div className="mb-8"><p className="text-sm text-[#6c63ff] font-semibold mb-2 tracking-wider">WELCOME</p><h1 className="text-2xl font-bold mb-1"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1></div>
+          <div className="space-y-4 max-w-sm">
+            <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">비밀번호</label><input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg">{err}</p>}
+            <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-[#6c63ff]/25 hover:shadow-xl hover:shadow-[#6c63ff]/30 transition-all active:scale-[0.98]">{ld?"로그인 중...":"로그인"}</button>
+          </div>
         </div>
       </div>
-      {/* 오른쪽 로그인 폼 */}
-      <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col justify-center">
-        <div className="mb-8">
-          <p className="text-sm text-[#6c63ff] font-semibold mb-2 tracking-wider">WELCOME</p>
-          <h1 className="text-2xl font-bold mb-1"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
+      {/* 모바일 */}
+      <div className={`md:hidden w-full max-w-sm transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/20 mb-4 text-center">
+          <img src={pi} alt="" className="w-16 h-16 rounded-full shadow-xl object-cover border-3 border-white/30 mx-auto mb-3"/>
+          <h2 className="text-lg font-bold text-white">{nm}</h2>
+          {bio&&<div className="text-[11px] text-white/60 leading-relaxed whitespace-pre-line mt-2">{bio}</div>}
         </div>
-        <div className="space-y-4 max-w-sm">
-          <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-          <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">비밀번호</label><input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-          {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg">{err}</p>}
-          <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-[#6c63ff]/25 hover:shadow-xl hover:shadow-[#6c63ff]/30 transition-all active:scale-[0.98]">{ld?"로그인 중...":"로그인"}</button>
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 shadow-2xl">
+          <p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p>
+          <h1 className="text-lg font-bold mb-5"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
+          <div className="space-y-3">
+            <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          </div>
+          {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg mt-2">{err}</p>}
+          <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm mt-4 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
         </div>
       </div>
     </div>
 
-    {/* 모바일 레이아웃 */}
-    <div className={`md:hidden relative z-10 w-full max-w-sm transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-      <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/20 mb-4 text-center">
-        <div className="flex-shrink-0 mb-3"><img src={pi} alt="" className="w-16 h-16 rounded-full shadow-xl object-cover border-3 border-white/30 mx-auto"/></div>
-        <h2 className="text-lg font-bold text-white">{nm}</h2>
-        {bio&&<div className="text-[11px] text-white/60 leading-relaxed whitespace-pre-line mt-2">{bio}</div>}
-      </div>
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 shadow-2xl">
-        <p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p>
-        <h1 className="text-lg font-bold mb-5"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
-        <div className="space-y-3">
-          <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-          <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
-        </div>
-        {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg mt-2">{err}</p>}
-        <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm mt-4 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
-      </div>
-    </div>
     {/* 후기 슬라이더 */}
-    {reviews.length>0&&<div className={`fixed bottom-0 left-0 right-0 z-10 py-5 bg-gradient-to-t from-black/30 to-transparent transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+    {reviews.length>0&&<div className={`relative z-10 pb-6 pt-2 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <p className="text-center text-white/40 text-[10px] font-semibold tracking-widest mb-3">STUDENT REVIEWS</p>
       <div className="overflow-hidden">
-        <div className="flex gap-4 review-scroll">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>(<div key={i} className="w-72 flex-shrink-0 bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-lg border border-white/30 hover:scale-[1.02] transition-transform cursor-default">
-            <div className="flex items-center gap-2 mb-2.5"><div className="w-7 h-7 bg-[#6c63ff]/10 rounded-full flex items-center justify-center text-[10px] font-bold text-[#6c63ff]">{r.users?.name?.charAt(0)||"?"}</div><div><span className="text-xs font-bold text-slate-700 block">{r.users?.name?.charAt(0)}**</span><span className="text-[9px] text-slate-400">{r.users?.school||""}</span></div><div className="ml-auto flex gap-0.5">{[1,2,3,4,5].map(s=>(<svg key={s} viewBox="0 0 20 20" width="11" height="11" fill="#ff6b35"><path d="M10 1l2.39 4.84 5.34.78-3.87 3.77.91 5.33L10 13.28l-4.77 2.44.91-5.33L2.27 6.62l5.34-.78z"/></svg>))}</div></div>
-            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-semibold text-[#6c63ff] bg-[#6c63ff]/8 px-2 py-0.5 rounded-full">#{kw}</span>))}</div>}
-            <p className="text-[11px] text-slate-600 leading-relaxed review-clamp">{r.content}</p>
-            {r.best_grade&&<p className="text-[9px] text-amber-500 font-semibold mt-2">📈 {r.best_grade}</p>}
+        <div className="flex gap-4 review-scroll pl-4">
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>(<div key={i} className="w-64 flex-shrink-0 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15 hover:bg-white/15 transition-all cursor-default">
+            <div className="flex items-center gap-2 mb-2"><div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-[9px] font-bold text-white">{r.display_name?.charAt(0)||"?"}</div><div><span className="text-[11px] font-bold text-white/90 block">{r.display_name||"학생"}</span><span className="text-[9px] text-white/40">{r.display_school||""}</span></div><div className="ml-auto flex gap-0.5">{[1,2,3,4,5].map(s=>(<svg key={s} viewBox="0 0 20 20" width="10" height="10" fill="#fbbf24"><path d="M10 1l2.39 4.84 5.34.78-3.87 3.77.91 5.33L10 13.28l-4.77 2.44.91-5.33L2.27 6.62l5.34-.78z"/></svg>))}</div></div>
+            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-semibold text-[#a5a0ff] bg-white/10 px-1.5 py-0.5 rounded-full">#{kw}</span>))}</div>}
+            <p className="text-[10px] text-white/70 leading-relaxed review-clamp">{r.content}</p>
           </div>))}
         </div>
       </div>
       <style>{`
-        .review-scroll{animation:reviewScroll ${Math.max(reviews.length*6,20)}s linear infinite;}
+        .review-scroll{animation:reviewScroll ${Math.max(reviews.length*8,25)}s linear infinite;}
         .review-scroll:hover{animation-play-state:paused;}
-        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-304px * ${reviews.length}))}}
+        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-272px * ${reviews.length}))}}
         .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
       `}</style>
     </div>}
@@ -671,16 +666,29 @@ function ShortsGrid(){
   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{shorts.map((s:any)=>(<button key={s.id} onClick={()=>setPlaying(s.video_id)} className="group relative bg-black rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:scale-[1.02]" style={{aspectRatio:"9/16"}}><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt={s.title} className="absolute inset-0 w-full h-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"/><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="#6c63ff"><polygon points="8 5 20 12 8 19"/></svg></div></div>{s.title&&<p className="absolute bottom-2 left-2 right-2 text-[10px] text-white font-semibold leading-tight line-clamp-2">{s.title}</p>}</button>))}</div></>);
 }
 
-/* ═══ ADMIN: REVIEW VIEWER ═══ */
+/* ═══ ADMIN: REVIEW MANAGER ═══ */
 function AdminReviewViewer(){
-  const[reviews,setReviews]=useState<any[]>([]);
-  useEffect(()=>{(async()=>{const{data}=await supabase.from("reviews").select("*, users:user_id(name, school)").order("created_at",{ascending:false});if(data)setReviews(data);})();},[]);
-  return(<div><h2 className="text-lg font-bold mb-4">✍️ 수강 후기 ({reviews.length}건)</h2>
-    {reviews.length>0?<div className="space-y-3">{reviews.map((r:any)=>(<div key={r.id} className="bg-white rounded-2xl p-5 shadow-sm"><div className="flex items-center gap-2 mb-3"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{r.users?.name||"?"}</span><span className="text-xs text-slate-400">{r.users?.school||""}</span><span className="text-xs text-slate-300 ml-auto">{r.created_at?.slice(0,10)}</span></div>
-      {r.best_grade&&<div className="mb-3"><p className="text-[10px] font-semibold text-slate-400">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{r.best_grade}</p></div>}
-      {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-3">{r.keywords.split(",").map((kw:string)=>(<span key={kw} className="bg-[#6c63ff]/10 text-[#6c63ff] px-2.5 py-0.5 rounded-full text-[10px] font-semibold">#{kw}</span>))}</div>}
-      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{r.content}</p>
-    </div>))}</div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">아직 후기가 없습니다</div>}
+  const[reviews,setReviews]=useState<any[]>([]);const[showAdd,setShowAdd]=useState(false);
+  const[form,setForm]=useState({display_name:"",display_school:"",best_grade:"",keywords:"",content:""});
+  const fR=async()=>{const{data}=await supabase.from("reviews").select("*").eq("is_featured",true).order("created_at",{ascending:false});if(data)setReviews(data);};
+  useEffect(()=>{fR();},[]);
+  const addReview=async()=>{if(!form.content||!form.display_name)return;await supabase.from("reviews").insert({display_name:form.display_name,display_school:form.display_school,best_grade:form.best_grade,keywords:form.keywords,content:form.content,is_featured:true});setForm({display_name:"",display_school:"",best_grade:"",keywords:"",content:""});setShowAdd(false);fR();};
+  const delReview=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("reviews").delete().eq("id",id);fR();};
+  const kwOptions=["흥미유발","관리","발문해석","좋은자료","기발한풀이","이해가잘되는해설","친근함","열정","소통","꼼꼼함"];
+  return(<div><div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">✍️ 후기 관리 (로그인 화면 노출용)</h2><button onClick={()=>setShowAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md shadow-[#6c63ff]/20 flex items-center gap-1"><Icon type="plus" size={14}/>후기 추가</button></div>
+    {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3">
+      <div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-semibold text-slate-500">학생 이름 *</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.display_name} onChange={e=>setForm(p=>({...p,display_name:e.target.value}))} placeholder="예: 김OO"/></div><div><label className="text-xs font-semibold text-slate-500">학교</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.display_school} onChange={e=>setForm(p=>({...p,display_school:e.target.value}))} placeholder="예: 서서고"/></div></div>
+      <div><label className="text-xs font-semibold text-slate-500">성적 향상</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.best_grade} onChange={e=>setForm(p=>({...p,best_grade:e.target.value}))} placeholder="예: 500등 → 100등"/></div>
+      <div><label className="text-xs font-semibold text-slate-500">장점 키워드 (쉼표 구분)</label><div className="flex flex-wrap gap-1.5 mt-1">{kwOptions.map(kw=>{const sel=form.keywords.split(",").map(k=>k.trim()).includes(kw);return(<button key={kw} onClick={()=>{const cur=form.keywords.split(",").map(k=>k.trim()).filter(Boolean);if(sel)setForm(p=>({...p,keywords:cur.filter(k=>k!==kw).join(",")}));else setForm(p=>({...p,keywords:[...cur,kw].join(",")}));}} className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${sel?"bg-[#6c63ff] text-white":"bg-slate-100 text-slate-500"}`}>#{kw}</button>);})}</div></div>
+      <div><label className="text-xs font-semibold text-slate-500">수강 후기 *</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm mt-1 border-0 resize-none h-24" value={form.content} onChange={e=>setForm(p=>({...p,content:e.target.value}))} placeholder="후기 내용"/></div>
+      <div className="flex gap-2"><button onClick={addReview} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">추가</button><button onClick={()=>setShowAdd(false)} className="text-xs text-slate-400">취소</button></div>
+    </div>}
+    <p className="text-xs text-slate-400 mb-3">아래 후기들이 로그인 화면 하단 슬라이더에 표시됩니다.</p>
+    {reviews.length>0?<div className="space-y-3">{reviews.map((r:any)=>(<div key={r.id} className="bg-white rounded-2xl p-5 shadow-sm"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{r.display_name||"?"}</span><span className="text-xs text-slate-400">{r.display_school||""}</span></div><button onClick={()=>delReview(r.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div>
+      {r.best_grade&&<p className="text-xs text-amber-600 font-semibold mb-1">📈 {r.best_grade}</p>}
+      {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").map((kw:string)=>(<span key={kw} className="bg-[#6c63ff]/10 text-[#6c63ff] px-2 py-0.5 rounded-full text-[10px] font-semibold">#{kw}</span>))}</div>}
+      <p className="text-sm text-slate-600 whitespace-pre-line">{r.content}</p>
+    </div>))}</div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">후기를 추가하면 로그인 화면에 표시됩니다</div>}
   </div>);
 }
 
