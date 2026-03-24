@@ -58,8 +58,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl">
           <h1 className="text-sm font-bold mb-4"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
           <div className="space-y-2.5">
-            <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
           {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-1.5 rounded-lg mt-2">{err}</p>}
           <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-2.5 rounded-xl font-semibold text-sm mt-3 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
@@ -803,6 +803,8 @@ export default function Home(){
   const fOrderCount=async()=>{const{count}=await supabase.from("purchases").select("*",{count:"exact",head:true}).or("status.is.null,status.eq.pending");if(count)setPendingOrders(count);else setPendingOrders(0);};
   const fS=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setSettings(s);}};
   useEffect(()=>{fS();
+    // 모바일 줌 방지: viewport meta 설정
+    let vp=document.querySelector('meta[name="viewport"]') as HTMLMetaElement;if(!vp){vp=document.createElement("meta");vp.name="viewport";document.head.appendChild(vp);}vp.content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
     try{const saved=window.localStorage.getItem("suhsuh_user");if(saved){const u=JSON.parse(saved);if(u&&u.id){(async()=>{const{data}=await supabase.from("users").select("*").eq("id",u.id).single();if(data&&data.status!=="pending"){setUser(data);setTab(data.role==="admin"?"classes":"grades");}setInitializing(false);})();return;}}
     }catch{}setInitializing(false);
   },[]);
