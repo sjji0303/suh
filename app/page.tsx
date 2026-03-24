@@ -22,7 +22,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#6c63ff]/10 rounded-full blur-3xl z-0"/>
 
     {/* 메인 영역 — 위쪽으로 */}
-    <div className="md:flex-1 flex items-start justify-center pt-40 md:pt-12 px-4 relative z-10">
+    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-12 px-4 relative z-10">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
         <div className="w-[320px] bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-2xl flex-shrink-0 border border-white/20">
@@ -46,7 +46,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       </div>
       {/* 모바일 — 컴팩트: 간격 줄이고 프로필 가운데 정렬 */}
       <div className={`md:hidden w-full max-w-xs transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 px-5 shadow-2xl border border-white/20 mb-2">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 px-5 shadow-2xl border border-white/20 mb-5">
           <div className="flex items-center gap-4 justify-center">
             <img src={pi} alt="" className="w-14 h-14 rounded-full shadow-xl object-cover border-2 border-white/30 flex-shrink-0"/>
             <div className="min-w-0">
@@ -72,10 +72,9 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       <p className="text-center text-white/40 text-[10px] font-semibold tracking-widest mb-3">STUDENT REVIEWS</p>
       <div className="overflow-hidden">
         <div className="flex gap-4 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();return(<div key={i} className={`w-64 flex-shrink-0 backdrop-blur-md rounded-2xl p-4 border transition-all cursor-default ${hasBestGrade?"bg-white/15 border-[#6c63ff]/30 ring-1 ring-[#6c63ff]/20":"bg-white/10 border-white/15 hover:bg-white/15"}`}>
-            {hasBestGrade&&<div className="flex items-center gap-1.5 mb-2"><span className="text-[9px] font-bold text-white bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] px-2 py-0.5 rounded-full shadow-md shadow-[#6c63ff]/30">🏆 성적 향상</span></div>}
-            <div className="flex items-center gap-2 mb-2"><div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-[9px] font-bold text-white">{r.display_name?.charAt(0)||"?"}</div><div><span className="text-[11px] font-bold text-white/90 block">{r.display_name||"학생"}</span><span className="text-[9px] text-white/40">{r.display_school||""}</span></div><div className="ml-auto flex gap-0.5">{[1,2,3,4,5].map(s=>(<svg key={s} viewBox="0 0 20 20" width="10" height="10" fill="#fbbf24"><path d="M10 1l2.39 4.84 5.34.78-3.87 3.77.91 5.33L10 13.28l-4.77 2.44.91-5.33L2.27 6.62l5.34-.78z"/></svg>))}</div></div>
-            {hasBestGrade&&<div className="bg-white/10 rounded-lg px-2.5 py-1.5 mb-2"><p className="text-[10px] font-bold text-[#a5a0ff]">📈 {r.best_grade}</p></div>}
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🐶","🐱","🐰","🐻","🦊","🐼","🐨","🐯","🦁","🐸","🐧","🐥","🦄","🐳","🐬","🦋","🐹","🐮","🐷","🐵"];const animalIcon=animals[i%animals.length];return(<div key={i} className={`w-64 flex-shrink-0 backdrop-blur-md rounded-2xl p-4 border transition-all cursor-default ${hasBestGrade?"bg-white/15 border-[#6c63ff]/30 ring-1 ring-[#6c63ff]/20":"bg-white/10 border-white/15 hover:bg-white/15"}`}>
+            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center text-sm">{animalIcon}</div><div><span className="text-[11px] font-bold text-white/90 block">{r.display_name||"학생"}</span><span className="text-[9px] text-white/40">{r.display_school||""}</span></div>{hasBestGrade?<div className="ml-auto bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] px-2 py-0.5 rounded-lg shadow-md shadow-[#6c63ff]/30"><p className="text-[9px] font-bold text-white">📈 {r.best_grade}</p></div>:<div className="ml-auto"><span className="text-[9px] font-bold text-white/30 bg-white/10 px-2 py-0.5 rounded-lg">수강생</span></div>}</div>
+            {hasBestGrade&&<div className="flex items-center gap-1.5 mb-2"><span className="text-[9px] font-bold text-white bg-gradient-to-r from-amber-500 to-amber-400 px-2 py-0.5 rounded-full shadow-sm">🏆 성적 향상</span></div>}
             {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-semibold text-[#a5a0ff] bg-white/10 px-1.5 py-0.5 rounded-full">#{kw}</span>))}</div>}
             <p className="text-[10px] text-white/70 leading-relaxed review-clamp">{r.content}</p>
           </div>)})}
