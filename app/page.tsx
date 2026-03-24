@@ -7,17 +7,65 @@ async function uploadImage(file:File,path:string){const ext=file.name.split(".")
 
 /* ═══ LOGIN ═══ */
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
-  const[id,setId]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);
+  const[id,setId]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const[ready,setReady]=useState(false);
   const go=async()=>{setLd(true);setErr(await onLogin(id,pw));setLd(false);};
-  const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"";
+  const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
-  return(<div className="min-h-screen relative flex items-center justify-center p-4">
-    {bg?<div className="absolute inset-0 z-0" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center"}}><div className="absolute inset-0 bg-black/40"/></div>:<div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600"/>}
-    <div className="hidden md:flex relative z-10 w-full max-w-4xl gap-5">
-      <div className="w-[340px] bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-xl text-center flex-shrink-0"><img src={pi} alt="" className="w-28 h-28 rounded-full mx-auto mb-4 shadow-lg object-cover border-4 border-white"/><h2 className="text-xl font-bold text-slate-800 mb-2">{nm}</h2><div className="w-10 h-0.5 bg-slate-300 mx-auto mb-4"/>{bio&&<div className="text-sm text-slate-500 leading-relaxed whitespace-pre-line">{bio}</div>}</div>
-      <div className="flex-1 bg-white/95 backdrop-blur-md rounded-3xl p-10 shadow-xl flex flex-col justify-center"><div className="mb-8"><h1 className="text-2xl font-bold text-slate-800 mb-1">정확하게, 확실하게,</h1><h1 className="text-2xl font-bold text-[#6c63ff] mb-3">서정인 수학으로 시작하기</h1><p className="text-sm text-slate-400">로그인하여 시작하세요</p></div><div className="space-y-4 max-w-sm"><div><label className="text-xs font-semibold text-slate-500 mb-1 block">아이디</label><input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div><div><label className="text-xs font-semibold text-slate-500 mb-1 block">비밀번호</label><input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>{err&&<p className="text-red-400 text-xs">{err}</p>}<button onClick={go} disabled={ld} className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50">{ld?"...":"로그인"}</button></div></div>
+  useEffect(()=>{setTimeout(()=>setReady(true),100);},[]);
+  return(<div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+    {/* 배경 — 흐리게 + 어둡게 + 확대 */}
+    <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(3px)"}}/>
+    <div className="absolute inset-0 z-0 bg-gradient-to-br from-black/60 via-black/40 to-[#6c63ff]/20"/>
+    {/* 장식 원형 글로우 */}
+    <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#6c63ff]/20 rounded-full blur-3xl z-0"/>
+    <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#6c63ff]/10 rounded-full blur-3xl z-0"/>
+
+    {/* PC 레이아웃 */}
+    <div className={`hidden md:flex relative z-10 w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+      {/* 왼쪽 프로필 카드 */}
+      <div className="w-[320px] bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl text-center flex-shrink-0 border border-white/20">
+        <div className="relative inline-block mb-5"><img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-400 rounded-full border-3 border-white shadow-lg"/></div>
+        <h2 className="text-2xl font-bold text-white mb-2">{nm}</h2>
+        <div className="w-12 h-0.5 bg-[#6c63ff] mx-auto mb-4 rounded-full"/>
+        {bio&&<div className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{bio}</div>}
+        <div className="mt-6 pt-5 border-t border-white/10">
+          <p className="text-xs text-white/40">수학의 자신감을 키우는 곳</p>
+        </div>
+      </div>
+      {/* 오른쪽 로그인 폼 */}
+      <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col justify-center">
+        <div className="mb-8">
+          <p className="text-sm text-[#6c63ff] font-semibold mb-2 tracking-wider">WELCOME</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-1">정확하게, 확실하게</h1>
+          <h1 className="text-3xl font-bold text-[#6c63ff]">서정인 수학</h1>
+        </div>
+        <div className="space-y-4 max-w-sm">
+          <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+          <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">비밀번호</label><input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+          {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg">{err}</p>}
+          <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-[#6c63ff]/25 hover:shadow-xl hover:shadow-[#6c63ff]/30 transition-all active:scale-[0.98]">{ld?"로그인 중...":"로그인"}</button>
+        </div>
+      </div>
     </div>
-    <div className="md:hidden relative z-10 w-full max-w-sm"><div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-xl"><div className="text-center mb-6"><img src={pi} alt="" className="w-20 h-20 rounded-full mx-auto mb-3 shadow-lg object-cover border-4 border-white"/><h2 className="text-lg font-bold text-slate-800">{nm}</h2><p className="text-xs text-slate-400 mt-1">서정인 수학학원</p></div><div className="space-y-3"><input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/><input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>{err&&<p className="text-red-400 text-xs mt-2">{err}</p>}<button onClick={go} disabled={ld} className="w-full bg-slate-800 text-white py-3 rounded-xl font-semibold text-sm mt-4">{ld?"...":"로그인"}</button></div></div>
+
+    {/* 모바일 레이아웃 */}
+    <div className={`md:hidden relative z-10 w-full max-w-sm transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+      <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-white/20 text-center mb-4">
+        <img src={pi} alt="" className="w-20 h-20 rounded-full mx-auto mb-3 shadow-xl object-cover border-3 border-white/30"/>
+        <h2 className="text-xl font-bold text-white">{nm}</h2>
+        <p className="text-xs text-white/50 mt-1">수학의 자신감을 키우는 곳</p>
+      </div>
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 shadow-2xl">
+        <p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p>
+        <h1 className="text-xl font-bold text-slate-800 mb-5">서정인 수학</h1>
+        <div className="space-y-3">
+          <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+        </div>
+        {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg mt-2">{err}</p>}
+        <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm mt-4 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
+      </div>
+    </div>
   </div>);
 }
 
