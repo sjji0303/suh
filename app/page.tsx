@@ -140,7 +140,8 @@ function AdminClassManager({users}:{users:any[]}){
   const fT=async(gid:number)=>{const{data}=await supabase.from("tests").select("*").eq("class_group_id",gid).order("date",{ascending:false});if(data)setTests(data);};
   useEffect(()=>{fG();},[]);
   const selGIdRef=useRef<number|null>(null);
-  useEffect(()=>{if(selG){fM(selG.id);fT(selG.id);if(selGIdRef.current!==selG.id){setSelT(null);selGIdRef.current=selG.id;}}else{setMembers([]);setTests([]);setSelT(null);selGIdRef.current=null;}},[selG]);
+  const selGId=selG?.id||null;
+  useEffect(()=>{if(selGId){fM(selGId);fT(selGId);if(selGIdRef.current!==selGId){setSelT(null);setGrid({});setIg({});setQs([]);selGIdRef.current=selGId;}}else{setMembers([]);setTests([]);setSelT(null);setGrid({});setIg({});setQs([]);selGIdRef.current=null;}},[selGId]);
 
   const cG=async()=>{if(!newGN)return;await supabase.from("class_groups").insert({name:newGN});setNewGN("");setShowNG(false);fG();};
   const dG=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("class_groups").delete().eq("id",id);if(selG?.id===id)setSelG(null);fG();};
@@ -178,7 +179,7 @@ function AdminClassManager({users}:{users:any[]}){
       else await supabase.from("test_student_info").insert(pay);
     }
     for(const q of qs){const{count:c}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",selT.id).eq("question_number",q.question_number).eq("is_correct",true);const{count:t}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",selT.id).eq("question_number",q.question_number);const r=t&&t>0?Math.round(((c||0)/t)*100):0;await supabase.from("test_questions").update({correct_rate:r}).eq("id",q.id);}
-    setSaving(false);alert("저장 완료!");
+    setSaving(false);alert("저장 완료!");if(selT)loadGrid(selT);
   };
 
   // Excel view
