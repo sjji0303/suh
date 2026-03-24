@@ -165,7 +165,7 @@ function AdminClassManager({users}:{users:any[]}){
 
   const saveAll=async()=>{
     if(!selT)return;setSaving(true);setSaveMsg("");
-    try{
+    const errors:string[]=[];
     const testId=selT.id;
     const scores:number[]=[];
     members.forEach((m:any)=>{const uid=m.user_id;if(hasA(uid))scores.push(getS(uid));});
@@ -176,18 +176,19 @@ function AdminClassManager({users}:{users:any[]}){
 
     for(const m of members){
       const uid=m.user_id;const sid=m.users?.student_id||uid;
-      await supabase.from("test_results").delete().eq("test_id",testId).eq("student_id",sid);
+      const{error:delErr}=await supabase.from("test_results").delete().eq("test_id",testId).eq("student_id",sid);
+      if(delErr)errors.push("결과삭제:"+delErr.message);
       const rows:any[]=[];qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rows.push({test_id:testId,student_id:sid,question_number:q.question_number,is_correct:v===1});});
-      if(rows.length>0)await supabase.from("test_results").insert(rows);
+      if(rows.length>0){const{error:insErr}=await supabase.from("test_results").insert(rows);if(insErr)errors.push("결과저장:"+insErr.message);}
       const sc=getS(uid);const inf=ig[uid]||{};
       const pay={test_id:testId,student_id:sid,total_score:sc,class_average:avgR,class_best:best,std_dev:stdR,attendance:inf.attendance||"",assignment_score:inf.assignment_score||"",wrong_answer_score:inf.wrong_answer_score||"",clinic_time:inf.clinic_time||"",comment:inf.comment||""};
       const{data:ex}=await supabase.from("test_student_info").select("id").eq("test_id",testId).eq("student_id",sid).single();
-      if(ex)await supabase.from("test_student_info").update(pay).eq("id",ex.id);
-      else await supabase.from("test_student_info").insert(pay);
+      if(ex){const{error:upErr}=await supabase.from("test_student_info").update(pay).eq("id",ex.id);if(upErr)errors.push("정보수정:"+upErr.message);}
+      else{const{error:inErr}=await supabase.from("test_student_info").insert(pay);if(inErr)errors.push("정보저장:"+inErr.message);}
     }
-    for(const q of qs){const{count:c}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",testId).eq("question_number",q.question_number).eq("is_correct",true);const{count:t}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",testId).eq("question_number",q.question_number);const r=t&&t>0?Math.round(((c||0)/t)*100):0;await supabase.from("test_questions").update({correct_rate:r}).eq("id",q.id);}
-    setSaveMsg("✅ 저장 완료!");
-    }catch(e){setSaveMsg("❌ 저장 오류");}
+    for(const q of qs){const{count:c}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",testId).eq("question_number",q.question_number).eq("is_correct",true);const{count:t}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",testId).eq("question_number",q.question_number);const r=t&&t>0?Math.round(((c||0)/t)*100):0;const{error:qErr}=await supabase.from("test_questions").update({correct_rate:r}).eq("id",q.id);if(qErr)errors.push("문항업데이트:"+qErr.message);}
+    if(errors.length>0)setSaveMsg("❌ "+errors.slice(0,3).join(" | "));
+    else setSaveMsg("✅ 저장 완료!");
     setSaving(false);
   };
 
