@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import html2canvas from "html2canvas";
 
 const Icon=({type,size=20}:{type:string;size?:number})=>{const s:any={width:size,height:size,strokeWidth:1.5,fill:"none",stroke:"currentColor",strokeLinecap:"round",strokeLinejoin:"round"};const i:any={folder:<svg viewBox="0 0 24 24" {...s}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>,test:<svg viewBox="0 0 24 24" {...s}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,settings:<svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09"/></svg>,logout:<svg viewBox="0 0 24 24" {...s}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,user:<svg viewBox="0 0 24 24" {...s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,menu:<svg viewBox="0 0 24 24" {...s}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,close:<svg viewBox="0 0 24 24" {...s}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,left:<svg viewBox="0 0 24 24" {...s}><polyline points="15 18 9 12 15 6"/></svg>,right:<svg viewBox="0 0 24 24" {...s}><polyline points="9 18 15 12 9 6"/></svg>,upload:<svg viewBox="0 0 24 24" {...s}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,plus:<svg viewBox="0 0 24 24" {...s}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,back:<svg viewBox="0 0 24 24" {...s}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,users:<svg viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>,home:<svg viewBox="0 0 24 24" {...s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,search:<svg viewBox="0 0 24 24" {...s}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,bell:<svg viewBox="0 0 24 24" {...s}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,cart:<svg viewBox="0 0 24 24" {...s}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>,msg:<svg viewBox="0 0 24 24" {...s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,coin:<svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8"/></svg>};return i[type]||null;};
-async function uploadImage(file:File,path:string){const ext=file.name.split(".").pop();const fn=`${path}_${Date.now()}.${ext}`;const{error}=await supabase.storage.from("images").upload(fn,file,{upsert:true});if(error)return null;return supabase.storage.from("images").getPublicUrl(fn).data.publicUrl;}
+async function uploadImage(file:File,path:string){const ext=file.name.split(".").pop();const fn=`${path}_${Date.now()}.${ext}`;const{error}=await supabase.storage.from("images").upload(fn,file,{upsert:true});if(error){console.error("Upload error:",error);return null;}return supabase.storage.from("images").getPublicUrl(fn).data.publicUrl;}
 
 /* ═══ LOGIN ═══ */
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
@@ -527,11 +527,11 @@ function AdminExamViewer({users}:{users:any[]}){
 }
 
 /* ═══ ADMIN: INQUIRY MANAGER ═══ */
-function AdminInquiryManager(){
+function AdminInquiryManager({onReply}:{onReply?:()=>void}){
   const[inqs,setInqs]=useState<any[]>([]);const[replyId,setReplyId]=useState<number|null>(null);const[replyText,setReplyText]=useState("");const[replyImg,setReplyImg]=useState<File|null>(null);const replyImgRef=useRef<HTMLInputElement>(null);
   const fI=async()=>{const{data}=await supabase.from("inquiries").select("*, users:user_id(name)").order("created_at",{ascending:false});if(data)setInqs(data);};
   useEffect(()=>{fI();},[]);
-  const saveReply=async(id:number)=>{let imgUrl="";if(replyImg){imgUrl=await uploadImage(replyImg,`reply_${id}`)||"";}const finalReply=replyText+(imgUrl?`\n[IMG]${imgUrl}[/IMG]`:"");await supabase.from("inquiries").update({reply:finalReply}).eq("id",id);setReplyId(null);setReplyText("");setReplyImg(null);fI();};
+  const saveReply=async(id:number)=>{let imgUrl="";if(replyImg){imgUrl=await uploadImage(replyImg,`reply_${id}`)||"";}const finalReply=replyText+(imgUrl?`\n[IMG]${imgUrl}[/IMG]`:"");await supabase.from("inquiries").update({reply:finalReply}).eq("id",id);setReplyId(null);setReplyText("");setReplyImg(null);fI();if(onReply)onReply();};
   const delInq=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("inquiries").delete().eq("id",id);fI();};
   return(<div><h2 className="text-lg font-bold mb-4">💬 문의사항 관리</h2>{inqs.length>0?<div className="space-y-3">{inqs.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImgMatch=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="bg-white rounded-2xl p-5 shadow-sm">
     <div className="flex justify-between mb-2"><div className="flex items-center gap-2"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{q.users?.name||"?"}</span><span className="text-xs text-slate-400">{q.created_at?.slice(0,10)}</span>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}<span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasReply?"bg-green-50 text-green-600":"bg-amber-50 text-amber-600"}`}>{hasReply?"답변 완료":"답변 대기중"}</span></div><button onClick={()=>delInq(q.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div>
@@ -574,16 +574,18 @@ function AdminSiteSettings({settings,fetchSettings}:{settings:any;fetchSettings:
 export default function Home(){
   const[user,setUser]=useState<any>(null);const[tab,setTab]=useState("classes");const[mm,setMm]=useState(false);
   const[users,setUsers]=useState<any[]>([]);const[groups,setGroups]=useState<any[]>([]);const[loading,setLoading]=useState(false);const[initializing,setInitializing]=useState(true);
+  const[unansweredInq,setUnansweredInq]=useState(0);
   const[settings,setSettings]=useState<any>({profile_name:"서정인 수학",profile_bio:"",profile_image:"",background_image:""});
   const fU=async()=>{const{data}=await supabase.from("users").select("*").order("created_at",{ascending:false});if(data)setUsers(data);};
   const fG=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
+  const fInqCount=async()=>{const{count}=await supabase.from("inquiries").select("*",{count:"exact",head:true}).or("reply.is.null,reply.eq.");if(count)setUnansweredInq(count);else setUnansweredInq(0);};
   const fS=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setSettings(s);}};
   useEffect(()=>{fS();
     // 새로고침 시 로그인 복원
     try{const saved=window.localStorage.getItem("suhsuh_user");if(saved){const u=JSON.parse(saved);if(u&&u.id){(async()=>{const{data}=await supabase.from("users").select("*").eq("id",u.id).single();if(data&&data.status!=="pending"){setUser(data);setTab(data.role==="admin"?"classes":"grades");}setInitializing(false);})();return;}}
     }catch{}setInitializing(false);
   },[]);
-  useEffect(()=>{if(user){setLoading(true);Promise.all([fU(),fG()]).then(()=>setLoading(false));window.localStorage.setItem("suhsuh_user",JSON.stringify({id:user.id}));}else{window.localStorage.removeItem("suhsuh_user");}},[user]);
+  useEffect(()=>{if(user){setLoading(true);Promise.all([fU(),fG(),fInqCount()]).then(()=>setLoading(false));window.localStorage.setItem("suhsuh_user",JSON.stringify({id:user.id}));}else{window.localStorage.removeItem("suhsuh_user");}},[user]);
 
   const handleLogin=async(id:string,pw:string):Promise<string>=>{const{data}=await supabase.from("users").select("*").eq("login_id",id).eq("password",pw).single();if(!data)return"아이디 또는 비밀번호 오류";if(data.status==="pending")return"승인 대기 중";setUser(data);setTab(data.role==="admin"?"classes":"grades");return"";};
   const logout=()=>{setUser(null);setTab("classes");};
@@ -594,7 +596,7 @@ export default function Home(){
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
   const mi=[{id:"classes",icon:"folder",label:"반 / 시험"},{id:"students",icon:"users",label:"학생 관리"},{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"settings",icon:"settings",label:"설정"}];
-  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-1`}>{mi.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);if(mob)setMm(false);}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>);
+  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-1`}>{mi.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);if(mob)setMm(false);if(m.id==="inquiries")fInqCount();}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}</button>))}</nav>);
 
   return(<div className="min-h-screen bg-[#f0f2f8] flex">
     <aside className="hidden lg:flex flex-col w-56 bg-white shadow-sm min-h-screen p-5 fixed left-0 top-0 bottom-0 z-40"><div className="flex items-center gap-3 mb-8"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-bold text-slate-800 text-sm">서정인 수학</span></div>{navEl()}<div className="pt-4 border-t border-slate-100 mt-4"><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 bg-[#6c63ff]/10 rounded-full flex items-center justify-center text-[#6c63ff]"><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">관리자</p></div></div><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50"><Icon type="logout" size={16}/>로그아웃</button></div></aside>
@@ -607,7 +609,7 @@ export default function Home(){
       {tab==="tokens"&&<AdminTokenManager users={users} fetchUsers={fU}/>}
       {tab==="shop"&&<AdminShopManager/>}
       {tab==="notices"&&<AdminNoticeManager groups={groups}/>}
-      {tab==="inquiries"&&<AdminInquiryManager/>}
+      {tab==="inquiries"&&<AdminInquiryManager onReply={fInqCount}/>}
       {tab==="site"&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
       {tab==="settings"&&<div><h2 className="text-lg font-bold mb-4">설정</h2><div className="bg-white rounded-2xl p-6 shadow-sm max-w-md"><p className="text-sm text-slate-500">관리자 비밀번호: Supabase에서 변경</p></div></div>}
     </div></main>
