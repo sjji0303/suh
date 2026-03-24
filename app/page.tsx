@@ -424,7 +424,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
       <div className="bg-white rounded-2xl p-10 w-96 shadow-2xl">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-2">🥩</div>
+          <img src="/profile.png" alt="서서갈비" className="w-24 h-24 rounded-2xl mx-auto mb-2 shadow-lg"/>
           <h1 className="text-2xl font-black text-slate-900">서서갈비</h1>
           <p className="text-sm text-gray-400 mt-1">국어 학원 관리 시스템</p>
         </div>
