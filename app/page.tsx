@@ -76,40 +76,49 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
       {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-4"><button onClick={()=>nav(1)} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p><p className="text-sm text-slate-400">{test.title}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
         {/* 공유 버튼 */}
         <div className="flex justify-end mb-3"><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#6c63ff] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
-        {info&&<div className="bg-slate-50 rounded-2xl p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="text-center"><p className="text-xs text-slate-400">출석</p><p className={`text-base font-bold ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">클리닉</p><p className="text-base font-semibold text-slate-600">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">과제 성취도</p><p className="text-base font-semibold text-slate-600">{info.assignment_score||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">오답 성취도</p><p className="text-base font-semibold text-slate-600">{info.wrong_answer_score||"—"}</p></div></div>}
-        {results.length>0?<div className="space-y-4">
-          <div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 truncate">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
-          <div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#6c63ff":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
+        {results.length>0?<>
+          {/* 상단 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 truncate">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
+            <div className="space-y-4">
+              {info&&<div className="bg-slate-50 rounded-2xl p-5"><div className="grid grid-cols-2 gap-3 text-center"><div><p className="text-xs text-slate-400">내 점수</p><p className="text-2xl font-bold text-[#6c63ff]">{info.total_score}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">반 평균</p><p className="text-2xl font-bold text-slate-600">{info.class_average}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">표준편차</p><p className="text-2xl font-bold text-slate-600">{info.std_dev||"—"}<span className="text-sm font-semibold">{info.std_dev?"점":""}</span></p></div><div><p className="text-xs text-slate-400">최고</p><p className="text-2xl font-bold text-slate-600">{info.class_best}<span className="text-sm font-semibold">점</span></p></div></div></div>}
+              {rankHistory.length>=1&&(()=>{
+                const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
+                const maxVal=Math.max(...data.map(d=>d.total),1);
+                const w=320;const h=160;const px=40;const py=25;const gw=w-px*2;const gh=h-py*2;
+                const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.value/maxVal)*gh;return{x,y,...d};});
+                const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
+                const prev=points.length>=2?points[points.length-2]:null;
+                const diff=prev?prev.rank-points[points.length-1].rank:0;
+                return(<div className="bg-slate-50 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-base">등수 변화</h3>
+                    {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
+                    {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
+                    {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
+                  </div>
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"180px"}}>
+                    {[0,0.5,1].map(r=>(<line key={r} x1={px} y1={py+gh*(1-r)} x2={w-px} y2={py+gh*(1-r)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>))}
+                    <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6c63ff" stopOpacity="0.15"/><stop offset="100%" stopColor="#6c63ff" stopOpacity="0"/></linearGradient></defs>
+                    {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
+                    <path d={line} fill="none" stroke="#6c63ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
+                    {points.map((p,i)=>(<g key={i}>
+                      <circle cx={p.x} cy={p.y} r="5" fill="white" stroke="#6c63ff" strokeWidth="2.5"/>
+                      <text x={p.x} y={h-4} textAnchor="middle" fontSize="9" fill="#94a3b8">{p.date.slice(5)}</text>
+                    </g>))}
+                  </svg>
+                </div>);
+              })()}
+            </div>
+          </div>
+          {/* 하단 풀폭: 정답률 → 최다오답 → 코멘트 → 출석/성취도 */}
+          <div className="space-y-4">
+            <div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#6c63ff":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
             {wrong.length>0&&<div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
-            {info&&<><div className="bg-slate-50 rounded-2xl p-5"><div className="grid grid-cols-4 gap-2 text-center"><div><p className="text-xs text-slate-400">내 점수</p><p className="text-2xl font-bold text-[#6c63ff]">{info.total_score}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">반 평균</p><p className="text-2xl font-bold text-slate-600">{info.class_average}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">표준편차</p><p className="text-2xl font-bold text-slate-600">{info.std_dev||"—"}<span className="text-sm font-semibold">{info.std_dev?"점":""}</span></p></div><div><p className="text-xs text-slate-400">최고</p><p className="text-2xl font-bold text-slate-600">{info.class_best}<span className="text-sm font-semibold">점</span></p></div></div></div>{info.comment&&<div className="bg-[#6c63ff]/5 rounded-2xl p-5"><p className="text-sm font-semibold text-[#6c63ff] mb-1">개인 코멘트</p><p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{info.comment}</p></div>}</>}
-            {rankHistory.length>=1&&(()=>{
-              const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
-              const maxVal=Math.max(...data.map(d=>d.total),1);
-              const w=320;const h=160;const px=40;const py=25;const gw=w-px*2;const gh=h-py*2;
-              const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.value/maxVal)*gh;return{x,y,...d};});
-              const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
-              const last=points[points.length-1];const prev=points.length>=2?points[points.length-2]:null;
-              const diff=prev?prev.rank-last.rank:0;
-              return(<div className="bg-slate-50 rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-base">등수 변화</h3>
-                  {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
-                  {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
-                  {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
-                </div>
-                <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"180px"}}>
-                  {[0,0.5,1].map(r=>(<line key={r} x1={px} y1={py+gh*(1-r)} x2={w-px} y2={py+gh*(1-r)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>))}
-                  <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6c63ff" stopOpacity="0.15"/><stop offset="100%" stopColor="#6c63ff" stopOpacity="0"/></linearGradient></defs>
-                  {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
-                  <path d={line} fill="none" stroke="#6c63ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
-                  {points.map((p,i)=>(<g key={i}>
-                    <circle cx={p.x} cy={p.y} r="5" fill="white" stroke="#6c63ff" strokeWidth="2.5"/>
-                    <text x={p.x} y={h-4} textAnchor="middle" fontSize="9" fill="#94a3b8">{p.date.slice(5)}</text>
-                  </g>))}
-                </svg>
-              </div>);
-            })()}
-          </div>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
+            {info?.comment&&<div className="bg-[#6c63ff]/5 rounded-2xl p-5"><p className="text-sm font-semibold text-[#6c63ff] mb-1">개인 코멘트</p><p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{info.comment}</p></div>}
+            {info&&<div className="bg-slate-50 rounded-2xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="text-center"><p className="text-xs text-slate-400">출석</p><p className={`text-base font-bold ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">클리닉</p><p className="text-base font-semibold text-slate-600">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">과제 성취도</p><p className="text-base font-semibold text-slate-600">{info.assignment_score||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">오답 성취도</p><p className="text-base font-semibold text-slate-600">{info.wrong_answer_score||"—"}</p></div></div>}
+          </div>
+        </>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
       </>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400">시험 없음</div>}</div>}
       {tab==="myexam"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 내 성적</h2><button onClick={()=>setShowExamAdd(true)} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>성적 입력</button></div>
