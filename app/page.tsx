@@ -306,7 +306,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
       </div>}
       {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 max-w-md"><div className="space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">변경</button></div></div>}
     </div></main>
-    </div>);
+  </div>);
+}
 }
 
 /* ═══ ADMIN: STUDENT MANAGER + EXCEL IMPORT ═══ */
