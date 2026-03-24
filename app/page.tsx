@@ -25,7 +25,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[tab,setTab]=useState("home");const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   useEffect(()=>{(async()=>{const{data}=await supabase.from("tests").select("*").order("date",{ascending:false});if(data&&data.length>0){setTests(data);ld(data[0]);}})();},[]);
-  const ld=async(t:any)=>{const sid=user.student_id||user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
+  const ld=async(t:any)=>{const sid=user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
   const nav=(d:number)=>{const n=idx+d;if(n>=0&&n<tests.length){setIdx(n);ld(tests[n]);}};
   const chPw=async()=>{if(pw.n1!==pw.n2){setPwMsg("불일치");return;}await supabase.from("users").update({password:pw.n1}).eq("id",user.id);setPwMsg("변경 완료!");setPw({n1:"",n2:""});};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
@@ -156,7 +156,7 @@ function AdminClassManager({users}:{users:any[]}){
   // 시험 삭제
   const deleteTest=async(tid:number)=>{if(!confirm("이 시험과 모든 결과를 삭제할까요?"))return;await supabase.from("test_student_info").delete().eq("test_id",tid);await supabase.from("test_results").delete().eq("test_id",tid);await supabase.from("test_questions").delete().eq("test_id",tid);await supabase.from("tests").delete().eq("id",tid);if(selT?.id===tid)setSelT(null);if(selG)fT(selG.id);};
 
-  const loadGrid=async(test:any)=>{setSelT(test);setSaveMsg("");const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");if(q)setQs(q);const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;const u=m.users;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:u?.student_id||uid};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.users?.student_id===r.student_id||m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.users?.student_id===si.student_id||m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si};});setGrid(g);setIg(ig2);};
+  const loadGrid=async(test:any)=>{setSelT(test);setSaveMsg("");const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");if(q)setQs(q);const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si};});setGrid(g);setIg(ig2);};
 
   const setC=(uid:number,qn:number,val:string)=>{const k=`${uid}-${qn}`;setGrid((p:any)=>{const n={...p};if(val==="")delete n[k];else n[k]=Number(val);return n;});};
   const setIC=(uid:number,key:string,val:string)=>{setIg((p:any)=>({...p,[uid]:{...p[uid],[key]:val}}));};
@@ -175,7 +175,7 @@ function AdminClassManager({users}:{users:any[]}){
     const avgR=Math.round(avg*10)/10;const stdR=Math.round(stdDev*10)/10;
 
     for(const m of members){
-      const uid=m.user_id;const sid=m.users?.student_id||uid;
+      const uid=m.user_id;const sid=uid;
       const{error:delErr}=await supabase.from("test_results").delete().eq("test_id",testId).eq("student_id",sid);
       if(delErr)errors.push("결과삭제:"+delErr.message);
       const rows:any[]=[];qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rows.push({test_id:testId,student_id:sid,question_number:q.question_number,is_correct:v===1});});
