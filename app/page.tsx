@@ -131,24 +131,37 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
 
 /* ═══ ADMIN: CLASS + EXCEL TEST (with auto stats) ═══ */
 function AdminClassManager({users}:{users:any[]}){
-  const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);
+  const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT_raw]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);
+  const selTRef=useRef<any>(null);
+  const setSelT=(v:any)=>{selTRef.current=v;setSelT_raw(v);};
   const[newGN,setNewGN]=useState("");const[showNG,setShowNG]=useState(false);const[ntf,setNtf]=useState({date:"",title:"",qCount:15,assignment:""});const[ntp,setNtp]=useState<string[]>([]);const[showNT,setShowNT]=useState(false);const[showAM,setShowAM]=useState(false);const[searchM,setSearchM]=useState("");
   const[editGN,setEditGN]=useState("");const[editingGId,setEditingGId]=useState<number|null>(null);
+  const[editTest,setEditTest]=useState<any>(null);const[editTF,setEditTF]=useState({date:"",title:"",assignment:""});
   const approved=users.filter((u:any)=>u.status==="approved"&&u.role!=="admin");
   const fG=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
   const fM=async(gid:number)=>{const{data}=await supabase.from("class_members").select("*, users:user_id(*)").eq("class_group_id",gid);if(data)setMembers(data);};
   const fT=async(gid:number)=>{const{data}=await supabase.from("tests").select("*").eq("class_group_id",gid).order("date",{ascending:false});if(data)setTests(data);};
   useEffect(()=>{fG();},[]);
-  const selGIdRef=useRef<number|null>(null);
+  const prevSelGId=useRef<number|null>(null);
   const selGId=selG?.id||null;
-  useEffect(()=>{if(selGId){fM(selGId);fT(selGId);if(selGIdRef.current!==selGId){setSelT(null);setGrid({});setIg({});setQs([]);selGIdRef.current=selGId;}}else{setMembers([]);setTests([]);setSelT(null);setGrid({});setIg({});setQs([]);selGIdRef.current=null;}},[selGId]);
+  useEffect(()=>{
+    if(selGId){
+      fM(selGId);fT(selGId);
+      if(prevSelGId.current!==selGId){setSelT(null);setGrid({});setIg({});setQs([]);prevSelGId.current=selGId;}
+    }else{setMembers([]);setTests([]);setSelT(null);setGrid({});setIg({});setQs([]);prevSelGId.current=null;}
+  },[selGId]);
 
   const cG=async()=>{if(!newGN)return;await supabase.from("class_groups").insert({name:newGN});setNewGN("");setShowNG(false);fG();};
   const dG=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("class_groups").delete().eq("id",id);if(selG?.id===id)setSelG(null);fG();};
-  const renameG=async(id:number)=>{if(!editGN.trim())return;await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG({...selG,name:editGN.trim()});};
+  const renameG=async(id:number)=>{if(!editGN.trim())return;await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>({...prev,name:editGN.trim()}));};
   const aM=async(uid:number)=>{if(!selG)return;await supabase.from("class_members").insert({class_group_id:selG.id,user_id:uid});fM(selG.id);};
   const rM=async(id:number)=>{await supabase.from("class_members").delete().eq("id",id);if(selG)fM(selG.id);};
   const cT=async()=>{if(!selG||!ntf.date)return;const title=ntf.title||`${ntf.date} ${selG.name}`;const{data:t}=await supabase.from("tests").insert({date:ntf.date,title,class_group_id:selG.id,class_name:selG.name,assignment:ntf.assignment}).select().single();if(!t)return;const rows=Array.from({length:ntf.qCount},(_,i)=>({test_id:t.id,question_number:i+1,topic:ntp[i]||"",correct_rate:0}));await supabase.from("test_questions").insert(rows);setShowNT(false);setNtf({date:"",title:"",qCount:15,assignment:""});setNtp([]);fT(selG.id);};
+
+  // 시험 수정
+  const updateTest=async()=>{if(!editTest)return;await supabase.from("tests").update({date:editTF.date,title:editTF.title,assignment:editTF.assignment}).eq("id",editTest.id);setEditTest(null);if(selG)fT(selG.id);if(selT?.id===editTest.id)setSelT({...selT,date:editTF.date,title:editTF.title,assignment:editTF.assignment});};
+  // 시험 삭제
+  const deleteTest=async(tid:number)=>{if(!confirm("이 시험과 모든 결과를 삭제할까요?"))return;await supabase.from("test_student_info").delete().eq("test_id",tid);await supabase.from("test_results").delete().eq("test_id",tid);await supabase.from("test_questions").delete().eq("test_id",tid);await supabase.from("tests").delete().eq("id",tid);if(selT?.id===tid)setSelT(null);if(selG)fT(selG.id);};
 
   const loadGrid=async(test:any)=>{setSelT(test);const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");if(q)setQs(q);const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;const u=m.users;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:u?.student_id||uid};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.users?.student_id===r.student_id||m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.users?.student_id===si.student_id||m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si};});setGrid(g);setIg(ig2);};
 
@@ -158,8 +171,8 @@ function AdminClassManager({users}:{users:any[]}){
   const hasA=(uid:number)=>qs.some(q=>grid[`${uid}-${q.question_number}`]!==undefined);
 
   const saveAll=async()=>{
-    if(!selT)return;setSaving(true);
-    // Calc auto stats
+    const curT=selTRef.current;
+    if(!curT)return;setSaving(true);
     const scores:number[]=[];
     members.forEach((m:any)=>{const uid=m.user_id;if(hasA(uid))scores.push(getS(uid));});
     const avg=scores.length>0?(scores.reduce((a,b)=>a+b,0)/scores.length):0;
@@ -169,17 +182,17 @@ function AdminClassManager({users}:{users:any[]}){
 
     for(const m of members){
       const uid=m.user_id;const sid=m.users?.student_id||uid;
-      await supabase.from("test_results").delete().eq("test_id",selT.id).eq("student_id",sid);
-      const rows:any[]=[];qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rows.push({test_id:selT.id,student_id:sid,question_number:q.question_number,is_correct:v===1});});
+      await supabase.from("test_results").delete().eq("test_id",curT.id).eq("student_id",sid);
+      const rows:any[]=[];qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rows.push({test_id:curT.id,student_id:sid,question_number:q.question_number,is_correct:v===1});});
       if(rows.length>0)await supabase.from("test_results").insert(rows);
       const sc=getS(uid);const inf=ig[uid]||{};
-      const pay={test_id:selT.id,student_id:sid,total_score:sc,class_average:avgR,class_best:best,std_dev:stdR,attendance:inf.attendance||"",assignment_score:inf.assignment_score||"",wrong_answer_score:inf.wrong_answer_score||"",clinic_time:inf.clinic_time||"",comment:inf.comment||""};
-      const{data:ex}=await supabase.from("test_student_info").select("id").eq("test_id",selT.id).eq("student_id",sid).single();
+      const pay={test_id:curT.id,student_id:sid,total_score:sc,class_average:avgR,class_best:best,std_dev:stdR,attendance:inf.attendance||"",assignment_score:inf.assignment_score||"",wrong_answer_score:inf.wrong_answer_score||"",clinic_time:inf.clinic_time||"",comment:inf.comment||""};
+      const{data:ex}=await supabase.from("test_student_info").select("id").eq("test_id",curT.id).eq("student_id",sid).single();
       if(ex)await supabase.from("test_student_info").update(pay).eq("id",ex.id);
       else await supabase.from("test_student_info").insert(pay);
     }
-    for(const q of qs){const{count:c}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",selT.id).eq("question_number",q.question_number).eq("is_correct",true);const{count:t}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",selT.id).eq("question_number",q.question_number);const r=t&&t>0?Math.round(((c||0)/t)*100):0;await supabase.from("test_questions").update({correct_rate:r}).eq("id",q.id);}
-    setSaving(false);alert("저장 완료!");if(selT)loadGrid(selT);
+    for(const q of qs){const{count:c}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",curT.id).eq("question_number",q.question_number).eq("is_correct",true);const{count:t}=await supabase.from("test_results").select("*",{count:"exact",head:true}).eq("test_id",curT.id).eq("question_number",q.question_number);const r=t&&t>0?Math.round(((c||0)/t)*100):0;await supabase.from("test_questions").update({correct_rate:r}).eq("id",q.id);}
+    setSaving(false);alert("저장 완료!");
   };
 
   // Excel view
@@ -207,7 +220,17 @@ function AdminClassManager({users}:{users:any[]}){
       {showAM&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4"><h3 className="font-semibold text-sm mb-3">학생 검색 / 추가</h3><div className="flex items-center gap-2 mb-3 bg-slate-50 rounded-xl px-3 py-2"><Icon type="search" size={16}/><input className="flex-1 bg-transparent text-sm border-0 focus:outline-none" value={searchM} onChange={e=>setSearchM(e.target.value)} placeholder="이름 또는 학교로 검색"/></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto">{filtered.map((u:any)=>(<button key={u.id} onClick={()=>aM(u.id)} className="bg-slate-50 rounded-lg p-3 text-left hover:bg-blue-50 text-xs"><p className="font-semibold">{u.name}</p><p className="text-slate-400">{u.school||""}</p></button>))}{filtered.length===0&&<p className="text-slate-400 text-xs col-span-3">결과 없음</p>}</div></div>}
       <div className="flex justify-between items-center mb-3"><h3 className="font-semibold text-sm">시험</h3><button onClick={()=>{setShowNT(true);setNtf(p=>({...p,date:new Date().toISOString().split("T")[0]}));}} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">+ 새 시험</button></div>
       {showNT&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3"><div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-semibold text-slate-500">날짜</label><input type="date" className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={ntf.date} onChange={e=>setNtf(p=>({...p,date:e.target.value}))}/></div><div><label className="text-xs font-semibold text-slate-500">시험명</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={ntf.title} onChange={e=>setNtf(p=>({...p,title:e.target.value}))}/></div></div><div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-semibold text-slate-500">문항수</label><input type="number" className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={ntf.qCount} onChange={e=>setNtf(p=>({...p,qCount:Number(e.target.value)||15}))}/></div><div><label className="text-xs font-semibold text-slate-500">과제</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={ntf.assignment} onChange={e=>setNtf(p=>({...p,assignment:e.target.value}))}/></div></div><div><label className="text-xs font-semibold text-slate-500">단원명</label><div className="mt-1 grid grid-cols-2 gap-1 max-h-40 overflow-y-auto">{Array.from({length:ntf.qCount},(_,i)=>(<div key={i} className="flex items-center gap-1"><span className="text-[10px] text-slate-400 w-4 text-right">{i+1}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1 text-xs border-0" value={ntp[i]||""} onChange={e=>{const t=[...ntp];t[i]=e.target.value;setNtp(t);}}/></div>))}</div></div><div className="flex gap-2"><button onClick={cT} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">생성</button><button onClick={()=>setShowNT(false)} className="text-xs text-slate-400">취소</button></div></div>}
-      <div className="space-y-2">{tests.map(t=>(<button key={t.id} onClick={()=>loadGrid(t)} className="w-full bg-white rounded-xl p-4 shadow-sm text-left hover:ring-2 hover:ring-[#6c63ff]/30 flex justify-between items-center"><div><p className="font-semibold text-sm">{t.title}</p><p className="text-xs text-slate-400">{t.date}</p></div><Icon type="right" size={16}/></button>))}{tests.length===0&&<div className="bg-white rounded-2xl p-8 shadow-sm text-center text-slate-400 text-sm">시험 추가 필요</div>}</div>
+      <div className="space-y-2">{tests.map(t=>(<div key={t.id} className="bg-white rounded-xl p-4 shadow-sm hover:ring-2 hover:ring-[#6c63ff]/30">
+        {editTest?.id===t.id?<div className="space-y-3">
+          <h3 className="font-semibold text-sm">✏️ 시험 수정</h3>
+          <div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-semibold text-slate-500">날짜</label><input type="date" className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={editTF.date} onChange={e=>setEditTF(p=>({...p,date:e.target.value}))}/></div><div><label className="text-xs font-semibold text-slate-500">시험명</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={editTF.title} onChange={e=>setEditTF(p=>({...p,title:e.target.value}))}/></div></div>
+          <div><label className="text-xs font-semibold text-slate-500">과제</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={editTF.assignment} onChange={e=>setEditTF(p=>({...p,assignment:e.target.value}))}/></div>
+          <div className="flex gap-2"><button onClick={updateTest} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setEditTest(null)} className="text-xs text-slate-400">취소</button></div>
+        </div>:<div className="flex justify-between items-center">
+          <button onClick={()=>loadGrid(t)} className="flex-1 text-left"><p className="font-semibold text-sm">{t.title}</p><p className="text-xs text-slate-400">{t.date}{t.assignment?` · 과제: ${t.assignment}`:""}</p></button>
+          <div className="flex items-center gap-2 ml-2"><button onClick={(e)=>{e.stopPropagation();setEditTest(t);setEditTF({date:t.date,title:t.title,assignment:t.assignment||""});}} className="text-xs text-slate-300 hover:text-[#6c63ff]">수정</button><button onClick={(e)=>{e.stopPropagation();deleteTest(t.id);}} className="text-xs text-slate-300 hover:text-red-500">삭제</button><Icon type="right" size={16}/></div>
+        </div>}
+      </div>))}{tests.length===0&&<div className="bg-white rounded-2xl p-8 shadow-sm text-center text-slate-400 text-sm">시험 추가 필요</div>}</div>
     </div>);
   }
 
