@@ -110,7 +110,7 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
       <div className="flex gap-2"><button onClick={addStudent} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">추가</button><button onClick={()=>setShowAdd(false)} className="text-xs text-slate-400">취소</button></div>
     </div>}
 
-    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50">{["이름","학교","아이디","학부모","학생",""].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{students.map((s:any)=>(<tr key={s.id} className="border-t border-slate-50 hover:bg-slate-50/50"><td className="px-4 py-3 font-semibold">{s.name}</td><td className="px-4 py-3 text-xs text-slate-500">{s.school||"—"}</td><td className="px-4 py-3 font-mono text-xs text-[#6c63ff]">{s.login_id}</td><td className="px-4 py-3 text-xs text-slate-500">{s.parent_phone||"—"}</td><td className="px-4 py-3 text-xs text-slate-500">{s.student_phone||s.phone||"—"}</td><td className="px-4 py-3 text-right"><button onClick={async()=>{const n=prompt("이름:",s.name);if(!n)return;const sc=prompt("학교:"-500">삭제</button></td></tr>))}{students.length===0&&<tr><td colSpan={6} className="text-center py-10 text-slate-400 text-sm">학생을 추가하세요</td></tr>}</tbody></table></div>
+    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50">{["이름","학교","아이디","학부모","학생",""].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{students.map((s:any)=>(<tr key={s.id} className="border-t border-slate-50 hover:bg-slate-50/50"><td className="px-4 py-3 font-semibold">{s.name}</td><td className="px-4 py-3 text-xs text-slate-500">{s.school||"—"}</td><td className="px-4 py-3 font-mono text-xs text-[#6c63ff]">{s.login_id}</td><td className="px-4 py-3 text-xs text-slate-500">{s.parent_phone||"—"}</td><td className="px-4 py-3 text-xs text-slate-500">{s.student_phone||s.phone||"—"}</td><td className="px-4 py-3 text-right"><button onClick={()=>removeStudent(s.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></td></tr>))}{students.length===0&&<tr><td colSpan={6} className="text-center py-10 text-slate-400 text-sm">학생을 추가하세요</td></tr>}</tbody></table></div>
   </div>);
 }
 
@@ -123,7 +123,7 @@ function AdminClassManager({users}:{users:any[]}){
   const fM=async(gid:number)=>{const{data}=await supabase.from("class_members").select("*, users:user_id(*)").eq("class_group_id",gid);if(data)setMembers(data);};
   const fT=async(gid:number)=>{const{data}=await supabase.from("tests").select("*").eq("class_group_id",gid).order("date",{ascending:false});if(data)setTests(data);};
   useEffect(()=>{fG();},[]);
-  useEffect(()=>{if(selG){fM(selG.id);fT(selG.id);}else{setMembers([]);setTests([]);setSelT(null);}},[selG]);
+  useEffect(()=>{if(selG){fM(selG.id);fT(selG.id);}else{setMembers([]);setTests([]);}setSelT(null);},[selG]);
 
   const cG=async()=>{if(!newGN)return;await supabase.from("class_groups").insert({name:newGN});setNewGN("");setShowNG(false);fG();};
   const dG=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("class_groups").delete().eq("id",id);if(selG?.id===id)setSelG(null);fG();};
