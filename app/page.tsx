@@ -56,7 +56,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
           </div>
         </div>
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl">
-          <h1 className="text-sm font-bold mb-4"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
+          <h1 className="text-sm font-bold mb-3"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
+          <div className="bg-slate-50 rounded-xl px-3 py-2 mb-3"><p className="text-[10px] text-slate-400 leading-relaxed">아이디: <span className="font-semibold text-slate-500">이름+학부모번호뒷4자리</span></p><p className="text-[10px] text-slate-400 leading-relaxed">비밀번호: <span className="font-semibold text-slate-500">학부모번호뒷4자리</span></p></div>
           <div className="space-y-2.5">
             <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
             <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
