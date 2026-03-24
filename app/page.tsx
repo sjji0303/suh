@@ -30,8 +30,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
           <h2 className="text-2xl font-bold text-white mb-2">{nm}</h2>
           <div className="w-10 h-0.5 bg-[#6c63ff] mx-auto mb-3 rounded-full"/>
         </div>
-        {bio&&<div className="text-xs text-white/70 leading-relaxed whitespace-pre-line text-left">{bio}</div>}
-        <div className="mt-5 pt-4 border-t border-white/10">
+        {bio&&<div className="text-xs text-white/70 leading-relaxed whitespace-pre-line text-center px-4">{bio}</div>}
+        <div className="mt-5 pt-4 border-t border-white/10 text-center">
           <p className="text-xs text-white/40">수학의 자신감을 키우는 곳</p>
         </div>
       </div>
@@ -52,14 +52,10 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
     {/* 모바일 레이아웃 */}
     <div className={`md:hidden relative z-10 w-full max-w-sm transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-      <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/20 mb-4">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0"><img src={pi} alt="" className="w-16 h-16 rounded-full shadow-xl object-cover border-3 border-white/30"/></div>
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-white">{nm}</h2>
-            {bio&&<div className="text-[11px] text-white/60 leading-relaxed whitespace-pre-line mt-1">{bio}</div>}
-          </div>
-        </div>
+      <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/20 mb-4 text-center">
+        <div className="flex-shrink-0 mb-3"><img src={pi} alt="" className="w-16 h-16 rounded-full shadow-xl object-cover border-3 border-white/30 mx-auto"/></div>
+        <h2 className="text-lg font-bold text-white">{nm}</h2>
+        {bio&&<div className="text-[11px] text-white/60 leading-relaxed whitespace-pre-line mt-2">{bio}</div>}
       </div>
       <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 shadow-2xl">
         <p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p>
