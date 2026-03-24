@@ -1,0 +1,57 @@
+{
+  "name": "서서갈비 국어 학원",
+  "short_name": "서서갈비",
+  "description": "서서갈비 국어 학원 관리 시스템",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+```
+
+Ctrl+S 저장, 메모장 닫기.
+
+**2단계: sw.js 만들기**
+```
+notepad public\sw.js
+```
+
+새 파일, 아래 내용 붙여넣기:
+```
+var CACHE_NAME = "suhsuh-v1";
+
+self.addEventListener("install", function(event) {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", function(event) {
+  event.waitUntil(clients.claim());
+});
+
+self.addEventListener("fetch", function(event) {
+  event.respondWith(
+    fetch(event.request).catch(function() { return caches.match(event.request); })
+  );
+});
+```
+
+Ctrl+S 저장, 메모장 닫기.
+
+**3단계: layout.tsx도 확인**
+```
+type app\layout.tsx
