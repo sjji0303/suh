@@ -24,12 +24,16 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     {/* PC 레이아웃 */}
     <div className={`hidden md:flex relative z-10 w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
       {/* 왼쪽 프로필 카드 */}
-      <div className="w-[320px] bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl text-center flex-shrink-0 border border-white/20">
-        <div className="relative inline-block mb-5"><img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-400 rounded-full border-3 border-white shadow-lg"/></div>
-        <h2 className="text-2xl font-bold text-white mb-2">{nm}</h2>
-        <div className="w-12 h-0.5 bg-[#6c63ff] mx-auto mb-4 rounded-full"/>
-        {bio&&<div className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{bio}</div>}
-        <div className="mt-6 pt-5 border-t border-white/10">
+      <div className="w-[360px] bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl flex-shrink-0 border border-white/20">
+        <div className="flex items-start gap-5">
+          <div className="relative flex-shrink-0"><img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
+          <div className="flex-1 pt-1">
+            <h2 className="text-xl font-bold text-white mb-2">{nm}</h2>
+            <div className="w-10 h-0.5 bg-[#6c63ff] mb-3 rounded-full"/>
+            {bio&&<div className="text-xs text-white/70 leading-relaxed whitespace-pre-line text-left">{bio}</div>}
+          </div>
+        </div>
+        <div className="mt-5 pt-4 border-t border-white/10">
           <p className="text-xs text-white/40">수학의 자신감을 키우는 곳</p>
         </div>
       </div>
@@ -97,6 +101,9 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
       hist.sort((a:any,b:any)=>a.date.localeCompare(b.date));
       setRankHistory(hist);
     }
+    // 공지사항 초기 로드 (N 뱃지용)
+    const{data:noticeData}=await supabase.from("class_notices").select("*, class_groups(name)").in("class_group_id",gids).order("created_at",{ascending:false});
+    if(noticeData)setNotices(noticeData);
   })();},[]);
   const ld=async(t:any)=>{const sid=user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
   const nav=(d:number)=>{const n=idx+d;if(n>=0&&n<tests.length){setIdx(n);ld(tests[n]);}};
@@ -123,8 +130,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"myexam",icon:"folder",label:"시험 결과"},{id:"shop",icon:"cart",label:"상점"},{id:"settings",icon:"settings",label:"설정"}];
   return(<div className="min-h-screen bg-white flex">
     <aside className="hidden lg:flex flex-col w-56 border-r border-slate-100 min-h-screen p-4 fixed left-0 top-0 bottom-0 z-40"><div className="flex items-center gap-2 mb-6 px-2"><img src="/logo.png" alt="" className="h-8 object-contain"/></div><nav className="flex-1 space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium ${tab===m.id?"bg-slate-100 text-slate-900":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><div className="border-t border-slate-100 pt-3"><div className="px-2 mb-2"><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">{user.school||""}</p></div><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50"><Icon type="logout" size={16}/>로그아웃</button></div></aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-100 z-40 px-4 py-3 flex justify-between items-center"><img src="/logo.png" alt="" className="h-6"/><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 z-40"/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 bg-white z-50 p-5 shadow-xl"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium ${tab===m.id?"bg-slate-100 text-slate-900":"text-slate-500"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 mt-4"><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-100 z-40 px-4 py-3 flex justify-between items-center"><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button><div className="flex items-center gap-2"><span className="text-xs font-semibold text-slate-600">{user.name}</span><img src="/logo.png" alt="" className="h-6"/></div></div>
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 z-40"/><div className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-white z-50 p-5 shadow-xl"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium ${tab===m.id?"bg-slate-100 text-slate-900":"text-slate-500"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 mt-4"><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-14 lg:pt-0 pb-20 lg:pb-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
       {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p><p className="text-sm text-slate-400">{test.title}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
         {/* 학생 정보 + 공유 */}
@@ -136,7 +143,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           {info?.comment&&<div className="bg-[#6c63ff]/5 rounded-2xl p-5 mb-4"><p className="text-sm font-semibold text-[#6c63ff] mb-1">개인 코멘트</p><p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 truncate">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
+            <div className="bg-slate-50 rounded-2xl p-5"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 text-center">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
             <div className="space-y-4">
               {info&&<div className="bg-slate-50 rounded-2xl p-5"><div className="grid grid-cols-2 gap-3 text-center"><div><p className="text-xs text-slate-400">내 점수</p><p className="text-2xl font-bold text-[#6c63ff]">{info.total_score}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">반 평균</p><p className="text-2xl font-bold text-slate-600">{info.class_average}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">표준편차</p><p className="text-2xl font-bold text-slate-600">{info.std_dev||"—"}<span className="text-sm font-semibold">{info.std_dev?"점":""}</span></p></div><div><p className="text-xs text-slate-400">최고</p><p className="text-2xl font-bold text-slate-600">{info.class_best}<span className="text-sm font-semibold">점</span></p></div></div></div>}
               {rankHistory.length>=1&&(()=>{
@@ -331,16 +338,19 @@ function AdminClassManager({users}:{users:any[]}){
   // 성적표 이미지 캡쳐
   const captureReport=async(uid:number)=>{
     setCapId(uid);
-    await new Promise(r=>setTimeout(r,300));
-    if(!capRef.current)return;
+    await new Promise(r=>setTimeout(r,500));
+    if(!capRef.current){setCapId(null);return;}
     try{
-      const canvas=await html2canvas(capRef.current,{backgroundColor:"#ffffff",scale:2,useCORS:true});
-      canvas.toBlob(async(blob)=>{
-        if(!blob)return;
-        try{await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);alert("성적표 이미지가 클립보드에 복사되었습니다!");}
-        catch{const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`성적표_${members.find(m=>m.user_id===uid)?.users?.name||"학생"}.png`;a.click();URL.revokeObjectURL(url);}
-      },"image/png");
-    }catch(e){alert("캡쳐 실패");}
+      const canvas=await html2canvas(capRef.current,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false,allowTaint:true});
+      const blob:Blob=await new Promise(r=>canvas.toBlob(b=>r(b!),"image/png"));
+      if(!blob){setCapId(null);return;}
+      // 먼저 클립보드 복사 시도
+      try{await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);alert("📷 성적표 이미지가 클립보드에 복사되었습니다!\n카톡에서 Ctrl+V로 붙여넣기 하세요.");}
+      catch{
+        // 클립보드 실패 시 다운로드
+        const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`성적표_${members.find(m=>m.user_id===uid)?.users?.name||"학생"}.png`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);alert("📷 성적표 이미지가 다운로드되었습니다!");
+      }
+    }catch(e){console.error("캡쳐 오류:",e);alert("캡쳐 실패: "+e);}
     setCapId(null);
   };
   const approved=users.filter((u:any)=>u.status==="approved"&&u.role!=="admin");
@@ -433,7 +443,7 @@ function AdminClassManager({users}:{users:any[]}){
       <div className="bg-white rounded-2xl shadow-sm p-5 mt-4"><div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-sm">문항 설정</h3><div className="flex items-center gap-2"><label className="text-xs text-slate-400">문항수</label><input type="number" className="w-16 bg-slate-50 rounded-lg px-2 py-1.5 text-sm border-0 text-center font-semibold" value={qs.length} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=50)changeQCount(v);}}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div></div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(a.correct_rate||0)-(b.correct_rate||0));
-      return(<div style={{position:"fixed",left:"-9999px",top:0}}><div ref={capRef} style={{width:"420px",padding:"24px",background:"white",fontFamily:"sans-serif"}}>
+      return(<div style={{position:"fixed",left:0,top:0,zIndex:-1,opacity:0.01,pointerEvents:"none"}}><div ref={capRef} style={{width:"420px",padding:"24px",background:"white",fontFamily:"sans-serif"}}>
         <div style={{textAlign:"center",marginBottom:"16px"}}><p style={{fontSize:"18px",fontWeight:"bold"}}>{fmtDate(selT.date)}</p><p style={{fontSize:"12px",color:"#94a3b8"}}>{selT.title}</p></div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}><div style={{display:"flex",gap:"8px",alignItems:"center"}}><span style={{fontSize:"11px",background:"#f0edff",color:"#6c63ff",padding:"2px 8px",borderRadius:"8px",fontWeight:"bold"}}>{selT.class_name||""}</span><span style={{fontSize:"13px",fontWeight:"bold"}}>{usr?.school||""} {usr?.name}</span></div></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"12px",marginBottom:"12px"}}>
