@@ -23,44 +23,42 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#6c63ff]/10 rounded-full blur-3xl z-0"/>
 
     {/* 메인 영역 — 위쪽으로 */}
-    <div className="flex-1 flex items-start justify-center pt-12 md:pt-16 px-4 relative z-10">
+    <div className="flex-1 flex items-start justify-center pt-6 md:pt-12 px-4 relative z-10">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="w-[360px] bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl flex-shrink-0 border border-white/20">
-          <div className="text-center mb-4">
-            <div className="relative inline-block mb-4"><img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
-            <h2 className="text-2xl font-bold text-white mb-2">{nm}</h2>
-            <div className="w-10 h-0.5 bg-[#6c63ff] mx-auto mb-3 rounded-full"/>
+        <div className="w-[320px] bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-2xl flex-shrink-0 border border-white/20">
+          <div className="text-center mb-3">
+            <div className="relative inline-block mb-3"><img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
+            <h2 className="text-xl font-bold text-white mb-1">{nm}</h2>
+            <div className="w-8 h-0.5 bg-[#6c63ff] mx-auto mb-2 rounded-full"/>
           </div>
-          {bio&&<div className="text-xs text-white/70 leading-relaxed whitespace-pre-line text-center px-4">{bio}</div>}
-          <div className="mt-5 pt-4 border-t border-white/10 text-center"><p className="text-xs text-white/40">수학의 자신감을 키우는 곳</p></div>
+          {bio&&<div className="text-[11px] text-white/70 leading-relaxed whitespace-pre-line text-center px-3">{bio}</div>}
+          <div className="mt-4 pt-3 border-t border-white/10 text-center"><p className="text-[10px] text-white/40">수학의 자신감을 키우는 곳</p></div>
         </div>
-        <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col justify-center">
-          <div className="mb-8"><p className="text-sm text-[#6c63ff] font-semibold mb-2 tracking-wider">WELCOME</p><h1 className="text-2xl font-bold mb-1"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1></div>
-          <div className="space-y-4 max-w-sm">
-            <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">비밀번호</label><input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+        <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl flex flex-col justify-center">
+          <div className="mb-6"><p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p><h1 className="text-xl font-bold"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1></div>
+          <div className="space-y-3 max-w-sm">
+            <div><label className="text-xs font-semibold text-slate-500 mb-1 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-xs font-semibold text-slate-500 mb-1 block">비밀번호</label><input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg">{err}</p>}
-            <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-[#6c63ff]/25 hover:shadow-xl hover:shadow-[#6c63ff]/30 transition-all active:scale-[0.98]">{ld?"로그인 중...":"로그인"}</button>
+            <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-[#6c63ff]/25 hover:shadow-xl transition-all active:scale-[0.98]">{ld?"로그인 중...":"로그인"}</button>
           </div>
         </div>
       </div>
-      {/* 모바일 */}
-      <div className={`md:hidden w-full max-w-sm transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/20 mb-4 text-center">
-          <img src={pi} alt="" className="w-16 h-16 rounded-full shadow-xl object-cover border-3 border-white/30 mx-auto mb-3"/>
-          <h2 className="text-lg font-bold text-white">{nm}</h2>
-          {bio&&<div className="text-[11px] text-white/60 leading-relaxed whitespace-pre-line mt-2">{bio}</div>}
+      {/* 모바일 — 컴팩트 */}
+      <div className={`md:hidden w-full max-w-xs transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-white/20 mb-3 text-center">
+          <img src={pi} alt="" className="w-14 h-14 rounded-full shadow-xl object-cover border-2 border-white/30 mx-auto mb-2"/>
+          <h2 className="text-base font-bold text-white">{nm}</h2>
         </div>
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 shadow-2xl">
-          <p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p>
-          <h1 className="text-lg font-bold mb-5"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
-          <div className="space-y-3">
-            <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl">
+          <h1 className="text-sm font-bold mb-4"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
+          <div className="space-y-2.5">
+            <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
-          {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg mt-2">{err}</p>}
-          <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm mt-4 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
+          {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-1.5 rounded-lg mt-2">{err}</p>}
+          <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-2.5 rounded-xl font-semibold text-sm mt-3 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
         </div>
       </div>
     </div>
@@ -158,17 +156,17 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const saveReview=async()=>{if(!reviewForm.content)return;const kws=[reviewForm.kw1,reviewForm.kw2,reviewForm.kw3].filter(Boolean);const payload={user_id:user.id,best_grade:reviewForm.best_grade,keywords:kws.join(","),content:reviewForm.content};if(myReview){await supabase.from("reviews").update(payload).eq("id",myReview.id);}else{await supabase.from("reviews").insert(payload);}const{data}=await supabase.from("reviews").select("*").eq("user_id",user.id).single();if(data)setMyReview(data);setShowReviewForm(false);alert("후기가 저장되었습니다!");};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
-  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"myexam",icon:"folder",label:"시험 결과"},{id:"shop",icon:"cart",label:"상점"},{id:"shorts",icon:"play",label:"쇼츠"},{id:"review",icon:"msg",label:"후기"},{id:"settings",icon:"settings",label:"설정"}];
+  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"review",icon:"msg",label:"후기 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#6c63ff]/5 flex">
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 bg-white rounded-3xl shadow-lg border border-slate-100/80 p-5 flex flex-col m-2">
         <div className="flex items-center justify-between mb-8 px-1"><img src="/logo.png" alt="" className="h-7 object-contain"/><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 hover:bg-slate-100 rounded-xl transition-colors"><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
         <nav className="flex-1 space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all ${tab===m.id?"bg-[#6c63ff] text-white shadow-md shadow-[#6c63ff]/25":"text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
-        <div className="border-t border-slate-100 pt-4 mt-4"><div className="px-1 mb-2"><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">{user.school||""}</p></div><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors"><Icon type="logout" size={16}/>로그아웃</button></div>
+        <div className="border-t border-slate-100 pt-4 mt-4"><div className="px-1 mb-2"><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">{user.school||""}</p></div><button onClick={()=>setTab("changepw")} className="flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors"><Icon type="logout" size={16}/>로그아웃</button></div>
       </div>
     </aside>
     <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-b border-slate-100/50 z-40 px-4 py-3 flex justify-between items-center shadow-sm"><button onClick={()=>setMm(!mm)} className="p-1 hover:bg-slate-100 rounded-xl transition-colors"><Icon type={mm?"close":"menu"} size={22}/></button><div className="flex items-center gap-2.5"><span className="text-xs font-semibold text-slate-600">{user.name}</span><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1 hover:bg-slate-100 rounded-xl transition-colors"><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button><img src="/logo.png" alt="" className="h-5"/></div></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40"/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 bg-white z-50 rounded-r-3xl shadow-2xl p-5 flex flex-col"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all ${tab===m.id?"bg-[#6c63ff] text-white shadow-md shadow-[#6c63ff]/25":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm text-red-400 mt-4 hover:bg-red-50 transition-colors"><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40"/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 bg-white z-50 rounded-r-3xl shadow-2xl p-5 flex flex-col"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all ${tab===m.id?"bg-[#6c63ff] text-white shadow-md shadow-[#6c63ff]/25":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{setTab("changepw");setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm text-slate-400 mt-2 hover:bg-slate-50 transition-colors"><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm text-red-400 mt-1 hover:bg-red-50 transition-colors"><Icon type="logout" size={16}/>로그아웃</button></div></>}
     {/* 알림 패널 */}
     {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-100/50"><div className="flex items-center justify-between px-4 py-3 border-b border-slate-100/50 bg-gradient-to-r from-[#6c63ff]/5 to-transparent"><h3 className="font-semibold text-sm">🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className={`px-4 py-3 border-b border-slate-50 ${!n.is_read?"bg-[#6c63ff]/5":""}`}><div className="flex items-start gap-2"><span className="text-sm">{n.type==="grade"?"📊":n.type==="token"?"🥩":n.type==="reply"?"💬":n.type==="notice"?"📢":"🔔"}</span><div className="flex-1"><p className="text-sm text-slate-700">{n.message}</p><p className="text-[10px] text-slate-400 mt-0.5">{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0"/>}</div></div>)):<div className="p-8 text-center text-slate-400 text-sm">알림이 없습니다</div>}</div></div></>}
     <main className="flex-1 lg:ml-64 pt-14 lg:pt-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
@@ -306,7 +304,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <p className="text-[10px] text-slate-300 mt-4">{myReview.created_at?.slice(0,10)} 작성</p>
         </div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">후기 작성하기</button></div>}
       </div>}
-      {tab==="settings"&&<div><h2 className="text-xl font-bold mb-4">설정</h2><div className="bg-slate-50 rounded-2xl p-6 max-w-md"><h3 className="font-semibold text-sm mb-4">비밀번호 변경</h3><div className="space-y-3"><input type="password" className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 focus:outline-none" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 focus:outline-none" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
+      {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 max-w-md"><div className="space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">변경</button></div></div>}
     </div></main>
     </div>);
 }
@@ -692,13 +690,26 @@ function AdminReviewViewer(){
   </div>);
 }
 
+/* ═══ ADMIN: STUDENT REVIEW VIEWER ═══ */
+function AdminStudentReviewViewer(){
+  const[reviews,setReviews]=useState<any[]>([]);
+  useEffect(()=>{(async()=>{const{data}=await supabase.from("reviews").select("*, users:user_id(name, school)").not("user_id","is",null).order("created_at",{ascending:false});if(data)setReviews(data);})();},[]);
+  return(<div><h2 className="text-lg font-bold mb-4">📝 학생 후기 ({reviews.length}건)</h2>
+    {reviews.length>0?<div className="space-y-3">{reviews.map((r:any)=>(<div key={r.id} className="bg-white rounded-2xl p-5 shadow-sm"><div className="flex items-center gap-2 mb-3"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{r.users?.name||"?"}</span><span className="text-xs text-slate-400">{r.users?.school||""}</span><span className="text-xs text-slate-300 ml-auto">{r.created_at?.slice(0,10)}</span></div>
+      {r.best_grade&&<div className="mb-2"><p className="text-[10px] font-semibold text-slate-400">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{r.best_grade}</p></div>}
+      {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-2">{r.keywords.split(",").map((kw:string,i:number)=>(<span key={i} className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${i===0?"bg-amber-100 text-amber-600":i===1?"bg-slate-100 text-slate-500":"bg-orange-50 text-orange-400"}`}>{i+1}순위 #{kw}</span>))}</div>}
+      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{r.content}</p>
+    </div>))}</div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">학생이 작성한 후기가 없습니다</div>}
+  </div>);
+}
+
 /* ═══ ADMIN: SHORTS MANAGER ═══ */
 function AdminShortsManager(){
   const[shorts,setShorts]=useState<any[]>([]);const[url,setUrl]=useState("");const[title,setTitle]=useState("");
   const fS=async()=>{const{data}=await supabase.from("shorts").select("*").order("created_at",{ascending:false});if(data)setShorts(data);};
   useEffect(()=>{fS();},[]);
   const extractId=(u:string)=>{const m=u.match(/(?:shorts\/|youtu\.be\/|embed\/|v=|\/v\/)([a-zA-Z0-9_-]{11})/);if(m)return m[1];const clean=u.trim();if(/^[a-zA-Z0-9_-]{11}$/.test(clean))return clean;return "";};
-  const addShort=async()=>{const vid=extractId(url);if(!vid){alert("유효한 유튜브 URL 또는 영상 ID를 입력해주세요");return;}await supabase.from("shorts").insert({video_id:vid,title});setUrl("");setTitle("");fS();};
+  const addShort=async()=>{const vid=extractId(url);if(!vid){alert("유효한 유튜브 URL 또는 영상 ID를 입력해주세요");return;}const{error}=await supabase.from("shorts").insert({video_id:vid,title});if(error){alert("저장 실패: "+error.message);return;}setUrl("");setTitle("");fS();alert("추가 완료!");};
   const delShort=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("shorts").delete().eq("id",id);fS();};
   return(<div><h2 className="text-lg font-bold mb-4">▶ 쇼츠 관리</h2>
     <div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3"><p className="text-xs text-slate-400">유튜브 쇼츠 URL을 붙여넣기</p><div className="flex gap-2"><input className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0" value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://youtube.com/shorts/xxxxx"/></div><div className="flex gap-2"><input className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0" value={title} onChange={e=>setTitle(e.target.value)} placeholder="제목 (선택)"/><button onClick={addShort} className="bg-[#6c63ff] text-white px-5 py-2.5 rounded-xl text-xs font-semibold">추가</button></div></div>
@@ -741,25 +752,41 @@ export default function Home(){
   if(loading)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
-  const mi=[{id:"classes",icon:"folder",label:"반 / 시험"},{id:"students",icon:"users",label:"학생 관리"},{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"settings",icon:"settings",label:"설정"}];
-  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-1`}>{mi.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);if(mob)setMm(false);if(m.id==="inquiries")fInqCount();if(m.id==="shop")fOrderCount();}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}</nav>);
+  const[adminUnlocked,setAdminUnlocked]=useState(false);const[adminPwInput,setAdminPwInput]=useState("");const[adminPwErr,setAdminPwErr]=useState("");
+  const ADMIN_SECRET="써정인1!";
+  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site"];
+  const tryUnlock=()=>{if(adminPwInput===ADMIN_SECRET){setAdminUnlocked(true);setAdminPwErr("");}else{setAdminPwErr("비밀번호가 틀렸습니다");}};
+  const handleAdminTab=(id:string,mob?:boolean)=>{if(lockedTabs.includes(id)&&!adminUnlocked){setTab("unlock");if(mob)setMm(false);return;}setTab(id);if(mob)setMm(false);if(id==="inquiries")fInqCount();if(id==="shop")fOrderCount();};
+
+  const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"}];
+  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"}];
+
+  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-1`}>
+    {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}
+    <div className="pt-2 mt-2 border-t border-slate-100">
+      <button onClick={()=>{if(!adminUnlocked){setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 text-[10px] font-semibold text-slate-400 mb-1">{adminUnlocked?"🔓 관리 메뉴":"🔒 관리 메뉴 (잠김)"}</button>
+      {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
+    </div>
+  </nav>);
 
   return(<div className="min-h-screen bg-[#f0f2f8] flex">
-    <aside className="hidden lg:flex flex-col w-56 bg-white shadow-sm min-h-screen p-5 fixed left-0 top-0 bottom-0 z-40"><div className="flex items-center gap-3 mb-8"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-bold text-slate-800 text-sm">서정인 수학</span></div>{navEl()}<div className="pt-4 border-t border-slate-100 mt-4"><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 bg-[#6c63ff]/10 rounded-full flex items-center justify-center text-[#6c63ff]"><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">관리자</p></div></div><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50"><Icon type="logout" size={16}/>로그아웃</button></div></aside>
+    <aside className="hidden lg:flex flex-col w-56 bg-white shadow-sm min-h-screen p-5 fixed left-0 top-0 bottom-0 z-40"><div className="flex items-center gap-3 mb-8"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-bold text-slate-800 text-sm">서정인 수학</span></div>{navEl()}<div className="pt-4 border-t border-slate-100 mt-4"><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 bg-[#6c63ff]/10 rounded-full flex items-center justify-center text-[#6c63ff]"><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">관리자</p></div></div><button onClick={()=>setTab("changepw")} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-50"><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50"><Icon type="logout" size={16}/>로그아웃</button></div></aside>
     <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-40 px-4 py-3 flex justify-between items-center"><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm">서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 z-40"/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 bg-white z-50 p-5 shadow-xl"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 mt-4"><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 z-40"/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 bg-white z-50 p-5 shadow-xl"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{setTab("changepw");setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-slate-400 mt-3"><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 mt-1"><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
+      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="bg-white rounded-2xl p-8 shadow-sm text-center"><div className="w-16 h-16 bg-[#6c63ff]/10 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div><h2 className="text-lg font-bold mb-1">관리 메뉴</h2><p className="text-xs text-slate-400 mb-6">접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 text-center mb-3" value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs text-red-400 mb-3">{adminPwErr}</p>}<button onClick={tryUnlock} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm shadow-md shadow-[#6c63ff]/20">확인</button></div></div>}
       {tab==="classes"&&<AdminClassManager users={users}/>}
       {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups}/>}
-      {tab==="exams"&&<AdminExamViewer users={users}/>}
-      {tab==="tokens"&&<AdminTokenManager users={users} fetchUsers={fU}/>}
-      {tab==="shop"&&<AdminShopManager onProcess={fOrderCount}/>}
-      {tab==="notices"&&<AdminNoticeManager groups={groups}/>}
-      {tab==="reviews"&&<AdminReviewViewer/>}
-      {tab==="shorts"&&<AdminShortsManager/>}
-      {tab==="inquiries"&&<AdminInquiryManager onReply={fInqCount}/>}
-      {tab==="site"&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
-      {tab==="settings"&&<div><h2 className="text-lg font-bold mb-4">설정</h2><div className="bg-white rounded-2xl p-6 shadow-sm max-w-md"><p className="text-sm text-slate-500">관리자 비밀번호: Supabase에서 변경</p></div></div>}
+      {tab==="exams"&&adminUnlocked&&<AdminExamViewer users={users}/>}
+      {tab==="tokens"&&adminUnlocked&&<AdminTokenManager users={users} fetchUsers={fU}/>}
+      {tab==="shop"&&adminUnlocked&&<AdminShopManager onProcess={fOrderCount}/>}
+      {tab==="notices"&&adminUnlocked&&<AdminNoticeManager groups={groups}/>}
+      {tab==="reviews"&&adminUnlocked&&<AdminReviewViewer/>}
+      {tab==="studentReviews"&&adminUnlocked&&<AdminStudentReviewViewer/>}
+      {tab==="shorts"&&adminUnlocked&&<AdminShortsManager/>}
+      {tab==="inquiries"&&adminUnlocked&&<AdminInquiryManager onReply={fInqCount}/>}
+      {tab==="site"&&adminUnlocked&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
+      {tab==="changepw"&&<div className="max-w-sm"><h2 className="text-lg font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white rounded-2xl p-6 shadow-sm"><p className="text-sm text-slate-500 mb-4">Supabase에서 관리자 비밀번호를 변경하세요.</p></div></div>}
     </div></main>
   </div>);
 }
