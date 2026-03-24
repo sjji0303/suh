@@ -4,347 +4,276 @@ import { supabase } from "@/lib/supabase";
 
 const SCHOOLS = ["계성고","경신고","용문고","대원외고"];
 
-function Modal({open,onClose,title,children}:{open:boolean;onClose:()=>void;title:string;children:React.ReactNode}) {
-  if(!open) return null;
-  return (
-    <div onClick={onClose} className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000] p-4">
-      <div onClick={e=>e.stopPropagation()} className="bg-white rounded-2xl w-full max-w-[520px] max-h-[85vh] overflow-auto shadow-2xl">
-        <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-bold">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 text-xl hover:text-gray-600">✕</button>
-        </div>
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
-  );
-}
+/* ───── ICONS (SVG) ───── */
+const Icon = ({type,size=20}:{type:string;size?:number}) => {
+  const s = {width:size,height:size,strokeWidth:1.5,fill:"none",stroke:"currentColor",strokeLinecap:"round" as const,strokeLinejoin:"round" as const};
+  switch(type){
+    case "dashboard": return <svg viewBox="0 0 24 24" {...s}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+    case "grades": return <svg viewBox="0 0 24 24" {...s}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>;
+    case "assignment": return <svg viewBox="0 0 24 24" {...s}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+    case "settings": return <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>;
+    case "logout": return <svg viewBox="0 0 24 24" {...s}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+    case "user": return <svg viewBox="0 0 24 24" {...s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+    case "menu": return <svg viewBox="0 0 24 24" {...s}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+    case "close": return <svg viewBox="0 0 24 24" {...s}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+    default: return null;
+  }
+};
 
-/* ───── SIGNUP PAGE ───── */
+/* ───── SIGNUP ───── */
 function SignupPage({onBack}:{onBack:()=>void}) {
   const [form,setForm]=useState({login_id:"",password:"",password2:"",name:"",role:"student",school:SCHOOLS[0],grade:1,phone:""});
   const [error,setError]=useState("");
   const [success,setSuccess]=useState(false);
   const set=(k:string,v:any)=>setForm(p=>({...p,[k]:v}));
-
   const handleSignup=async()=>{
     setError("");
     if(!form.login_id||!form.password||!form.name){setError("모든 필수 항목을 입력해주세요.");return;}
     if(form.password!==form.password2){setError("비밀번호가 일치하지 않습니다.");return;}
     if(form.login_id.length<3){setError("아이디는 3자 이상이어야 합니다.");return;}
-    if(form.password.length<4){setError("비밀번호는 4자 이상이어야 합니다.");return;}
-
-    const {data:existing}=await supabase.from("users").select("id").eq("login_id",form.login_id).single();
-    if(existing){setError("이미 사용 중인 아이디입니다.");return;}
-
-    const {error:insertError}=await supabase.from("users").insert({
-      login_id:form.login_id,
-      password:form.password,
-      name:form.name,
-      role:form.role,
-      school:form.school,
-      grade:form.grade,
-      phone:form.phone,
-      status:"pending"
-    });
-
-    if(insertError){setError("가입 중 오류가 발생했습니다.");return;}
+    const{data:ex}=await supabase.from("users").select("id").eq("login_id",form.login_id).single();
+    if(ex){setError("이미 사용 중인 아이디입니다.");return;}
+    const{error:ie}=await supabase.from("users").insert({login_id:form.login_id,password:form.password,name:form.name,role:form.role,school:form.school,grade:form.grade,phone:form.phone,status:"pending"});
+    if(ie){setError("오류가 발생했습니다.");return;}
     setSuccess(true);
   };
-
   if(success) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-      <div className="bg-white rounded-2xl p-10 w-96 shadow-2xl text-center">
-        <div className="text-5xl mb-4">✅</div>
-        <h2 className="text-xl font-black mb-2">가입 신청 완료!</h2>
-        <p className="text-sm text-gray-500 mb-6 leading-relaxed">관리자 승인 후 사용 가능합니다.<br/>승인이 완료되면 로그인해주세요.</p>
-        <button onClick={onBack} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold">로그인 화면으로</button>
+    <div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-10 w-full max-w-sm shadow-sm text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-2xl">✓</div>
+        <h2 className="text-xl font-bold mb-2 text-slate-800">가입 신청 완료</h2>
+        <p className="text-sm text-slate-400 mb-6">관리자 승인 후 로그인 가능합니다</p>
+        <button onClick={onBack} className="w-full bg-[#6c63ff] text-white py-3 rounded-xl font-semibold text-sm hover:bg-[#5b54e6] transition-colors">로그인으로 돌아가기</button>
       </div>
     </div>
   );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+    <div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-sm">
         <div className="text-center mb-6">
-          <img src="/profile.png" alt="서서갈비" className="w-20 h-20 rounded-2xl mx-auto mb-2 shadow-lg"/>
-          <h1 className="text-xl font-black text-slate-900">회원가입</h1>
-          <p className="text-xs text-gray-400 mt-1">서서갈비 국어 학원</p>
+          <img src="/profile.png" alt="" className="w-16 h-16 rounded-2xl mx-auto mb-3 shadow-sm"/>
+          <h1 className="text-lg font-bold text-slate-800">회원가입</h1>
         </div>
-
+        <div className="flex gap-2 mb-4">
+          {[{v:"student",l:"학생"},{v:"parent",l:"학부모"}].map(r=>(
+            <button key={r.v} onClick={()=>set("role",r.v)} className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${form.role===r.v?"bg-[#6c63ff] text-white":"bg-slate-100 text-slate-400"}`}>{r.l}</button>
+          ))}
+        </div>
         <div className="space-y-3">
-          <div className="flex gap-2">
-            {[{v:"student",l:"학생"},{v:"parent",l:"학부모"}].map(r=>(
-              <button key={r.v} onClick={()=>set("role",r.v)} className={`flex-1 py-2 rounded-lg text-sm font-bold border-2 transition-colors ${form.role===r.v?"bg-blue-50 border-blue-500 text-blue-600":"bg-white border-gray-200 text-gray-400"}`}>{r.l}</button>
-            ))}
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-gray-500">아이디 *</label>
-            <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.login_id} onChange={e=>set("login_id",e.target.value)} placeholder="3자 이상"/>
-          </div>
-
+          <input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={form.login_id} onChange={e=>set("login_id",e.target.value)} placeholder="아이디"/>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs font-bold text-gray-500">비밀번호 *</label>
-              <input type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.password} onChange={e=>set("password",e.target.value)} placeholder="4자 이상"/>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500">비밀번호 확인 *</label>
-              <input type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.password2} onChange={e=>set("password2",e.target.value)} placeholder="다시 입력"/>
-            </div>
+            <input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={form.password} onChange={e=>set("password",e.target.value)} placeholder="비밀번호"/>
+            <input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={form.password2} onChange={e=>set("password2",e.target.value)} placeholder="비밀번호 확인"/>
           </div>
-
-          <div>
-            <label className="text-xs font-bold text-gray-500">이름 *</label>
-            <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.name} onChange={e=>set("name",e.target.value)} placeholder={form.role==="student"?"학생 이름":"학부모 이름"}/>
-          </div>
-
+          <input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={form.name} onChange={e=>set("name",e.target.value)} placeholder="이름"/>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs font-bold text-gray-500">학교</label>
-              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.school} onChange={e=>set("school",e.target.value)}>
-                {SCHOOLS.map(s=><option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500">학년</label>
-              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.grade} onChange={e=>set("grade",Number(e.target.value))}>
-                {[1,2,3].map(g=><option key={g} value={g}>{g}학년</option>)}
-              </select>
-            </div>
+            <select className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none border-0" value={form.school} onChange={e=>set("school",e.target.value)}>{SCHOOLS.map(s=><option key={s}>{s}</option>)}</select>
+            <select className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none border-0" value={form.grade} onChange={e=>set("grade",Number(e.target.value))}>{[1,2,3].map(g=><option key={g} value={g}>{g}학년</option>)}</select>
           </div>
-
-          <div>
-            <label className="text-xs font-bold text-gray-500">연락처</label>
-            <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="010-0000-0000"/>
-          </div>
+          <input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="연락처 (선택)"/>
         </div>
-
-        {error&&<p className="text-red-500 text-xs font-semibold mt-3">{error}</p>}
-
-        <button onClick={handleSignup} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold text-base mt-4">가입 신청</button>
-        <button onClick={onBack} className="w-full text-gray-400 text-sm mt-3 hover:text-gray-600">← 로그인 화면으로</button>
+        {error&&<p className="text-red-400 text-xs mt-2">{error}</p>}
+        <button onClick={handleSignup} className="w-full bg-[#6c63ff] text-white py-3 rounded-xl font-semibold text-sm mt-4 hover:bg-[#5b54e6] transition-colors">가입 신청</button>
+        <button onClick={onBack} className="w-full text-slate-400 text-xs mt-3 hover:text-slate-600">← 로그인으로</button>
       </div>
     </div>
   );
 }
 
-/* ───── STUDENT HOME ───── */
-function StudentHome({students,notices,user}:{students:any[];notices:any[];user:any}) {
-  const active = students.filter((s:any)=>s.status==="active");
+/* ───── DASHBOARD VIEW ───── */
+function DashboardView({user,scores,students}:{user:any;scores:any[];students:any[]}) {
+  const myScores = user.student_id ? scores.filter((s:any)=>s.student_id===user.student_id) : [];
+  const avg = myScores.length>0 ? Math.round(myScores.filter((s:any)=>s.score).reduce((a:number,b:any)=>a+b.score,0)/myScores.filter((s:any)=>s.score).length) : 0;
+  const bestRank = myScores.length>0 ? Math.min(...myScores.filter((s:any)=>s.rank).map((s:any)=>s.rank)) : 0;
   return (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-7 text-white relative overflow-hidden">
-        <div className="absolute -top-5 -right-5 w-28 h-28 bg-white/5 rounded-full"/>
-        <p className="text-slate-400 text-sm">맛있게, 확실하게, 그리고</p>
-        <h2 className="text-2xl font-black mt-1">🥩 서서갈비로 국어하기</h2>
-        <p className="text-slate-400 text-sm mt-1">{user.name}님, 환영합니다!</p>
+    <div>
+      <div className="bg-[#ffeadb] rounded-2xl p-6 mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-slate-800">안녕하세요, {user.name}님! 👋</h2>
+          <p className="text-sm text-slate-500 mt-1">{myScores.length>0?`최근 성적: ${myScores[0]?.exam}`:"아직 등록된 성적이 없어요"}</p>
+        </div>
+        <img src="/profile.png" alt="" className="w-16 h-16 rounded-2xl shadow-sm hidden sm:block"/>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="font-bold mb-3">📢 공지사항</h3>
-        {notices.map((n:any)=>(
-          <div key={n.id} className="py-2 border-b border-gray-100 flex justify-between">
-            <span className="text-sm font-semibold text-slate-700">{n.title}</span>
-            <span className="text-xs text-gray-400">{n.date}</span>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-slate-400 font-medium mb-1">평균 점수</p>
+          <p className="text-3xl font-bold text-[#6c63ff]">{avg||"—"}<span className="text-sm text-slate-400 font-normal ml-1">점</span></p>
+        </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-slate-400 font-medium mb-1">최고 등급</p>
+          <p className="text-3xl font-bold text-[#ff6b6b]">{bestRank||"—"}<span className="text-sm text-slate-400 font-normal ml-1">등급</span></p>
+        </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-slate-400 font-medium mb-1">응시 횟수</p>
+          <p className="text-3xl font-bold text-[#51cf66]">{myScores.length}<span className="text-sm text-slate-400 font-normal ml-1">회</span></p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-sm text-slate-700">최근 성적</h3>
+            <span className="text-xs text-[#6c63ff] font-medium cursor-pointer">더보기 →</span>
+          </div>
+          {myScores.length>0?myScores.slice(0,4).map((s:any,i:number)=>(
+            <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${s.rank===1?"bg-[#6c63ff]":s.rank===2?"bg-[#51cf66]":"bg-slate-300"}`}/>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">{s.exam}</p>
+                  <p className="text-xs text-slate-400">{s.subject}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                {s.score&&<span className="text-sm font-bold text-slate-700">{s.score}점</span>}
+                {s.rank&&<span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${s.rank===1?"bg-[#6c63ff]/10 text-[#6c63ff]":"bg-slate-100 text-slate-500"}`}>{s.rank}등급</span>}
+              </div>
+            </div>
+          )):(
+            <p className="text-center text-slate-400 text-sm py-8">등록된 성적이 없습니다</p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-sm text-slate-700">과제 성취도</h3>
+            <span className="text-xs text-[#6c63ff] font-medium cursor-pointer">더보기 →</span>
+          </div>
+          <div className="space-y-4">
+            {["국어","문학","독서"].map((subj,i)=>{
+              const pct = [85,72,90][i];
+              return (
+                <div key={subj}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-slate-600">{subj}</span>
+                    <span className="text-sm font-semibold text-slate-700">{pct}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{width:`${pct}%`,background:i===0?"#6c63ff":i===1?"#ff6b6b":"#51cf66"}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-5 p-4 bg-slate-50 rounded-xl">
+            <p className="text-xs font-semibold text-slate-500 mb-1">📝 선생님 코멘트</p>
+            <p className="text-sm text-slate-600 leading-relaxed">전반적으로 잘 하고 있어요! 문학 영역에서 좀 더 분석력을 키우면 1등급 충분히 가능합니다. 화이팅!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───── GRADES DETAIL ───── */
+function GradesDetail({user,scores}:{user:any;scores:any[]}) {
+  const my = user.student_id ? scores.filter((s:any)=>s.student_id===user.student_id) : scores;
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-slate-800 mb-4">성적 상세</h2>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        {my.length>0?(
+          <table className="w-full text-sm">
+            <thead><tr className="bg-slate-50">{["시험","과목","점수","등급","유형"].map(h=><th key={h} className="px-5 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead>
+            <tbody>
+              {my.map((s:any,i:number)=>(
+                <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
+                  <td className="px-5 py-4 font-medium text-slate-700">{s.exam}</td>
+                  <td className="px-5 py-4 text-slate-500">{s.subject}</td>
+                  <td className="px-5 py-4">{s.score?<span className="font-bold text-[#6c63ff]">{s.score}점</span>:<span className="text-slate-300">—</span>}</td>
+                  <td className="px-5 py-4">{s.rank?<span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.rank===1?"bg-[#6c63ff]/10 text-[#6c63ff]":s.rank<=3?"bg-green-50 text-green-600":"bg-slate-100 text-slate-500"}`}>{s.rank}등급</span>:"—"}</td>
+                  <td className="px-5 py-4">{s.type==="improvement"&&<span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">향상</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ):(
+          <div className="p-12 text-center text-slate-400">등록된 성적이 없습니다</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───── ASSIGNMENT DETAIL ───── */
+function AssignmentDetail({user}:{user:any}) {
+  const assignments = [
+    {id:1,title:"비문학 독해 연습 20문항",subject:"독서",due:"2026-03-28",status:"완료",score:90},
+    {id:2,title:"현대시 분석 리포트",subject:"문학",due:"2026-03-30",status:"진행중",score:null},
+    {id:3,title:"INSIGHT 추가과제 50문항",subject:"국어",due:"2026-04-02",status:"미제출",score:null},
+    {id:4,title:"오답노트 정리",subject:"국어",due:"2026-03-25",status:"완료",score:85},
+    {id:5,title:"화법과작문 기출 풀이",subject:"화법과작문",due:"2026-04-05",status:"미제출",score:null},
+  ];
+  const statusStyle=(s:string)=>s==="완료"?"bg-green-50 text-green-600":s==="진행중"?"bg-blue-50 text-blue-600":"bg-slate-100 text-slate-400";
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-slate-800 mb-4">과제 상세</h2>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+          <p className="text-2xl font-bold text-[#51cf66]">{assignments.filter(a=>a.status==="완료").length}</p>
+          <p className="text-xs text-slate-400 mt-1">완료</p>
+        </div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+          <p className="text-2xl font-bold text-[#6c63ff]">{assignments.filter(a=>a.status==="진행중").length}</p>
+          <p className="text-xs text-slate-400 mt-1">진행중</p>
+        </div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+          <p className="text-2xl font-bold text-[#ff6b6b]">{assignments.filter(a=>a.status==="미제출").length}</p>
+          <p className="text-xs text-slate-400 mt-1">미제출</p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {assignments.map(a=>(
+          <div key={a.id} className="bg-white rounded-2xl p-5 shadow-sm flex justify-between items-center">
+            <div>
+              <p className="font-medium text-sm text-slate-700">{a.title}</p>
+              <p className="text-xs text-slate-400 mt-1">{a.subject} · 마감: {a.due}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {a.score&&<span className="text-sm font-bold text-[#6c63ff]">{a.score}점</span>}
+              <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusStyle(a.status)}`}>{a.status}</span>
+            </div>
           </div>
         ))}
-        {notices.length===0&&<div className="text-center py-4 text-gray-400 text-sm">공지사항이 없습니다</div>}
-      </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="font-bold">🏆 재원생 현황</h3>
-        <p className="text-xs text-gray-400 mb-3">총 {active.length}명</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {active.slice(0,8).map((s:any)=>(
-            <div key={s.id} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <div className="font-bold text-sm">{s.name} <span className="text-xs text-gray-400 font-normal">{s.school} {s.grade}학년</span></div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
 }
 
-/* ───── STUDENT GRADES ───── */
-function StudentGrades({scores,studentId}:{scores:any[];studentId:number|null}) {
-  const my = studentId ? scores.filter((s:any)=>s.student_id===studentId) : scores;
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="font-bold mb-4">📊 내 성적</h3>
-      {my.length>0?(
-        <div className="space-y-2">
-          {my.map((s:any)=>(
-            <div key={s.id} className="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
-              <div><div className="text-sm font-bold">{s.exam}</div><div className="text-xs text-gray-500">{s.subject}</div></div>
-              <div className="text-right">
-                {s.score&&<div className="text-lg font-black text-blue-600">{s.score}점</div>}
-                {s.rank&&<div className={`text-xs font-bold ${s.rank===1?"text-red-500":"text-gray-500"}`}>{s.rank}등급</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-      ):(
-        <div className="text-center py-10 text-gray-400">등록된 성적이 없습니다</div>
-      )}
-    </div>
-  );
-}
-
-/* ───── ADMIN DASHBOARD ───── */
-function AdminDashboard({students,classes,pendingCount}:{students:any[];classes:any[];pendingCount:number}) {
-  const active=students.filter((s:any)=>s.status==="active");
-  const bySchool=SCHOOLS.map(sc=>({name:sc,count:active.filter((s:any)=>s.school===sc).length}));
-  const sat=new Date();sat.setDate(sat.getDate()+(6-sat.getDay()));
-  const sun=new Date(sat);sun.setDate(sat.getDate()+1);
-  return (
-    <div>
-      <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-7 text-white relative overflow-hidden mb-4">
-        <div className="absolute -top-5 -right-5 w-28 h-28 bg-white/5 rounded-full"/>
-        <p className="text-slate-400 text-sm">맛있게, 확실하게, 그리고</p>
-        <h2 className="text-2xl font-black mt-1">🥩 서서갈비로 국어하기</h2>
-        <p className="text-slate-400 text-sm mt-1">국어 서서갈비 T 관리 페이지</p>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-bold">전체 현황</h3>
-              {pendingCount>0&&<span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse">가입 대기 {pendingCount}건</span>}
-            </div>
-            <div className="bg-blue-50 rounded-lg p-3 mb-3 flex items-center gap-2">
-              <span className="text-lg">👥</span>
-              <span className="text-blue-800 font-black text-lg">재원생 {active.length}명</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {bySchool.map(s=>(
-                <div key={s.name} className="text-center p-2 border border-gray-200 rounded-lg">
-                  <div className="text-sm font-bold">{s.name}</div>
-                  <div className="text-sm text-gray-500">{s.count}명</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              {cat:"학생 및 소통",items:["✅ 가입 승인","✏️ 정보 수정","🔑 계정 관리"],color:"text-blue-500 border-blue-500"},
-              {cat:"학생 관리",items:["📣 공지","🩺 클리닉 관리","📝 과제 관리"],color:"text-purple-500 border-purple-500"},
-              {cat:"수업 및 성적",items:["📅 수업/시험","📊 시험 성적","📄 수업 레포트"],color:"text-amber-500 border-amber-500"},
-              {cat:"운영 관리",items:["👤 조교 근무","💬 문자 발송"],color:"text-emerald-500 border-emerald-500"},
-            ].map(g=>(
-              <div key={g.cat} className="bg-white rounded-xl border border-gray-200 p-4">
-                <div className={`text-xs font-bold mb-3 pb-2 border-b-2 ${g.color}`}>{g.cat}</div>
-                <div className="space-y-1">
-                  {g.items.map(it=>(
-                    <button key={it} className="w-full text-left text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg px-2.5 py-2 transition-colors">{it}</button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="font-bold text-sm mb-3">📚 이번 주 수업</h4>
-            {[{label:`${sat.getMonth()+1}/${sat.getDate()}(토)`,day:"토"},{label:`${sun.getMonth()+1}/${sun.getDate()}(일)`,day:"일"}].map(d=>(
-              <div key={d.day} className="mb-3">
-                <div className="text-sm font-bold text-gray-700 mb-2">{d.label}</div>
-                {classes.filter((c:any)=>c.day===d.day).map((c:any)=>(
-                  <div key={c.id} className="flex items-center gap-2 py-1 pl-3 mb-1" style={{borderLeft:`3px solid ${c.color}`}}>
-                    <span className="text-xs font-bold">{c.time}</span>
-                    <span className="text-xs text-gray-600">{c.title}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="font-bold text-sm mb-2">📝 시험 일정</h4>
-            <div className="text-center py-3 text-gray-400 text-sm">예정된 시험이 없습니다</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ───── ADMIN STUDENTS ───── */
-function AdminStudents({students,fetchStudents}:{students:any[];fetchStudents:()=>void}) {
-  const [search,setSearch]=useState("");
-  const [filterSchool,setFilterSchool]=useState("all");
-  const [modal,setModal]=useState<string|null>(null);
-  const [form,setForm]=useState<any>({});
-  const filtered=students.filter((s:any)=>{
-    const ms=s.name.includes(search)||s.school.includes(search);
-    const mf=filterSchool==="all"||s.school===filterSchool;
-    return ms&&mf&&s.status==="active";
-  });
-  const openAdd=()=>{setForm({name:"",school:SCHOOLS[0],grade:1,number:"",phone:"",parent_name:"",parent_phone:"",parent_relation:"어머니"});setModal("add");};
-  const openEdit=(s:any)=>{setForm({...s});setModal("edit");};
-  const save=async()=>{
-    if(!form.name)return;
-    if(modal==="add"){
-      await supabase.from("students").insert({name:form.name,school:form.school,grade:form.grade,number:Number(form.number)||0,phone:form.phone,parent_name:form.parent_name,parent_phone:form.parent_phone,parent_relation:form.parent_relation,status:"active"});
-    } else {
-      await supabase.from("students").update({name:form.name,school:form.school,grade:form.grade,number:Number(form.number)||0,phone:form.phone,parent_name:form.parent_name,parent_phone:form.parent_phone,parent_relation:form.parent_relation}).eq("id",form.id);
-    }
-    setModal(null);fetchStudents();
+/* ───── SETTINGS ───── */
+function SettingsView({user}:{user:any}) {
+  const [pw,setPw]=useState({current:"",new1:"",new2:""});
+  const [msg,setMsg]=useState("");
+  const changePw=async()=>{
+    if(pw.new1!==pw.new2){setMsg("새 비밀번호가 일치하지 않습니다.");return;}
+    if(pw.new1.length<4){setMsg("비밀번호는 4자 이상이어야 합니다.");return;}
+    const{error}=await supabase.from("users").update({password:pw.new1}).eq("id",user.id);
+    if(!error){setMsg("비밀번호가 변경되었습니다!");setPw({current:"",new1:"",new2:""});}
+    else setMsg("오류가 발생했습니다.");
   };
-  const remove=async(id:number)=>{if(confirm("정말 삭제하시겠습니까?")){await supabase.from("students").delete().eq("id",id);fetchStudents();}};
   return (
     <div>
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-        <div className="flex gap-2">
-          <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-52 focus:outline-none focus:border-blue-500" placeholder="🔍 이름 또는 학교로 검색..." value={search} onChange={e=>setSearch(e.target.value)}/>
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" value={filterSchool} onChange={e=>setFilterSchool(e.target.value)}>
-            <option value="all">전체 학교</option>{SCHOOLS.map(s=><option key={s} value={s}>{s}</option>)}
-          </select>
+      <h2 className="text-lg font-bold text-slate-800 mb-4">설정</h2>
+      <div className="bg-white rounded-2xl p-6 shadow-sm max-w-md">
+        <h3 className="font-semibold text-sm text-slate-700 mb-4">비밀번호 변경</h3>
+        <div className="space-y-3">
+          <input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={pw.current} onChange={e=>setPw(p=>({...p,current:e.target.value}))} placeholder="현재 비밀번호"/>
+          <input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={pw.new1} onChange={e=>setPw(p=>({...p,new1:e.target.value}))} placeholder="새 비밀번호"/>
+          <input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0" value={pw.new2} onChange={e=>setPw(p=>({...p,new2:e.target.value}))} placeholder="새 비밀번호 확인"/>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700" onClick={openAdd}>+ 학생 추가</button>
+        {msg&&<p className={`text-xs mt-2 ${msg.includes("변경")?"text-green-500":"text-red-400"}`}>{msg}</p>}
+        <button onClick={changePw} className="mt-4 bg-[#6c63ff] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#5b54e6] transition-colors">변경하기</button>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="bg-gray-50">{["이름","학교","학년","번호","연락처","학부모","학부모 연락처",""].map(h=>(<th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200">{h}</th>))}</tr></thead>
-          <tbody>
-            {filtered.map((s:any)=>(
-              <tr key={s.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-bold">{s.name}</td>
-                <td className="px-4 py-3"><span className="bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">{s.school}</span></td>
-                <td className="px-4 py-3 text-gray-500">{s.grade}학년</td>
-                <td className="px-4 py-3 text-gray-500">{s.number}번</td>
-                <td className="px-4 py-3 text-gray-500 text-xs">{s.phone}</td>
-                <td className="px-4 py-3 font-semibold">{s.parent_name}</td>
-                <td className="px-4 py-3 text-blue-600 text-xs">{s.parent_phone}</td>
-                <td className="px-4 py-3 text-right">
-                  <button className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-semibold mr-1" onClick={()=>openEdit(s)}>수정</button>
-                  <button className="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-semibold" onClick={()=>remove(s.id)}>삭제</button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length===0&&<tr><td colSpan={8} className="text-center py-10 text-gray-400">학생이 없습니다</td></tr>}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-2xl p-6 shadow-sm max-w-md mt-4">
+        <h3 className="font-semibold text-sm text-slate-700 mb-3">내 정보</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-400">이름</span><span className="font-medium text-slate-700">{user.name}</span></div>
+          <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-400">아이디</span><span className="font-medium text-slate-700">{user.login_id}</span></div>
+          <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-400">역할</span><span className="font-medium text-slate-700">{user.role==="student"?"학생":user.role==="parent"?"학부모":"관리자"}</span></div>
+          <div className="flex justify-between py-2"><span className="text-slate-400">학교</span><span className="font-medium text-slate-700">{user.school||"—"}</span></div>
+        </div>
       </div>
-      <Modal open={!!modal} onClose={()=>setModal(null)} title={modal==="add"?"새 학생 등록":"학생 정보 수정"}>
-        <div className="grid grid-cols-2 gap-3">
-          <div><label className="text-xs font-bold text-gray-600">이름</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.name||""} onChange={e=>setForm((p:any)=>({...p,name:e.target.value}))}/></div>
-          <div><label className="text-xs font-bold text-gray-600">학교</label><select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.school||""} onChange={e=>setForm((p:any)=>({...p,school:e.target.value}))}>{SCHOOLS.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div><label className="text-xs font-bold text-gray-600">학년</label><select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.grade||1} onChange={e=>setForm((p:any)=>({...p,grade:Number(e.target.value)}))}>{[1,2,3].map(g=><option key={g} value={g}>{g}학년</option>)}</select></div>
-          <div><label className="text-xs font-bold text-gray-600">번호</label><input type="number" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.number||""} onChange={e=>setForm((p:any)=>({...p,number:e.target.value}))}/></div>
-          <div className="col-span-2"><label className="text-xs font-bold text-gray-600">연락처</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.phone||""} onChange={e=>setForm((p:any)=>({...p,phone:e.target.value}))} placeholder="010-0000-0000"/></div>
-        </div>
-        <div className="border-t border-dashed border-gray-200 mt-4 pt-4">
-          <p className="text-xs font-bold text-gray-500 mb-3">👨‍👩‍👧 학부모 정보</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs font-bold text-gray-600">이름</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.parent_name||""} onChange={e=>setForm((p:any)=>({...p,parent_name:e.target.value}))}/></div>
-            <div><label className="text-xs font-bold text-gray-600">관계</label><select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.parent_relation||"어머니"} onChange={e=>setForm((p:any)=>({...p,parent_relation:e.target.value}))}>{["어머니","아버지","조부모","기타"].map(r=><option key={r}>{r}</option>)}</select></div>
-            <div className="col-span-2"><label className="text-xs font-bold text-gray-600">연락처</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.parent_phone||""} onChange={e=>setForm((p:any)=>({...p,parent_phone:e.target.value}))} placeholder="010-0000-0000"/></div>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <button className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold" onClick={()=>setModal(null)}>취소</button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50" disabled={!form.name} onClick={save}>저장</button>
-        </div>
-      </Modal>
     </div>
   );
 }
@@ -353,74 +282,56 @@ function AdminStudents({students,fetchStudents}:{students:any[];fetchStudents:()
 function AdminApproval({users,fetchUsers}:{users:any[];fetchUsers:()=>void}) {
   const pending=users.filter((u:any)=>u.status==="pending");
   const approved=users.filter((u:any)=>u.status==="approved");
-  const roleLabel=(r:string)=>r==="admin"?"관리자":r==="student"?"학생":"학부모";
-  const roleColor=(r:string)=>r==="admin"?"bg-red-50 text-red-600":r==="student"?"bg-blue-50 text-blue-600":"bg-green-50 text-green-600";
-
   const approve=async(id:number)=>{await supabase.from("users").update({status:"approved"}).eq("id",id);fetchUsers();};
-  const reject=async(id:number)=>{if(confirm("가입을 거절하시겠습니까?")){await supabase.from("users").delete().eq("id",id);fetchUsers();}};
-  const removeUser=async(id:number)=>{if(confirm("계정을 삭제하시겠습니까?")){await supabase.from("users").delete().eq("id",id);fetchUsers();}};
-
+  const reject=async(id:number)=>{if(confirm("거절하시겠습니까?")){await supabase.from("users").delete().eq("id",id);fetchUsers();}};
+  const removeUser=async(id:number)=>{if(confirm("삭제하시겠습니까?")){await supabase.from("users").delete().eq("id",id);fetchUsers();}};
+  const roleLabel=(r:string)=>r==="admin"?"관리자":r==="student"?"학생":"학부모";
   return (
-    <div className="space-y-6">
+    <div>
+      <h2 className="text-lg font-bold text-slate-800 mb-4">가입 승인 / 계정 관리</h2>
       {pending.length>0&&(
-        <div>
-          <h3 className="font-bold text-lg mb-3">⏳ 가입 대기 ({pending.length}건)</h3>
-          <div className="space-y-2">
-            {pending.map((u:any)=>(
-              <div key={u.id} className="bg-white rounded-xl border-2 border-amber-200 p-4 flex justify-between items-center">
-                <div>
-                  <div className="font-bold">{u.name} <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${roleColor(u.role)}`}>{roleLabel(u.role)}</span></div>
-                  <div className="text-xs text-gray-500 mt-1">아이디: {u.login_id} · {u.school} {u.grade}학년 · {u.phone||"연락처 없음"}</div>
-                </div>
-                <div className="flex gap-2">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold" onClick={()=>approve(u.id)}>승인</button>
-                  <button className="bg-red-50 text-red-500 px-3 py-2 rounded-lg text-xs font-bold" onClick={()=>reject(u.id)}>거절</button>
-                </div>
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-amber-600 mb-3">대기 중 ({pending.length}건)</p>
+          {pending.map((u:any)=>(
+            <div key={u.id} className="bg-white rounded-2xl p-5 shadow-sm mb-2 flex justify-between items-center">
+              <div><p className="font-medium text-sm">{u.name} <span className="text-xs text-slate-400">({u.login_id})</span></p><p className="text-xs text-slate-400">{roleLabel(u.role)} · {u.school||""} {u.grade?u.grade+"학년":""}</p></div>
+              <div className="flex gap-2">
+                <button onClick={()=>approve(u.id)} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">승인</button>
+                <button onClick={()=>reject(u.id)} className="bg-slate-100 text-slate-500 px-3 py-2 rounded-xl text-xs font-semibold">거절</button>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-sm font-semibold text-slate-500 mb-3">전체 계정 ({approved.length}명)</p>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead><tr className="bg-slate-50">{["아이디","이름","역할",""].map(h=><th key={h} className="px-5 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead>
+          <tbody>
+            {approved.map((u:any)=>(
+              <tr key={u.id} className="border-t border-slate-50 hover:bg-slate-50/50">
+                <td className="px-5 py-3 font-mono text-xs">{u.login_id}</td>
+                <td className="px-5 py-3 font-medium">{u.name}</td>
+                <td className="px-5 py-3"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.role==="admin"?"bg-red-50 text-red-500":u.role==="student"?"bg-blue-50 text-blue-500":"bg-green-50 text-green-500"}`}>{roleLabel(u.role)}</span></td>
+                <td className="px-5 py-3 text-right">{u.role!=="admin"&&<button onClick={()=>removeUser(u.id)} className="text-xs text-slate-400 hover:text-red-500">삭제</button>}</td>
+              </tr>
             ))}
-          </div>
-        </div>
-      )}
-      {pending.length===0&&(
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-          <div className="text-2xl mb-2">✅</div>
-          <p className="text-green-700 font-semibold text-sm">대기 중인 가입 신청이 없습니다</p>
-        </div>
-      )}
-      <div>
-        <h3 className="font-bold text-lg mb-3">🔑 전체 계정 ({approved.length}명)</h3>
-        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50">{["아이디","이름","역할","학교","상태",""].map(h=>(<th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200">{h}</th>))}</tr></thead>
-            <tbody>
-              {approved.map((u:any)=>(
-                <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-sm">{u.login_id}</td>
-                  <td className="px-4 py-3 font-semibold">{u.name}</td>
-                  <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-1 rounded-full ${roleColor(u.role)}`}>{roleLabel(u.role)}</span></td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{u.school||"-"}</td>
-                  <td className="px-4 py-3"><span className="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full">승인됨</span></td>
-                  <td className="px-4 py-3 text-right">{u.role!=="admin"&&<button className="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-semibold" onClick={()=>removeUser(u.id)}>삭제</button>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
-/* ───── MAIN APP ───── */
+/* ───── MAIN ───── */
 export default function Home() {
   const [page,setPage]=useState<"login"|"signup">("login");
   const [user,setUser]=useState<any>(null);
   const [loginId,setLoginId]=useState("");
   const [loginPw,setLoginPw]=useState("");
   const [loginError,setLoginError]=useState("");
-  const [adminTab,setAdminTab]=useState("dashboard");
-  const [studentTab,setStudentTab]=useState("home");
-  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [tab,setTab]=useState("dashboard");
+  const [mobileMenu,setMobileMenu]=useState(false);
   const [students,setStudents]=useState<any[]>([]);
   const [scores,setScores]=useState<any[]>([]);
   const [classes,setClasses]=useState<any[]>([]);
@@ -428,7 +339,6 @@ export default function Home() {
   const [users,setUsers]=useState<any[]>([]);
   const [loading,setLoading]=useState(false);
 
-  const fetchStudents=async()=>{const{data}=await supabase.from("students").select("*").order("created_at",{ascending:false});if(data)setStudents(data);};
   const fetchUsers=async()=>{const{data}=await supabase.from("users").select("*").order("created_at",{ascending:false});if(data)setUsers(data);};
   const fetchAll=async()=>{
     setLoading(true);
@@ -442,129 +352,126 @@ export default function Home() {
     if(s.data)setStudents(s.data);if(sc.data)setScores(sc.data);if(c.data)setClasses(c.data);if(n.data)setNotices(n.data);if(u.data)setUsers(u.data);
     setLoading(false);
   };
-
   useEffect(()=>{if(user)fetchAll();},[user]);
 
   const handleLogin=async()=>{
     const{data}=await supabase.from("users").select("*").eq("login_id",loginId).eq("password",loginPw).single();
     if(!data){setLoginError("아이디 또는 비밀번호가 올바르지 않습니다.");return;}
-    if(data.status==="pending"){setLoginError("가입 승인 대기 중입니다. 관리자 승인 후 사용 가능합니다.");return;}
-    setUser(data);setLoginError("");
+    if(data.status==="pending"){setLoginError("승인 대기 중입니다.");return;}
+    setUser(data);setLoginError("");setTab("dashboard");
   };
-
+  const logout=()=>{setUser(null);setLoginId("");setLoginPw("");setLoginError("");setTab("dashboard");};
   const pendingCount=users.filter((u:any)=>u.status==="pending").length;
 
-  /* SIGNUP */
   if(page==="signup"&&!user) return <SignupPage onBack={()=>setPage("login")}/>;
 
-  /* LOGIN */
   if(!user) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-      <div className="bg-white rounded-2xl p-10 w-96 shadow-2xl">
+    <div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-10 w-full max-w-sm shadow-sm">
         <div className="text-center mb-8">
-          <img src="/profile.png" alt="서서갈비" className="w-24 h-24 rounded-2xl mx-auto mb-2 shadow-lg"/>
-          <h1 className="text-2xl font-black text-slate-900">서서갈비</h1>
-          <p className="text-sm text-gray-400 mt-1">국어 학원 관리 시스템</p>
+          <img src="/profile.png" alt="" className="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-sm"/>
+          <h1 className="text-xl font-bold text-slate-800">서서갈비</h1>
+          <p className="text-xs text-slate-400 mt-1">국어 학원 관리 시스템</p>
         </div>
-        <div className="mb-3">
-          <label className="text-xs font-bold text-gray-500">아이디</label>
-          <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={loginId} onChange={e=>{setLoginId(e.target.value);setLoginError("");}} placeholder="아이디를 입력하세요" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
+        <div className="space-y-3">
+          <input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0 placeholder:text-slate-300" value={loginId} onChange={e=>{setLoginId(e.target.value);setLoginError("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
+          <input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6c63ff]/20 border-0 placeholder:text-slate-300" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginError("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
         </div>
-        <div className="mb-5">
-          <label className="text-xs font-bold text-gray-500">비밀번호</label>
-          <input type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginError("");}} placeholder="비밀번호를 입력하세요" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
-        </div>
-        {loginError&&<p className="text-red-500 text-xs font-semibold mb-3">{loginError}</p>}
-        <button onClick={handleLogin} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold text-base">로그인</button>
-        <button onClick={()=>setPage("signup")} className="w-full mt-3 border-2 border-gray-200 text-gray-500 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50">회원가입</button>
+        {loginError&&<p className="text-red-400 text-xs mt-2">{loginError}</p>}
+        <button onClick={handleLogin} className="w-full bg-[#6c63ff] text-white py-3 rounded-xl font-semibold text-sm mt-4 hover:bg-[#5b54e6] transition-colors">로그인</button>
+        <button onClick={()=>setPage("signup")} className="w-full bg-slate-50 text-slate-500 py-2.5 rounded-xl font-semibold text-xs mt-2 hover:bg-slate-100 transition-colors">회원가입</button>
+        <p className="text-center text-[10px] text-slate-300 mt-4">admin / rnrdj1234 · student1 / 1234</p>
       </div>
     </div>
   );
 
-  if(loading) return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="text-center"><div className="text-4xl mb-3">🥩</div><p className="text-gray-500 font-semibold">데이터를 불러오는 중...</p></div>
-    </div>
-  );
+  if(loading) return <div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><div className="text-center"><img src="/profile.png" alt="" className="w-12 h-12 rounded-xl mx-auto mb-3 opacity-50 animate-pulse"/><p className="text-slate-400 text-sm">불러오는 중...</p></div></div>;
 
-  /* STUDENT & PARENT */
-  if(user.role==="student"||user.role==="parent") {
-    const tabs=[{id:"home",icon:"🏠",label:"홈"},{id:"grades",icon:"📊",label:"성적"},{id:"ai",icon:"💎",label:"AI"},{id:"info",icon:"🔔",label:"안내/자료"},{id:"game",icon:"🎮",label:"게임"}];
-    return (
-      <div className="min-h-screen bg-gray-100 pb-20">
-        <div className="bg-slate-900 px-5 py-3 flex justify-between items-center text-white">
-          <span className="font-bold">🥩 서서갈비</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">{user.name} ({user.role==="student"?"학생":"학부모"})</span>
-            <button onClick={()=>{setUser(null);setLoginId("");setLoginPw("");}} className="bg-slate-800 text-gray-400 border border-slate-700 px-3 py-1 rounded text-xs">로그아웃</button>
-          </div>
-        </div>
-        <div className="max-w-3xl mx-auto px-4 pt-4">
-          {studentTab==="home"&&<StudentHome students={students} notices={notices} user={user}/>}
-          {studentTab==="grades"&&<StudentGrades scores={scores} studentId={user.student_id}/>}
-          {!["home","grades"].includes(studentTab)&&<div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-400">🚧 준비 중인 기능입니다</div>}
-        </div>
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 pb-3 z-50">
-          {tabs.map(t=>(<button key={t.id} onClick={()=>setStudentTab(t.id)} className={`flex flex-col items-center gap-0.5 px-3 py-1 ${studentTab===t.id?"text-blue-600":"text-gray-400"}`}><span className="text-xl">{t.icon}</span><span className="text-[10px] font-bold">{t.label}</span></button>))}
-        </div>
-      </div>
-    );
-  }
+  const isAdmin=user.role==="admin";
+  const menuItems=isAdmin?[
+    {id:"dashboard",icon:"dashboard",label:"대시보드"},
+    {id:"approval",icon:"user",label:"가입 승인",badge:pendingCount},
+    {id:"settings",icon:"settings",label:"설정"},
+  ]:[
+    {id:"dashboard",icon:"dashboard",label:"대시보드"},
+    {id:"grades",icon:"grades",label:"성적 상세"},
+    {id:"assignments",icon:"assignment",label:"과제 상세"},
+    {id:"settings",icon:"settings",label:"설정"},
+  ];
 
-  /* ADMIN */
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-slate-900 px-5 py-3 flex justify-between items-center text-white sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <button onClick={()=>setSidebarOpen(!sidebarOpen)} className="text-xl">☰</button>
-          <span className="font-bold text-sm">🥩 서서갈비 T 관리 페이지</span>
-          {pendingCount>0&&<span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
+    <div className="min-h-screen bg-[#f0f2f8] flex">
+      {/* SIDEBAR — DESKTOP */}
+      <aside className="hidden lg:flex flex-col w-60 bg-white shadow-sm min-h-screen p-5 fixed left-0 top-0 bottom-0 z-40">
+        <div className="flex items-center gap-3 mb-8">
+          <img src="/profile.png" alt="" className="w-9 h-9 rounded-xl shadow-sm"/>
+          <span className="font-bold text-slate-800">서서갈비</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">{user.name}</span>
-          <button onClick={()=>{setUser(null);setLoginId("");setLoginPw("");}} className="bg-slate-800 text-gray-300 border border-slate-700 px-3 py-1 rounded text-xs font-semibold">로그아웃</button>
-        </div>
-      </div>
-      {sidebarOpen&&<div onClick={()=>setSidebarOpen(false)} className="fixed inset-0 bg-black/40 z-[300]"/>}
-      <div className={`fixed left-0 top-0 bottom-0 w-72 bg-white z-[400] transition-transform duration-300 overflow-y-auto shadow-xl ${sidebarOpen?"translate-x-0":"-translate-x-full"}`}>
-        <div className="p-5">
-          <div className="flex justify-between items-center">
-            <div><div className="font-bold">⭐ 관리자 메뉴</div><div className="text-xs text-gray-400">{user.name}</div></div>
-            <button onClick={()=>setSidebarOpen(false)} className="bg-red-50 w-8 h-8 rounded-full text-red-500 flex items-center justify-center text-sm">✕</button>
-          </div>
-        </div>
-        <div className="px-3 pb-5">
-          {[
-            {id:"dashboard",icon:"🏠",label:"대시보드",badge:0},
-            {id:"approval",icon:"✅",label:"가입 승인",badge:pendingCount},
-            {id:"students",icon:"👨‍🎓",label:"학생 관리",badge:0},
-          ].map(m=>(
-            <button key={m.id} onClick={()=>{setAdminTab(m.id);setSidebarOpen(false);}} className={`flex items-center gap-2 w-full px-3 py-3 rounded-lg text-sm font-bold mb-1 ${adminTab===m.id?"bg-blue-50 text-blue-600":"text-gray-600 hover:bg-gray-50"}`}>
-              {m.icon} {m.label} {m.badge>0&&<span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">{m.badge}</span>}
+        <nav className="flex-1 space-y-1">
+          {menuItems.map(m=>(
+            <button key={m.id} onClick={()=>setTab(m.id)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}>
+              <Icon type={m.icon} size={18}/> {m.label}
+              {m.badge&&m.badge>0?<span className="ml-auto bg-red-400 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{m.badge}</span>:null}
             </button>
           ))}
-          {[
-            {cat:"수업 및 성적",items:[{id:"schedule",icon:"📅",label:"수업/시험 일정"},{id:"grades",icon:"📊",label:"시험 성적"}]},
-            {cat:"운영 관리",items:[{id:"ta",icon:"👤",label:"조교 근무"},{id:"sms",icon:"💬",label:"문자 발송"}]},
-          ].map(g=>(
-            <div key={g.cat} className="mt-3">
-              <div className="text-[10px] font-bold text-gray-400 px-3 py-1 uppercase">{g.cat}</div>
-              {g.items.map(it=>(<button key={it.id} onClick={()=>{setAdminTab(it.id);setSidebarOpen(false);}} className={`flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-semibold ${adminTab===it.id?"bg-blue-50 text-blue-600":"text-gray-500 hover:bg-gray-50"}`}>{it.icon} {it.label}</button>))}
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="max-w-5xl mx-auto px-4 py-5">
-        {adminTab==="dashboard"&&<AdminDashboard students={students} classes={classes} pendingCount={pendingCount}/>}
-        {adminTab==="approval"&&<AdminApproval users={users} fetchUsers={fetchUsers}/>}
-        {adminTab==="students"&&<AdminStudents students={students} fetchStudents={fetchStudents}/>}
-        {!["dashboard","approval","students"].includes(adminTab)&&(
-          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-            <div className="text-4xl mb-3">🚧</div><h3 className="font-bold text-lg">준비 중인 기능입니다</h3><p className="text-sm text-gray-400 mt-1">이 기능은 곧 추가될 예정입니다</p>
+        </nav>
+        <div className="pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <div className="w-8 h-8 bg-[#6c63ff]/10 rounded-full flex items-center justify-center text-[#6c63ff]"><Icon type="user" size={16}/></div>
+            <div><p className="text-xs font-semibold text-slate-700">{user.name}</p><p className="text-[10px] text-slate-400">{isAdmin?"관리자":user.role==="student"?"학생":"학부모"}</p></div>
           </div>
-        )}
+          <button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors">
+            <Icon type="logout" size={16}/> 로그아웃
+          </button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-40 px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <img src="/profile.png" alt="" className="w-7 h-7 rounded-lg"/>
+          <span className="font-bold text-sm text-slate-800">서서갈비</span>
+        </div>
+        <button onClick={()=>setMobileMenu(!mobileMenu)} className="text-slate-500"><Icon type={mobileMenu?"close":"menu"} size={22}/></button>
       </div>
-      {!sidebarOpen&&(<button onClick={()=>setSidebarOpen(true)} className="fixed left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-amber-400 text-white text-lg shadow-lg flex items-center justify-center z-50">☰</button>)}
+
+      {/* MOBILE MENU */}
+      {mobileMenu&&(
+        <>
+          <div onClick={()=>setMobileMenu(false)} className="lg:hidden fixed inset-0 bg-black/30 z-40"/>
+          <div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 bg-white z-50 p-5 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <span className="font-bold text-slate-800">메뉴</span>
+              <button onClick={()=>setMobileMenu(false)} className="text-slate-400"><Icon type="close" size={20}/></button>
+            </div>
+            <nav className="space-y-1">
+              {menuItems.map(m=>(
+                <button key={m.id} onClick={()=>{setTab(m.id);setMobileMenu(false);}} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500"}`}>
+                  <Icon type={m.icon} size={18}/> {m.label}
+                  {m.badge&&m.badge>0?<span className="ml-auto bg-red-400 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{m.badge}</span>:null}
+                </button>
+              ))}
+            </nav>
+            <button onClick={()=>{logout();setMobileMenu(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 mt-4 hover:bg-red-50">
+              <Icon type="logout" size={16}/> 로그아웃
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* CONTENT */}
+      <main className="flex-1 lg:ml-60 pt-16 lg:pt-0">
+        <div className="max-w-4xl mx-auto p-5 lg:p-8">
+          {tab==="dashboard"&&(isAdmin
+            ?<AdminApproval users={users} fetchUsers={fetchUsers}/>
+            :<DashboardView user={user} scores={scores} students={students}/>
+          )}
+          {tab==="grades"&&<GradesDetail user={user} scores={scores}/>}
+          {tab==="assignments"&&<AssignmentDetail user={user}/>}
+          {tab==="approval"&&<AdminApproval users={users} fetchUsers={fetchUsers}/>}
+          {tab==="settings"&&<SettingsView user={user}/>}
+        </div>
+      </main>
     </div>
   );
 }
