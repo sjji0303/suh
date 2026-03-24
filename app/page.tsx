@@ -48,7 +48,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       <div className={`md:hidden w-full max-w-xs transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 px-5 shadow-2xl border border-white/20 mb-5">
           <div className="flex items-center gap-4 justify-center">
-            <img src={pi} alt="" className="w-14 h-14 rounded-full shadow-xl object-cover border-2 border-white/30 flex-shrink-0"/>
+            <img src={pi} alt="" className="w-[67px] h-[67px] -ml-4 rounded-full shadow-xl object-cover border-2 border-white/30 flex-shrink-0"/>
             <div className="min-w-0">
               <h2 className="text-base font-bold text-white">{nm}</h2>
               {bio&&<div className="text-[10px] text-white/60 leading-relaxed whitespace-pre-line mt-0.5 line-clamp-3">{bio}</div>}
