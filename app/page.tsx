@@ -55,7 +55,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const chPw=async()=>{if(pw.n1!==pw.n2){setPwMsg("불일치");return;}await supabase.from("users").update({password:pw.n1}).eq("id",user.id);setPwMsg("변경 완료!");setPw({n1:"",n2:""});};
   const[notices,setNotices]=useState<any[]>([]);
   const[myExams,setMyExams]=useState<any[]>([]);const[showExamAdd,setShowExamAdd]=useState(false);
-  const[examForm,setExamForm]=useState({exam_type:"중간고사",exam_name:"",subject:"수학",score:"",total:"",grade:"",memo:"",exam_date:""});
+  const[examForm,setExamForm]=useState({exam_type:"모의고사",exam_name:"",subject:"수학",score:"",total:"",grade:"",memo:"",exam_date:"",q1:"",q2:"",q3:""});
   useEffect(()=>{if(tab==="notice"){(async()=>{
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
     if(!cm||cm.length===0)return;
@@ -63,8 +63,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     const{data}=await supabase.from("class_notices").select("*, class_groups(name)").in("class_group_id",gids).order("created_at",{ascending:false});
     if(data)setNotices(data);
   })();}if(tab==="myexam"){(async()=>{const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("exam_date",{ascending:false});if(data)setMyExams(data);})();}},[tab]);
-  const addExam=async()=>{if(!examForm.exam_date||!examForm.score)return;await supabase.from("student_exams").insert({user_id:user.id,...examForm});setExamForm({exam_type:"중간고사",exam_name:"",subject:"수학",score:"",total:"",grade:"",memo:"",exam_date:""});setShowExamAdd(false);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("exam_date",{ascending:false});if(data)setMyExams(data);};
-  const delExam=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("student_exams").delete().eq("id",id);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("exam_date",{ascending:false});if(data)setMyExams(data);};
+  const addExam=async()=>{if(!examForm.score)return;const payload={user_id:user.id,exam_type:examForm.exam_type,exam_name:examForm.exam_name,subject:examForm.subject,score:examForm.score,total:examForm.total,grade:examForm.grade,memo:JSON.stringify({q1:examForm.q1,q2:examForm.q2,q3:examForm.q3}),exam_date:examForm.exam_date||""};await supabase.from("student_exams").insert(payload);setExamForm({exam_type:"모의고사",exam_name:"",subject:"수학",score:"",total:"",grade:"",memo:"",exam_date:"",q1:"",q2:"",q3:""});setShowExamAdd(false);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);};
+  const delExam=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("student_exams").delete().eq("id",id);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"myexam",icon:"folder",label:"내 성적"},{id:"notice",icon:"bell",label:"공지"},{id:"settings",icon:"settings",label:"설정"}];
@@ -112,41 +112,53 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
       </>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400">시험 없음</div>}</div>}
       {tab==="myexam"&&<div>
-        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 내 성적</h2><button onClick={()=>{setShowExamAdd(true);setExamForm(p=>({...p,exam_date:new Date().toISOString().split("T")[0]}));}} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>성적 입력</button></div>
+        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 내 성적</h2><button onClick={()=>setShowExamAdd(true)} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>성적 입력</button></div>
         {showExamAdd&&<div className="bg-slate-50 rounded-2xl p-5 mb-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs font-semibold text-slate-500">시험 유형</label><select className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.exam_type} onChange={e=>setExamForm(p=>({...p,exam_type:e.target.value}))}><option>중간고사</option><option>기말고사</option><option>모의고사</option><option>기타</option></select></div>
-            <div><label className="text-xs font-semibold text-slate-500">시험 날짜</label><input type="date" className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.exam_date} onChange={e=>setExamForm(p=>({...p,exam_date:e.target.value}))}/></div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs font-semibold text-slate-500">시험명</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.exam_name} onChange={e=>setExamForm(p=>({...p,exam_name:e.target.value}))} placeholder="예: 1학기 중간고사"/></div>
-            <div><label className="text-xs font-semibold text-slate-500">과목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.subject} onChange={e=>setExamForm(p=>({...p,subject:e.target.value}))}/></div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div><label className="text-xs font-semibold text-slate-500">점수 *</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.score} onChange={e=>setExamForm(p=>({...p,score:e.target.value}))} placeholder="85"/></div>
-            <div><label className="text-xs font-semibold text-slate-500">만점</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.total} onChange={e=>setExamForm(p=>({...p,total:e.target.value}))} placeholder="100"/></div>
-            <div><label className="text-xs font-semibold text-slate-500">등급</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.grade} onChange={e=>setExamForm(p=>({...p,grade:e.target.value}))} placeholder="2등급"/></div>
-          </div>
-          <div><label className="text-xs font-semibold text-slate-500">메모</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.memo} onChange={e=>setExamForm(p=>({...p,memo:e.target.value}))} placeholder="오답 유형, 느낀점 등"/></div>
+          {/* 시험 유형 선택 */}
+          <div><label className="text-xs font-semibold text-slate-500">시험 유형</label><div className="flex gap-2 mt-1">{["모의고사","내신"].map(t=>(<button key={t} onClick={()=>setExamForm(p=>({...p,exam_type:t,exam_name:"",subject:t==="내신"?"수학":"수학"}))} className={`px-4 py-2 rounded-xl text-sm font-semibold ${examForm.exam_type===t?"bg-[#6c63ff] text-white":"bg-white text-slate-500 border border-slate-200"}`}>{t}</button>))}</div></div>
+
+          {examForm.exam_type==="모의고사"&&<>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-xs font-semibold text-slate-500">몇월 모의고사</label><select className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.exam_name} onChange={e=>setExamForm(p=>({...p,exam_name:e.target.value}))}><option value="">선택</option>{[3,4,6,7,9,10,11].map(m=>(<option key={m} value={`${m}월 모의고사`}>{m}월 모의고사</option>))}</select></div>
+              <div><label className="text-xs font-semibold text-slate-500">과목</label><select className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.subject} onChange={e=>setExamForm(p=>({...p,subject:e.target.value}))}>{["국어","수학","영어","과탐","사탐"].map(s=>(<option key={s}>{s}</option>))}</select></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-xs font-semibold text-slate-500">점수 *</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.score} onChange={e=>setExamForm(p=>({...p,score:e.target.value}))} placeholder="85"/></div>
+              <div><label className="text-xs font-semibold text-slate-500">등급</label><select className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.grade} onChange={e=>setExamForm(p=>({...p,grade:e.target.value}))}><option value="">선택</option>{[1,2,3,4,5,6,7,8,9].map(g=>(<option key={g} value={`${g}등급`}>{g}등급</option>))}</select></div>
+            </div>
+          </>}
+
+          {examForm.exam_type==="내신"&&<>
+            <div><label className="text-xs font-semibold text-slate-500">시험 구분</label><select className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.exam_name} onChange={e=>setExamForm(p=>({...p,exam_name:e.target.value}))}><option value="">선택</option><option>1학기 중간</option><option>1학기 기말</option><option>2학기 중간</option><option>2학기 기말</option></select></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-xs font-semibold text-slate-500">수학 점수 *</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.score} onChange={e=>setExamForm(p=>({...p,score:e.target.value}))} placeholder="85"/></div>
+              <div><label className="text-xs font-semibold text-slate-500">등급</label><select className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.grade} onChange={e=>setExamForm(p=>({...p,grade:e.target.value}))}><option value="">선택</option>{[1,2,3,4,5,6,7,8,9].map(g=>(<option key={g} value={`${g}등급`}>{g}등급</option>))}</select></div>
+            </div>
+          </>}
+
+          {/* 공통 질문 */}
+          <div><label className="text-xs font-semibold text-slate-500">수학 성적이 올랐나요?</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q1} onChange={e=>setExamForm(p=>({...p,q1:e.target.value}))} placeholder="예: 저번보다 10점 올랐어요"/></div>
+          <div><label className="text-xs font-semibold text-slate-500">공부에 가장 큰 고민은?</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q2} onChange={e=>setExamForm(p=>({...p,q2:e.target.value}))} placeholder="예: 시간이 부족해요"/></div>
+          <div><label className="text-xs font-semibold text-slate-500">하고 싶은 말</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q3} onChange={e=>setExamForm(p=>({...p,q3:e.target.value}))} placeholder="자유롭게 적어주세요"/></div>
           <div className="flex gap-2"><button onClick={addExam} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setShowExamAdd(false)} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>(<div key={ex.id} className="bg-slate-50 rounded-2xl p-4">
+        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}return(<div key={ex.id} className="bg-slate-50 rounded-2xl p-4">
           <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${ex.exam_type==="중간고사"?"bg-blue-50 text-blue-600":ex.exam_type==="기말고사"?"bg-green-50 text-green-600":ex.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-slate-100 text-slate-500"}`}>{ex.exam_type}</span><span className="text-xs text-slate-400">{ex.exam_date}</span></div>
-              <p className="font-semibold text-sm">{ex.exam_name||ex.exam_type} — {ex.subject}</p>
-              <div className="flex items-center gap-3 mt-1"><span className="text-lg font-bold text-[#6c63ff]">{ex.score}{ex.total?`/${ex.total}`:""}</span>{ex.grade&&<span className="text-sm font-semibold text-slate-500">{ex.grade}</span>}</div>
-              {ex.memo&&<p className="text-xs text-slate-400 mt-1">{ex.memo}</p>}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${ex.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-blue-50 text-blue-600"}`}>{ex.exam_type}</span>{ex.exam_name&&<span className="text-xs text-slate-500">{ex.exam_name}</span>}</div>
+              <p className="font-semibold text-sm">{ex.subject}</p>
+              <div className="flex items-center gap-3 mt-1"><span className="text-lg font-bold text-[#6c63ff]">{ex.score}점</span>{ex.grade&&<span className="text-sm font-semibold text-slate-500">{ex.grade}</span>}</div>
+              {(memoObj.q1||memoObj.q2||memoObj.q3)&&<div className="mt-2 space-y-1 text-xs text-slate-500">{memoObj.q1&&<p>📈 {memoObj.q1}</p>}{memoObj.q2&&<p>🤔 {memoObj.q2}</p>}{memoObj.q3&&<p>💬 {memoObj.q3}</p>}</div>}
             </div>
             <button onClick={()=>delExam(ex.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button>
           </div>
-        </div>))}</div>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400">시험 성적을 입력해보세요</div>}
+        </div>);})}</div>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400">시험 성적을 입력해보세요</div>}
       </div>}
-      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>(<div key={n.id} className="bg-slate-50 rounded-2xl p-5"><div className="flex items-center justify-between mb-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3><div className="flex items-center gap-2"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{n.content}</p></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
+      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;return(<div key={n.id} className="bg-slate-50 rounded-2xl p-5"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{n.content}</p></div>);})}</div>:<div className="bg-slate-50 rounded-2xl p-12 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
       {tab==="settings"&&<div><h2 className="text-xl font-bold mb-4">설정</h2><div className="bg-slate-50 rounded-2xl p-6 max-w-md"><h3 className="font-semibold text-sm mb-4">비밀번호 변경</h3><div className="space-y-3"><input type="password" className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 focus:outline-none" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 focus:outline-none" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
     </div></main>
     {/* 모바일 하단 탭바 */}
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-40 flex justify-around py-2 px-1 safe-area-pb">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium ${tab===m.id?"text-[#6c63ff]":"text-slate-400"}`}><Icon type={m.icon} size={20}/>{m.label}</button>))}</nav>
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-40 flex justify-around py-2 px-1 safe-area-pb">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium relative ${tab===m.id?"text-[#6c63ff]":"text-slate-400"}`}><Icon type={m.icon} size={20}/>{m.label}{m.id==="notice"&&notices.some(n=>n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000)&&<span className="absolute -top-0.5 right-0.5 bg-red-500 text-white text-[7px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">N</span>}</button>))}</nav>
     </div>);
 }
 
@@ -385,17 +397,16 @@ function AdminNoticeManager({groups}:{groups:any[]}){
 /* ═══ ADMIN: STUDENT EXAM VIEWER ═══ */
 function AdminExamViewer({users}:{users:any[]}){
   const[exams,setExams]=useState<any[]>([]);const[filter,setFilter]=useState("");const[typeFilter,setTypeFilter]=useState("");
-  const students=users.filter((u:any)=>u.role==="student"&&u.status==="approved");
-  const fE=async()=>{const{data}=await supabase.from("student_exams").select("*, users:user_id(name, school)").order("exam_date",{ascending:false});if(data)setExams(data);};
+  const fE=async()=>{const{data}=await supabase.from("student_exams").select("*, users:user_id(name, school)").order("created_at",{ascending:false});if(data)setExams(data);};
   useEffect(()=>{fE();},[]);
   const filtered=exams.filter(e=>{const name=e.users?.name||"";const match=!filter||name.includes(filter);const tMatch=!typeFilter||e.exam_type===typeFilter;return match&&tMatch;});
   return(<div>
     <h2 className="text-lg font-bold mb-4">📊 학생 시험 성적</h2>
     <div className="flex flex-wrap gap-2 mb-4">
       <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-sm"><Icon type="search" size={16}/><input className="bg-transparent text-sm border-0 focus:outline-none w-32" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="이름 검색"/></div>
-      <select className="bg-white rounded-xl px-3 py-2 text-sm shadow-sm border-0" value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">전체</option><option>중간고사</option><option>기말고사</option><option>모의고사</option><option>기타</option></select>
+      <select className="bg-white rounded-xl px-3 py-2 text-sm shadow-sm border-0" value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">전체</option><option>모의고사</option><option>내신</option></select>
     </div>
-    {filtered.length>0?<div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50">{["이름","학교","유형","시험명","과목","점수","등급","날짜","메모"].map(h=><th key={h} className="px-3 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{filtered.map((e:any)=>(<tr key={e.id} className="border-t border-slate-50 hover:bg-slate-50/50"><td className="px-3 py-2.5 font-semibold">{e.users?.name||"?"}</td><td className="px-3 py-2.5 text-xs text-slate-500">{e.users?.school||"—"}</td><td className="px-3 py-2.5"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${e.exam_type==="중간고사"?"bg-blue-50 text-blue-600":e.exam_type==="기말고사"?"bg-green-50 text-green-600":e.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-slate-100 text-slate-500"}`}>{e.exam_type}</span></td><td className="px-3 py-2.5 text-xs">{e.exam_name||"—"}</td><td className="px-3 py-2.5 text-xs">{e.subject}</td><td className="px-3 py-2.5 font-bold text-[#6c63ff]">{e.score}{e.total?`/${e.total}`:""}</td><td className="px-3 py-2.5 text-xs">{e.grade||"—"}</td><td className="px-3 py-2.5 text-xs text-slate-400">{e.exam_date}</td><td className="px-3 py-2.5 text-xs text-slate-400 max-w-[150px] truncate">{e.memo||"—"}</td></tr>))}</tbody></table></div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">학생이 입력한 성적이 없습니다</div>}
+    {filtered.length>0?<div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50">{["이름","학교","유형","구분","과목","점수","등급","성적변화","고민","하고싶은말"].map(h=><th key={h} className="px-3 py-3 text-left text-xs font-semibold text-slate-400 whitespace-nowrap">{h}</th>)}</tr></thead><tbody>{filtered.map((e:any)=>{let memoObj:any={};try{memoObj=JSON.parse(e.memo||"{}");}catch{}return(<tr key={e.id} className="border-t border-slate-50 hover:bg-slate-50/50"><td className="px-3 py-2.5 font-semibold whitespace-nowrap">{e.users?.name||"?"}</td><td className="px-3 py-2.5 text-xs text-slate-500">{e.users?.school||"—"}</td><td className="px-3 py-2.5"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${e.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-blue-50 text-blue-600"}`}>{e.exam_type}</span></td><td className="px-3 py-2.5 text-xs">{e.exam_name||"—"}</td><td className="px-3 py-2.5 text-xs">{e.subject}</td><td className="px-3 py-2.5 font-bold text-[#6c63ff]">{e.score}점</td><td className="px-3 py-2.5 text-xs">{e.grade||"—"}</td><td className="px-3 py-2.5 text-xs text-slate-500 max-w-[120px]">{memoObj.q1||"—"}</td><td className="px-3 py-2.5 text-xs text-slate-500 max-w-[120px]">{memoObj.q2||"—"}</td><td className="px-3 py-2.5 text-xs text-slate-500 max-w-[120px]">{memoObj.q3||"—"}</td></tr>);})}</tbody></table></div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">학생이 입력한 성적이 없습니다</div>}
   </div>);
 }
 
@@ -410,17 +421,22 @@ function AdminSiteSettings({settings,fetchSettings}:{settings:any;fetchSettings:
 /* ═══ MAIN ═══ */
 export default function Home(){
   const[user,setUser]=useState<any>(null);const[tab,setTab]=useState("classes");const[mm,setMm]=useState(false);
-  const[users,setUsers]=useState<any[]>([]);const[groups,setGroups]=useState<any[]>([]);const[loading,setLoading]=useState(false);
+  const[users,setUsers]=useState<any[]>([]);const[groups,setGroups]=useState<any[]>([]);const[loading,setLoading]=useState(false);const[initializing,setInitializing]=useState(true);
   const[settings,setSettings]=useState<any>({profile_name:"서정인 수학",profile_bio:"",profile_image:"",background_image:""});
   const fU=async()=>{const{data}=await supabase.from("users").select("*").order("created_at",{ascending:false});if(data)setUsers(data);};
   const fG=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
   const fS=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setSettings(s);}};
-  useEffect(()=>{fS();},[]);
-  useEffect(()=>{if(user){setLoading(true);Promise.all([fU(),fG()]).then(()=>setLoading(false));};},[user]);
+  useEffect(()=>{fS();
+    // 새로고침 시 로그인 복원
+    try{const saved=window.localStorage.getItem("suhsuh_user");if(saved){const u=JSON.parse(saved);if(u&&u.id){(async()=>{const{data}=await supabase.from("users").select("*").eq("id",u.id).single();if(data&&data.status!=="pending"){setUser(data);setTab(data.role==="admin"?"classes":"grades");}setInitializing(false);})();return;}}
+    }catch{}setInitializing(false);
+  },[]);
+  useEffect(()=>{if(user){setLoading(true);Promise.all([fU(),fG()]).then(()=>setLoading(false));window.localStorage.setItem("suhsuh_user",JSON.stringify({id:user.id}));}else{window.localStorage.removeItem("suhsuh_user");}},[user]);
 
-  const handleLogin=async(id:string,pw:string):Promise<string>=>{const{data}=await supabase.from("users").select("*").eq("login_id",id).eq("password",pw).single();if(!data)return"아이디 또는 비밀번호 오류";if(data.status==="pending")return"승인 대기 중";setUser(data);setTab(data.role==="admin"?"classes":"home");return"";};
+  const handleLogin=async(id:string,pw:string):Promise<string>=>{const{data}=await supabase.from("users").select("*").eq("login_id",id).eq("password",pw).single();if(!data)return"아이디 또는 비밀번호 오류";if(data.status==="pending")return"승인 대기 중";setUser(data);setTab(data.role==="admin"?"classes":"grades");return"";};
   const logout=()=>{setUser(null);setTab("classes");};
 
+  if(initializing)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(!user)return<LoginScreen onLogin={handleLogin} settings={settings}/>;
   if(loading)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
