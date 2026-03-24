@@ -19,6 +19,116 @@ function Modal({open,onClose,title,children}:{open:boolean;onClose:()=>void;titl
   );
 }
 
+/* ───── SIGNUP PAGE ───── */
+function SignupPage({onBack}:{onBack:()=>void}) {
+  const [form,setForm]=useState({login_id:"",password:"",password2:"",name:"",role:"student",school:SCHOOLS[0],grade:1,phone:""});
+  const [error,setError]=useState("");
+  const [success,setSuccess]=useState(false);
+  const set=(k:string,v:any)=>setForm(p=>({...p,[k]:v}));
+
+  const handleSignup=async()=>{
+    setError("");
+    if(!form.login_id||!form.password||!form.name){setError("모든 필수 항목을 입력해주세요.");return;}
+    if(form.password!==form.password2){setError("비밀번호가 일치하지 않습니다.");return;}
+    if(form.login_id.length<3){setError("아이디는 3자 이상이어야 합니다.");return;}
+    if(form.password.length<4){setError("비밀번호는 4자 이상이어야 합니다.");return;}
+
+    const {data:existing}=await supabase.from("users").select("id").eq("login_id",form.login_id).single();
+    if(existing){setError("이미 사용 중인 아이디입니다.");return;}
+
+    const {error:insertError}=await supabase.from("users").insert({
+      login_id:form.login_id,
+      password:form.password,
+      name:form.name,
+      role:form.role,
+      school:form.school,
+      grade:form.grade,
+      phone:form.phone,
+      status:"pending"
+    });
+
+    if(insertError){setError("가입 중 오류가 발생했습니다.");return;}
+    setSuccess(true);
+  };
+
+  if(success) return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-10 w-96 shadow-2xl text-center">
+        <div className="text-5xl mb-4">✅</div>
+        <h2 className="text-xl font-black mb-2">가입 신청 완료!</h2>
+        <p className="text-sm text-gray-500 mb-6 leading-relaxed">관리자 승인 후 사용 가능합니다.<br/>승인이 완료되면 로그인해주세요.</p>
+        <button onClick={onBack} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold">로그인 화면으로</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+        <div className="text-center mb-6">
+          <img src="/profile.png" alt="서서갈비" className="w-20 h-20 rounded-2xl mx-auto mb-2 shadow-lg"/>
+          <h1 className="text-xl font-black text-slate-900">회원가입</h1>
+          <p className="text-xs text-gray-400 mt-1">서서갈비 국어 학원</p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            {[{v:"student",l:"학생"},{v:"parent",l:"학부모"}].map(r=>(
+              <button key={r.v} onClick={()=>set("role",r.v)} className={`flex-1 py-2 rounded-lg text-sm font-bold border-2 transition-colors ${form.role===r.v?"bg-blue-50 border-blue-500 text-blue-600":"bg-white border-gray-200 text-gray-400"}`}>{r.l}</button>
+            ))}
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500">아이디 *</label>
+            <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.login_id} onChange={e=>set("login_id",e.target.value)} placeholder="3자 이상"/>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs font-bold text-gray-500">비밀번호 *</label>
+              <input type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.password} onChange={e=>set("password",e.target.value)} placeholder="4자 이상"/>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500">비밀번호 확인 *</label>
+              <input type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.password2} onChange={e=>set("password2",e.target.value)} placeholder="다시 입력"/>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500">이름 *</label>
+            <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.name} onChange={e=>set("name",e.target.value)} placeholder={form.role==="student"?"학생 이름":"학부모 이름"}/>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs font-bold text-gray-500">학교</label>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.school} onChange={e=>set("school",e.target.value)}>
+                {SCHOOLS.map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500">학년</label>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.grade} onChange={e=>set("grade",Number(e.target.value))}>
+                {[1,2,3].map(g=><option key={g} value={g}>{g}학년</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500">연락처</label>
+            <input className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="010-0000-0000"/>
+          </div>
+        </div>
+
+        {error&&<p className="text-red-500 text-xs font-semibold mt-3">{error}</p>}
+
+        <button onClick={handleSignup} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold text-base mt-4">가입 신청</button>
+        <button onClick={onBack} className="w-full text-gray-400 text-sm mt-3 hover:text-gray-600">← 로그인 화면으로</button>
+      </div>
+    </div>
+  );
+}
+
 /* ───── STUDENT HOME ───── */
 function StudentHome({students,notices,user}:{students:any[];notices:any[];user:any}) {
   const active = students.filter((s:any)=>s.status==="active");
@@ -39,17 +149,6 @@ function StudentHome({students,notices,user}:{students:any[];notices:any[];user:
           </div>
         ))}
         {notices.length===0&&<div className="text-center py-4 text-gray-400 text-sm">공지사항이 없습니다</div>}
-      </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-bold">수업 후기</h3>
-          <span className="text-xs text-blue-500 font-semibold cursor-pointer">후기 작성 &gt;</span>
-        </div>
-        <div className="text-center py-4">
-          <div className="bg-yellow-50 rounded-lg px-4 py-3 inline-block text-sm text-yellow-800">
-            🎁 후기 작성 시 <b>200P</b> 지급! 베스트 선정 시 <b>500P</b> 추가!
-          </div>
-        </div>
       </div>
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h3 className="font-bold">🏆 재원생 현황</h3>
@@ -92,7 +191,7 @@ function StudentGrades({scores,studentId}:{scores:any[];studentId:number|null}) 
 }
 
 /* ───── ADMIN DASHBOARD ───── */
-function AdminDashboard({students,classes}:{students:any[];classes:any[]}) {
+function AdminDashboard({students,classes,pendingCount}:{students:any[];classes:any[];pendingCount:number}) {
   const active=students.filter((s:any)=>s.status==="active");
   const bySchool=SCHOOLS.map(sc=>({name:sc,count:active.filter((s:any)=>s.school===sc).length}));
   const sat=new Date();sat.setDate(sat.getDate()+(6-sat.getDay()));
@@ -108,12 +207,15 @@ function AdminDashboard({students,classes}:{students:any[];classes:any[]}) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="font-bold mb-3">전체 현황</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold">전체 현황</h3>
+              {pendingCount>0&&<span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse">가입 대기 {pendingCount}건</span>}
+            </div>
             <div className="bg-blue-50 rounded-lg p-3 mb-3 flex items-center gap-2">
               <span className="text-lg">👥</span>
               <span className="text-blue-800 font-black text-lg">재원생 {active.length}명</span>
             </div>
-            <div className="grid grid-cols-4 gap-2 mb-3">
+            <div className="grid grid-cols-4 gap-2">
               {bySchool.map(s=>(
                 <div key={s.name} className="text-center p-2 border border-gray-200 rounded-lg">
                   <div className="text-sm font-bold">{s.name}</div>
@@ -176,71 +278,35 @@ function AdminStudents({students,fetchStudents}:{students:any[];fetchStudents:()
     const mf=filterSchool==="all"||s.school===filterSchool;
     return ms&&mf&&s.status==="active";
   });
-  const openAdd=()=>{setForm({name:"",school:SCHOOLS[0],grade:1,number:"",phone:"",parent_name:"",parent_phone:"",parent_relation:"어머니",create_account:true,login_id:"",login_pw:"1234"});setModal("add");};
+  const openAdd=()=>{setForm({name:"",school:SCHOOLS[0],grade:1,number:"",phone:"",parent_name:"",parent_phone:"",parent_relation:"어머니"});setModal("add");};
   const openEdit=(s:any)=>{setForm({...s});setModal("edit");};
   const save=async()=>{
     if(!form.name)return;
     if(modal==="add"){
-      const {data}=await supabase.from("students").insert({
-        name:form.name,school:form.school,grade:form.grade,
-        number:Number(form.number)||0,phone:form.phone,
-        parent_name:form.parent_name,parent_phone:form.parent_phone,
-        parent_relation:form.parent_relation,status:"active"
-      }).select().single();
-      if(data&&form.create_account&&form.login_id){
-        await supabase.from("users").insert({
-          login_id:form.login_id,password:form.login_pw||"1234",
-          name:form.name,role:"student",student_id:data.id
-        });
-        if(form.parent_name){
-          await supabase.from("users").insert({
-            login_id:form.login_id+"_parent",password:form.login_pw||"1234",
-            name:form.parent_name,role:"parent",student_id:data.id
-          });
-        }
-      }
+      await supabase.from("students").insert({name:form.name,school:form.school,grade:form.grade,number:Number(form.number)||0,phone:form.phone,parent_name:form.parent_name,parent_phone:form.parent_phone,parent_relation:form.parent_relation,status:"active"});
     } else {
-      await supabase.from("students").update({
-        name:form.name,school:form.school,grade:form.grade,
-        number:Number(form.number)||0,phone:form.phone,
-        parent_name:form.parent_name,parent_phone:form.parent_phone,
-        parent_relation:form.parent_relation
-      }).eq("id",form.id);
+      await supabase.from("students").update({name:form.name,school:form.school,grade:form.grade,number:Number(form.number)||0,phone:form.phone,parent_name:form.parent_name,parent_phone:form.parent_phone,parent_relation:form.parent_relation}).eq("id",form.id);
     }
-    setModal(null);
-    fetchStudents();
+    setModal(null);fetchStudents();
   };
-  const remove=async(id:number)=>{
-    if(confirm("정말 삭제하시겠습니까?")){
-      await supabase.from("users").delete().eq("student_id",id);
-      await supabase.from("students").delete().eq("id",id);
-      fetchStudents();
-    }
-  };
+  const remove=async(id:number)=>{if(confirm("정말 삭제하시겠습니까?")){await supabase.from("students").delete().eq("id",id);fetchStudents();}};
   return (
     <div>
       <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <div className="flex gap-2">
           <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-52 focus:outline-none focus:border-blue-500" placeholder="🔍 이름 또는 학교로 검색..." value={search} onChange={e=>setSearch(e.target.value)}/>
           <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" value={filterSchool} onChange={e=>setFilterSchool(e.target.value)}>
-            <option value="all">전체 학교</option>
-            {SCHOOLS.map(s=><option key={s} value={s}>{s}</option>)}
+            <option value="all">전체 학교</option>{SCHOOLS.map(s=><option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700" onClick={openAdd}>+ 학생 추가</button>
       </div>
       <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50">
-              {["이름","학교","학년","번호","연락처","학부모","학부모 연락처",""].map(h=>(
-                <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200">{h}</th>
-              ))}
-            </tr>
-          </thead>
+          <thead><tr className="bg-gray-50">{["이름","학교","학년","번호","연락처","학부모","학부모 연락처",""].map(h=>(<th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200">{h}</th>))}</tr></thead>
           <tbody>
             {filtered.map((s:any)=>(
-              <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={s.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-bold">{s.name}</td>
                 <td className="px-4 py-3"><span className="bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">{s.school}</span></td>
                 <td className="px-4 py-3 text-gray-500">{s.grade}학년</td>
@@ -249,8 +315,8 @@ function AdminStudents({students,fetchStudents}:{students:any[];fetchStudents:()
                 <td className="px-4 py-3 font-semibold">{s.parent_name}</td>
                 <td className="px-4 py-3 text-blue-600 text-xs">{s.parent_phone}</td>
                 <td className="px-4 py-3 text-right">
-                  <button className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-semibold mr-1 hover:bg-gray-200" onClick={()=>openEdit(s)}>수정</button>
-                  <button className="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-semibold hover:bg-red-100" onClick={()=>remove(s.id)}>삭제</button>
+                  <button className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-semibold mr-1" onClick={()=>openEdit(s)}>수정</button>
+                  <button className="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-semibold" onClick={()=>remove(s.id)}>삭제</button>
                 </td>
               </tr>
             ))}
@@ -274,23 +340,6 @@ function AdminStudents({students,fetchStudents}:{students:any[];fetchStudents:()
             <div className="col-span-2"><label className="text-xs font-bold text-gray-600">연락처</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.parent_phone||""} onChange={e=>setForm((p:any)=>({...p,parent_phone:e.target.value}))} placeholder="010-0000-0000"/></div>
           </div>
         </div>
-        {modal==="add"&&(
-          <div className="border-t border-dashed border-gray-200 mt-4 pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <input type="checkbox" id="createAcc" checked={form.create_account||false} onChange={e=>setForm((p:any)=>({...p,create_account:e.target.checked}))} className="w-4 h-4"/>
-              <label htmlFor="createAcc" className="text-xs font-bold text-gray-600">🔑 로그인 계정도 함께 생성</label>
-            </div>
-            {form.create_account&&(
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-bold text-gray-600">로그인 아이디</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.login_id||""} onChange={e=>setForm((p:any)=>({...p,login_id:e.target.value}))} placeholder="student01"/></div>
-                <div><label className="text-xs font-bold text-gray-600">초기 비밀번호</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.login_pw||""} onChange={e=>setForm((p:any)=>({...p,login_pw:e.target.value}))} placeholder="1234"/></div>
-              </div>
-            )}
-            {form.create_account&&form.parent_name&&(
-              <p className="text-xs text-gray-400 mt-2">학부모 계정: {form.login_id||"아이디"}_parent / {form.login_pw||"1234"}</p>
-            )}
-          </div>
-        )}
         <div className="flex justify-end gap-2 mt-4">
           <button className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold" onClick={()=>setModal(null)}>취소</button>
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50" disabled={!form.name} onClick={save}>저장</button>
@@ -300,75 +349,71 @@ function AdminStudents({students,fetchStudents}:{students:any[];fetchStudents:()
   );
 }
 
-/* ───── ADMIN ACCOUNTS ───── */
-function AdminAccounts({users,fetchUsers}:{users:any[];fetchUsers:()=>void}) {
-  const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({login_id:"",password:"1234",name:"",role:"student",student_id:""});
-  const addUser=async()=>{
-    if(!form.login_id||!form.name)return;
-    await supabase.from("users").insert({
-      login_id:form.login_id,password:form.password,name:form.name,
-      role:form.role,student_id:form.student_id?Number(form.student_id):null
-    });
-    setModal(false);
-    setForm({login_id:"",password:"1234",name:"",role:"student",student_id:""});
-    fetchUsers();
-  };
-  const removeUser=async(id:number)=>{
-    if(confirm("계정을 삭제하시겠습니까?")){
-      await supabase.from("users").delete().eq("id",id);
-      fetchUsers();
-    }
-  };
+/* ───── ADMIN APPROVAL ───── */
+function AdminApproval({users,fetchUsers}:{users:any[];fetchUsers:()=>void}) {
+  const pending=users.filter((u:any)=>u.status==="pending");
+  const approved=users.filter((u:any)=>u.status==="approved");
   const roleLabel=(r:string)=>r==="admin"?"관리자":r==="student"?"학생":"학부모";
   const roleColor=(r:string)=>r==="admin"?"bg-red-50 text-red-600":r==="student"?"bg-blue-50 text-blue-600":"bg-green-50 text-green-600";
+
+  const approve=async(id:number)=>{await supabase.from("users").update({status:"approved"}).eq("id",id);fetchUsers();};
+  const reject=async(id:number)=>{if(confirm("가입을 거절하시겠습니까?")){await supabase.from("users").delete().eq("id",id);fetchUsers();}};
+  const removeUser=async(id:number)=>{if(confirm("계정을 삭제하시겠습니까?")){await supabase.from("users").delete().eq("id",id);fetchUsers();}};
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-lg">🔑 계정 관리</h3>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold" onClick={()=>setModal(true)}>+ 계정 추가</button>
-      </div>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50">
-              {["아이디","이름","역할",""].map(h=>(
-                <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u:any)=>(
-              <tr key={u.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-mono text-sm">{u.login_id}</td>
-                <td className="px-4 py-3 font-semibold">{u.name}</td>
-                <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-1 rounded-full ${roleColor(u.role)}`}>{roleLabel(u.role)}</span></td>
-                <td className="px-4 py-3 text-right">
-                  {u.role!=="admin"&&<button className="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-semibold" onClick={()=>removeUser(u.id)}>삭제</button>}
-                </td>
-              </tr>
+    <div className="space-y-6">
+      {pending.length>0&&(
+        <div>
+          <h3 className="font-bold text-lg mb-3">⏳ 가입 대기 ({pending.length}건)</h3>
+          <div className="space-y-2">
+            {pending.map((u:any)=>(
+              <div key={u.id} className="bg-white rounded-xl border-2 border-amber-200 p-4 flex justify-between items-center">
+                <div>
+                  <div className="font-bold">{u.name} <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${roleColor(u.role)}`}>{roleLabel(u.role)}</span></div>
+                  <div className="text-xs text-gray-500 mt-1">아이디: {u.login_id} · {u.school} {u.grade}학년 · {u.phone||"연락처 없음"}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold" onClick={()=>approve(u.id)}>승인</button>
+                  <button className="bg-red-50 text-red-500 px-3 py-2 rounded-lg text-xs font-bold" onClick={()=>reject(u.id)}>거절</button>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
+      )}
+      {pending.length===0&&(
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+          <div className="text-2xl mb-2">✅</div>
+          <p className="text-green-700 font-semibold text-sm">대기 중인 가입 신청이 없습니다</p>
+        </div>
+      )}
+      <div>
+        <h3 className="font-bold text-lg mb-3">🔑 전체 계정 ({approved.length}명)</h3>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-gray-50">{["아이디","이름","역할","학교","상태",""].map(h=>(<th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200">{h}</th>))}</tr></thead>
+            <tbody>
+              {approved.map((u:any)=>(
+                <tr key={u.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-mono text-sm">{u.login_id}</td>
+                  <td className="px-4 py-3 font-semibold">{u.name}</td>
+                  <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-1 rounded-full ${roleColor(u.role)}`}>{roleLabel(u.role)}</span></td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{u.school||"-"}</td>
+                  <td className="px-4 py-3"><span className="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full">승인됨</span></td>
+                  <td className="px-4 py-3 text-right">{u.role!=="admin"&&<button className="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-semibold" onClick={()=>removeUser(u.id)}>삭제</button>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-      <Modal open={modal} onClose={()=>setModal(false)} title="새 계정 추가">
-        <div className="space-y-3">
-          <div><label className="text-xs font-bold text-gray-600">아이디</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.login_id} onChange={e=>setForm(p=>({...p,login_id:e.target.value}))} placeholder="student01"/></div>
-          <div><label className="text-xs font-bold text-gray-600">비밀번호</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.password} onChange={e=>setForm(p=>({...p,password:e.target.value}))}/></div>
-          <div><label className="text-xs font-bold text-gray-600">이름</label><input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))}/></div>
-          <div><label className="text-xs font-bold text-gray-600">역할</label><select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:outline-none focus:border-blue-500" value={form.role} onChange={e=>setForm(p=>({...p,role:e.target.value}))}><option value="student">학생</option><option value="parent">학부모</option><option value="admin">관리자</option></select></div>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <button className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold" onClick={()=>setModal(false)}>취소</button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold" onClick={addUser}>저장</button>
-        </div>
-      </Modal>
     </div>
   );
 }
 
 /* ───── MAIN APP ───── */
 export default function Home() {
+  const [page,setPage]=useState<"login"|"signup">("login");
   const [user,setUser]=useState<any>(null);
   const [loginId,setLoginId]=useState("");
   const [loginPw,setLoginPw]=useState("");
@@ -383,43 +428,36 @@ export default function Home() {
   const [users,setUsers]=useState<any[]>([]);
   const [loading,setLoading]=useState(false);
 
-  const fetchStudents=async()=>{
-    const {data}=await supabase.from("students").select("*").order("created_at",{ascending:false});
-    if(data) setStudents(data);
-  };
-  const fetchUsers=async()=>{
-    const {data}=await supabase.from("users").select("*").order("created_at",{ascending:false});
-    if(data) setUsers(data);
-  };
+  const fetchStudents=async()=>{const{data}=await supabase.from("students").select("*").order("created_at",{ascending:false});if(data)setStudents(data);};
+  const fetchUsers=async()=>{const{data}=await supabase.from("users").select("*").order("created_at",{ascending:false});if(data)setUsers(data);};
   const fetchAll=async()=>{
     setLoading(true);
-    const [s,sc,c,n,u]=await Promise.all([
+    const[s,sc,c,n,u]=await Promise.all([
       supabase.from("students").select("*").order("created_at",{ascending:false}),
       supabase.from("scores").select("*"),
       supabase.from("classes").select("*").order("time"),
       supabase.from("notices").select("*").order("created_at",{ascending:false}),
       supabase.from("users").select("*").order("created_at",{ascending:false}),
     ]);
-    if(s.data) setStudents(s.data);
-    if(sc.data) setScores(sc.data);
-    if(c.data) setClasses(c.data);
-    if(n.data) setNotices(n.data);
-    if(u.data) setUsers(u.data);
+    if(s.data)setStudents(s.data);if(sc.data)setScores(sc.data);if(c.data)setClasses(c.data);if(n.data)setNotices(n.data);if(u.data)setUsers(u.data);
     setLoading(false);
   };
 
-  useEffect(()=>{if(user) fetchAll();},[user]);
+  useEffect(()=>{if(user)fetchAll();},[user]);
 
   const handleLogin=async()=>{
-    const {data,error}=await supabase.from("users").select("*").eq("login_id",loginId).eq("password",loginPw).single();
-    if(data){
-      setUser(data);
-      setLoginError("");
-    } else {
-      setLoginError("아이디 또는 비밀번호가 올바르지 않습니다.");
-    }
+    const{data}=await supabase.from("users").select("*").eq("login_id",loginId).eq("password",loginPw).single();
+    if(!data){setLoginError("아이디 또는 비밀번호가 올바르지 않습니다.");return;}
+    if(data.status==="pending"){setLoginError("가입 승인 대기 중입니다. 관리자 승인 후 사용 가능합니다.");return;}
+    setUser(data);setLoginError("");
   };
 
+  const pendingCount=users.filter((u:any)=>u.status==="pending").length;
+
+  /* SIGNUP */
+  if(page==="signup"&&!user) return <SignupPage onBack={()=>setPage("login")}/>;
+
+  /* LOGIN */
   if(!user) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
       <div className="bg-white rounded-2xl p-10 w-96 shadow-2xl">
@@ -438,25 +476,18 @@ export default function Home() {
         </div>
         {loginError&&<p className="text-red-500 text-xs font-semibold mb-3">{loginError}</p>}
         <button onClick={handleLogin} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold text-base">로그인</button>
-        <div className="text-center mt-5 text-xs text-gray-400 leading-relaxed">
-          관리자: admin / rnrdj1234<br/>
-          학생: student1 / 1234<br/>
-          학부모: parent1 / 1234
-        </div>
+        <button onClick={()=>setPage("signup")} className="w-full mt-3 border-2 border-gray-200 text-gray-500 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50">회원가입</button>
       </div>
     </div>
   );
 
   if(loading) return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-4xl mb-3">🥩</div>
-        <p className="text-gray-500 font-semibold">데이터를 불러오는 중...</p>
-      </div>
+      <div className="text-center"><div className="text-4xl mb-3">🥩</div><p className="text-gray-500 font-semibold">데이터를 불러오는 중...</p></div>
     </div>
   );
 
-  /* STUDENT & PARENT VIEW */
+  /* STUDENT & PARENT */
   if(user.role==="student"||user.role==="parent") {
     const tabs=[{id:"home",icon:"🏠",label:"홈"},{id:"grades",icon:"📊",label:"성적"},{id:"ai",icon:"💎",label:"AI"},{id:"info",icon:"🔔",label:"안내/자료"},{id:"game",icon:"🎮",label:"게임"}];
     return (
@@ -465,39 +496,33 @@ export default function Home() {
           <span className="font-bold">🥩 서서갈비</span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">{user.name} ({user.role==="student"?"학생":"학부모"})</span>
-            <button onClick={()=>setUser(null)} className="bg-slate-800 text-gray-400 border border-slate-700 px-3 py-1 rounded text-xs">로그아웃</button>
+            <button onClick={()=>{setUser(null);setLoginId("");setLoginPw("");}} className="bg-slate-800 text-gray-400 border border-slate-700 px-3 py-1 rounded text-xs">로그아웃</button>
           </div>
         </div>
         <div className="max-w-3xl mx-auto px-4 pt-4">
           {studentTab==="home"&&<StudentHome students={students} notices={notices} user={user}/>}
           {studentTab==="grades"&&<StudentGrades scores={scores} studentId={user.student_id}/>}
-          {!["home","grades"].includes(studentTab)&&(
-            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-400">🚧 준비 중인 기능입니다</div>
-          )}
+          {!["home","grades"].includes(studentTab)&&<div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-400">🚧 준비 중인 기능입니다</div>}
         </div>
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 pb-3 z-50">
-          {tabs.map(t=>(
-            <button key={t.id} onClick={()=>setStudentTab(t.id)} className={`flex flex-col items-center gap-0.5 px-3 py-1 ${studentTab===t.id?"text-blue-600":"text-gray-400"}`}>
-              <span className="text-xl">{t.icon}</span>
-              <span className="text-[10px] font-bold">{t.label}</span>
-            </button>
-          ))}
+          {tabs.map(t=>(<button key={t.id} onClick={()=>setStudentTab(t.id)} className={`flex flex-col items-center gap-0.5 px-3 py-1 ${studentTab===t.id?"text-blue-600":"text-gray-400"}`}><span className="text-xl">{t.icon}</span><span className="text-[10px] font-bold">{t.label}</span></button>))}
         </div>
       </div>
     );
   }
 
-  /* ADMIN VIEW */
+  /* ADMIN */
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-slate-900 px-5 py-3 flex justify-between items-center text-white sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <button onClick={()=>setSidebarOpen(!sidebarOpen)} className="text-xl">☰</button>
           <span className="font-bold text-sm">🥩 서서갈비 T 관리 페이지</span>
+          {pendingCount>0&&<span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">{user.name} (관리자)</span>
-          <button onClick={()=>setUser(null)} className="bg-slate-800 text-gray-300 border border-slate-700 px-3 py-1 rounded text-xs font-semibold">로그아웃</button>
+          <span className="text-xs text-gray-400">{user.name}</span>
+          <button onClick={()=>{setUser(null);setLoginId("");setLoginPw("");}} className="bg-slate-800 text-gray-300 border border-slate-700 px-3 py-1 rounded text-xs font-semibold">로그아웃</button>
         </div>
       </div>
       {sidebarOpen&&<div onClick={()=>setSidebarOpen(false)} className="fixed inset-0 bg-black/40 z-[300]"/>}
@@ -509,9 +534,13 @@ export default function Home() {
           </div>
         </div>
         <div className="px-3 pb-5">
-          {[{id:"dashboard",icon:"🏠",label:"대시보드"},{id:"students",icon:"👨‍🎓",label:"학생 관리"},{id:"accounts",icon:"🔑",label:"계정 관리"}].map(m=>(
+          {[
+            {id:"dashboard",icon:"🏠",label:"대시보드",badge:0},
+            {id:"approval",icon:"✅",label:"가입 승인",badge:pendingCount},
+            {id:"students",icon:"👨‍🎓",label:"학생 관리",badge:0},
+          ].map(m=>(
             <button key={m.id} onClick={()=>{setAdminTab(m.id);setSidebarOpen(false);}} className={`flex items-center gap-2 w-full px-3 py-3 rounded-lg text-sm font-bold mb-1 ${adminTab===m.id?"bg-blue-50 text-blue-600":"text-gray-600 hover:bg-gray-50"}`}>
-              {m.icon} {m.label}
+              {m.icon} {m.label} {m.badge>0&&<span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">{m.badge}</span>}
             </button>
           ))}
           {[
@@ -520,30 +549,22 @@ export default function Home() {
           ].map(g=>(
             <div key={g.cat} className="mt-3">
               <div className="text-[10px] font-bold text-gray-400 px-3 py-1 uppercase">{g.cat}</div>
-              {g.items.map(it=>(
-                <button key={it.id} onClick={()=>{setAdminTab(it.id);setSidebarOpen(false);}} className={`flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-semibold ${adminTab===it.id?"bg-blue-50 text-blue-600":"text-gray-500 hover:bg-gray-50"}`}>
-                  {it.icon} {it.label}
-                </button>
-              ))}
+              {g.items.map(it=>(<button key={it.id} onClick={()=>{setAdminTab(it.id);setSidebarOpen(false);}} className={`flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-semibold ${adminTab===it.id?"bg-blue-50 text-blue-600":"text-gray-500 hover:bg-gray-50"}`}>{it.icon} {it.label}</button>))}
             </div>
           ))}
         </div>
       </div>
       <div className="max-w-5xl mx-auto px-4 py-5">
-        {adminTab==="dashboard"&&<AdminDashboard students={students} classes={classes}/>}
+        {adminTab==="dashboard"&&<AdminDashboard students={students} classes={classes} pendingCount={pendingCount}/>}
+        {adminTab==="approval"&&<AdminApproval users={users} fetchUsers={fetchUsers}/>}
         {adminTab==="students"&&<AdminStudents students={students} fetchStudents={fetchStudents}/>}
-        {adminTab==="accounts"&&<AdminAccounts users={users} fetchUsers={fetchUsers}/>}
-        {!["dashboard","students","accounts"].includes(adminTab)&&(
+        {!["dashboard","approval","students"].includes(adminTab)&&(
           <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-            <div className="text-4xl mb-3">🚧</div>
-            <h3 className="font-bold text-lg">준비 중인 기능입니다</h3>
-            <p className="text-sm text-gray-400 mt-1">이 기능은 곧 추가될 예정입니다</p>
+            <div className="text-4xl mb-3">🚧</div><h3 className="font-bold text-lg">준비 중인 기능입니다</h3><p className="text-sm text-gray-400 mt-1">이 기능은 곧 추가될 예정입니다</p>
           </div>
         )}
       </div>
-      {!sidebarOpen&&(
-        <button onClick={()=>setSidebarOpen(true)} className="fixed left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-amber-400 text-white text-lg shadow-lg flex items-center justify-center z-50">☰</button>
-      )}
+      {!sidebarOpen&&(<button onClick={()=>setSidebarOpen(true)} className="fixed left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-amber-400 text-white text-lg shadow-lg flex items-center justify-center z-50">☰</button>)}
     </div>
   );
 }
