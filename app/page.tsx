@@ -14,7 +14,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
   useEffect(()=>{setTimeout(()=>setReady(true),100);},[]);
   return(<div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
     {/* 배경 — 흐리게 + 어둡게 + 확대 */}
-    <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(3px)"}}/>
+    <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(8px)"}}/>
     <div className="absolute inset-0 z-0 bg-gradient-to-br from-black/60 via-black/40 to-[#6c63ff]/20"/>
     {/* 장식 원형 글로우 */}
     <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#6c63ff]/20 rounded-full blur-3xl z-0"/>
@@ -36,8 +36,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col justify-center">
         <div className="mb-8">
           <p className="text-sm text-[#6c63ff] font-semibold mb-2 tracking-wider">WELCOME</p>
-          <h1 className="text-3xl font-bold text-slate-800 mb-1">정확하게, 확실하게</h1>
-          <h1 className="text-3xl font-bold text-[#6c63ff]">서정인 수학</h1>
+          <h1 className="text-3xl font-bold text-slate-800 mb-1">흐릿한 시작을,</h1>
+          <h1 className="text-3xl font-bold text-[#6c63ff]">뚜렷한 선택으로</h1>
         </div>
         <div className="space-y-4 max-w-sm">
           <div><label className="text-xs font-semibold text-slate-500 mb-1.5 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
@@ -57,7 +57,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       </div>
       <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 shadow-2xl">
         <p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p>
-        <h1 className="text-xl font-bold text-slate-800 mb-5">서정인 수학</h1>
+        <h1 className="text-xl font-bold text-slate-800 mb-1">흐릿한 시작을,</h1>
+        <h1 className="text-xl font-bold text-[#6c63ff] mb-5">뚜렷한 선택으로</h1>
         <div className="space-y-3">
           <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
           <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
