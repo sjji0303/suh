@@ -160,8 +160,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
           </div>
 
           <div className="text-center mb-6 relative z-10 w-full">
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.4rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
-              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
+            <h1 style={{fontFamily:"var(--font-serif)",letterSpacing:"-0.02em",lineHeight:1.4,whiteSpace:"nowrap"}}>
+              <span style={{fontSize:"0.82rem",color:"#999",fontWeight:300}}>흐릿한 시작이, </span><strong style={{fontSize:"1.4rem",background:"linear-gradient(135deg,#B5952F 0%,#D4AF37 50%,#AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontWeight:800}}>확실한 실력으로.</strong>
             </h1>
             <p className="text-[8px] font-bold tracking-[0.25em] uppercase mt-2 text-[#AA8C2C]">AGREESUH</p>
           </div>
@@ -278,89 +278,82 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
       .ios-glass-card {
-        background: linear-gradient(145deg,
-          rgba(255,255,255,0.82) 0%,
-          rgba(255,255,255,0.55) 50%,
-          rgba(255,255,255,0.72) 100%);
-        backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
-        -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
-        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
+        backdrop-filter: blur(28px) saturate(180%);
+        -webkit-backdrop-filter: blur(28px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 1);
+        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.06), inset 0 2px 5px rgba(255,255,255,1);
+        border-radius: 28px;
         position: relative;
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        /* 골드 테두리: 바깥 골드 + 안쪽 흰빛 하이라이트 */
-        border: 1px solid transparent;
-        background-clip: padding-box;
-        box-shadow:
-          0 0 0 1px rgba(212,175,55,0.45),
-          0 0 0 2px rgba(255,255,255,0.6),
-          0 12px 48px rgba(212,175,55,0.12),
-          0 4px 16px rgba(0,0,0,0.06),
-          inset 0 1px 0 rgba(255,255,255,0.95),
-          inset 0 -1px 0 rgba(212,175,55,0.15);
       }
       .ios-glass-card:hover {
         transform: translateY(-2px);
-        box-shadow:
-          0 0 0 1px rgba(212,175,55,0.65),
-          0 0 0 2px rgba(255,255,255,0.7),
-          0 20px 60px rgba(212,175,55,0.18),
-          0 6px 20px rgba(0,0,0,0.08),
-          inset 0 1px 0 rgba(255,255,255,1),
-          inset 0 -1px 0 rgba(212,175,55,0.2);
+        box-shadow: 0 16px 50px rgba(212, 175, 55, 0.1), inset 0 2px 5px rgba(255,255,255,1);
       }
-      /* 리퀴드 글라스 상단 하이라이트 */
-      .ios-glass-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 50%;
-        background: linear-gradient(180deg,
-          rgba(255,255,255,0.55) 0%,
-          rgba(255,255,255,0) 100%);
-        border-radius: 24px 24px 0 0;
-        pointer-events: none;
-        z-index: 1;
-      }
-      /* 리퀴드 글라스 쉬머 빛 */
       .ios-glass-card::after {
         content: "";
         position: absolute;
-        top: 0; left: -150%; width: 45%; height: 100%;
-        background: linear-gradient(to right,
-          transparent,
-          rgba(255,255,255,0.75),
-          transparent);
-        transform: skewX(-20deg);
-        animation: iosShimmerAnim 7s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        top: 0; left: -150%; width: 50%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
+        transform: skewX(-25deg);
+        animation: iosShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
         pointer-events: none;
-        z-index: 2;
       }
       @keyframes iosShimmerAnim {
-        0%   { left: -150%; opacity: 0; }
-        10%  { opacity: 1; }
-        45%  { left: 200%; opacity: 0; }
+        0% { left: -150%; opacity: 0; }
+        15% { opacity: 1; }
+        50% { left: 200%; opacity: 0; }
         100% { left: 200%; opacity: 0; }
       }
+      /* ── 타이포그래피 시스템 ── */
       .grade-label {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #94a3b8;
+        color: #b0afc0;
         margin-bottom: 4px;
-      }
-      @media (min-width: 640px) {
-        .grade-label { font-size: 11px; letter-spacing: 0.1em; margin-bottom: 6px; }
+        font-family: var(--font-sans);
       }
       .grade-value {
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        color: #334155;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #2d2b3d;
+        font-family: var(--font-sans);
       }
-      @media (min-width: 640px) {
-        .grade-value { font-size: 22px; }
+      /* 날짜 */
+      .score-date {
+        font-size: 15px;
+        font-weight: 700;
+        color: #2d2b3d;
+        letter-spacing: -0.01em;
+      }
+      /* 섹션 헤더 */
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #2d2b3d;
+        letter-spacing: -0.01em;
+      }
+      /* 문항 번호 */
+      .q-num { font-size: 12px; font-weight: 700; color: #c0becf; }
+      /* 문항 단원명 */
+      .q-topic { font-size: 12px; font-weight: 500; color: #6b6880; }
+      /* 정답률 % */
+      .q-rate { font-size: 10px; font-weight: 600; color: #b0afc0; }
+      /* 코멘트 라벨 */
+      .comment-label {
+        font-size: 9px; font-weight: 700;
+        letter-spacing: 0.15em; text-transform: uppercase;
+        color: #D4AF37; margin-bottom: 6px;
+      }
+      /* 코멘트 본문 */
+      .comment-body {
+        font-size: 13px; font-weight: 500;
+        color: #3d3b52; line-height: 1.7;
       }
     `}</style>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
@@ -376,24 +369,24 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     {/* 알림 패널 */}
     {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.15)",backdropFilter:"blur(2px)"}}/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] z-50 overflow-hidden rounded-2xl border" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.1)",boxShadow:"0 12px 40px rgba(212,175,55,0.12),0 2px 8px rgba(212,175,55,0.06)"}}><div className="flex items-center justify-between px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.1)",background:"linear-gradient(135deg,rgba(212,175,55,0.03),rgba(212,175,55,0.02))"}}><h3 className="font-semibold text-sm" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="transition-colors" style={{color:"rgba(130,120,150,0.6)"}}><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className="px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.06)",background:n.is_read?"transparent":"rgba(212,175,55,0.03)"}}><div className="flex items-start gap-2"><div className="flex-1"><p className="text-sm" style={{color:"#1a1628",fontFamily:"'Montserrat',sans-serif"}}>{n.message}</p><p className="text-[10px] mt-0.5" style={{color:"rgba(130,120,150,0.6)",fontFamily:"'Montserrat',sans-serif"}}>{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{background:"var(--c-gold)"}}/>}</div></div>)):<div className="p-8 text-center text-sm" style={{color:"rgba(130,120,150,0.5)",fontFamily:"'Montserrat',sans-serif"}}>알림이 없습니다</div>}</div></div></>}
     <main className="flex-1 lg:ml-64 pt-14 lg:pt-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
-      {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
+      {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={20}/></button><div className="text-center"><p className="score-date">{fmtDate(test.date)}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
         {/* 학생 정보 + 공유 */}
         <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#D4AF37] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
           {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
           {/* 2. 개인 코멘트 */}
-          {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
+          {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group" style={{borderLeft:"4px solid #D4AF37"}}><p className="comment-label">선생님 코멘트</p><p className="comment-body whitespace-pre-line relative z-10">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="ios-glass-card p-4 sm:p-6 flex flex-col min-h-[280px]">
-                <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
+              <div className="ios-glass-card p-4 sm:p-5 flex flex-col">
+                <h3 className="section-title mb-4 flex items-center justify-between">문항별 결과 <span className="text-[9px] bg-slate-50 px-2 py-1 tracking-widest text-slate-300 rounded-lg uppercase font-semibold">Questions</span></h3>
                 <div className="space-y-1.5 flex-1 relative z-10">
-                  {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
+                  {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="q-num w-6 text-right">{q.question_number}</span><span className="q-topic flex-1 text-center">{q.topic||"—"}</span><span className={`text-sm font-bold w-8 text-center ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="q-rate w-12 text-right">{q.correct_rate}%</span></div>))}
                 </div>
               </div>
               <div className="space-y-5">
-                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-5 sm:gap-y-6 gap-x-3 sm:gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-3xl sm:text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-2xl sm:text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-4 sm:p-5 relative z-10"><div className="grid grid-cols-2 gap-y-4 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="leading-none font-extrabold tracking-tighter" style={{fontSize:"26px"}} style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="leading-none font-bold tracking-tight text-slate-600 mt-1" style={{fontSize:"20px"}}>{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="font-semibold text-slate-400 mt-1" style={{fontSize:"16px"}}>{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="font-semibold text-slate-400 mt-1" style={{fontSize:"16px"}}>{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
                   const maxVal=Math.max(...data.map(d=>d.total),1);
@@ -404,7 +397,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   const diff=prev?prev.rank-points[points.length-1].rank:0;
                   return(<div className="ios-glass-card p-4 sm:p-6 relative z-10">
                     <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-base">등수 변화</h3>
+                    <h3 className="section-title">등수 변화</h3>
                     {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
                     {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
                     {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
@@ -425,14 +418,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>
           {/* 4. 하단 풀폭: 정답률 → 최다오답 */}
           <div className="space-y-4">
-            <div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#D4AF37":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
-            {wrong.length>0&&<div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#D4AF37":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
+            {wrong.length>0&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
           </div>
-        </>:<div className="ios-glass-card p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
-      </>:<div className="ios-glass-card p-12 text-center text-slate-400">시험 없음</div>}</div>}
+        </>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400 text-sm">결과 미입력</div>}
+      </>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">시험 없음</div>}</div>}
       {tab==="myexam"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 시험 결과</h2><button onClick={()=>setShowExamAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1  transition-all"><Icon type="plus" size={14}/>성적 입력</button></div>
-        {showExamAdd&&<div className="ios-glass-card p-5 mb-4 space-y-4">
+        {showExamAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-4">
           {/* 시험 유형 선택 */}
           <div><label className="text-xs font-semibold text-slate-500">시험 유형</label><div className="flex gap-2 mt-1">{["모의고사","내신"].map(t=>(<button key={t} onClick={()=>setExamForm(p=>({...p,exam_type:t,exam_name:"",score:"",grade:""}))} className={`px-4 py-2 rounded-xl text-sm font-semibold ${examForm.exam_type===t?"bg-[#D4AF37] text-white":"bg-white text-slate-500 border border-slate-200"}`}>{t}</button>))}</div></div>
 
@@ -465,7 +458,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div><label className="text-xs font-semibold text-slate-500">하고 싶은 말</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q3} onChange={e=>setExamForm(p=>({...p,q3:e.target.value}))} placeholder="자유롭게 적어주세요"/></div>
           <div className="flex gap-2"><button onClick={addExam} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setShowExamAdd(false)} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="ios-glass-card p-4">
+        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-slate-100/50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${ex.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-blue-50 text-blue-600"}`}>{ex.exam_type}</span>{ex.exam_name&&<span className="text-xs text-slate-500">{ex.exam_name}</span>}</div>
@@ -474,18 +467,18 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
             </div>
             <button onClick={()=>delExam(ex.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button>
           </div>
-        </div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">시험 성적을 입력해보세요</div>}
+        </div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">시험 성적을 입력해보세요</div>}
       </div>}
-      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="ios-glass-card p-5"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}</div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
+      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}</div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
       {tab==="inquiry"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">💬 문의사항</h2><button onClick={()=>setShowInqAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1  transition-all"><Icon type="plus" size={14}/>문의하기</button></div>
-        {showInqAdd&&<div className="ios-glass-card p-5 mb-4 space-y-3">
+        {showInqAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-3">
           <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={inqForm.title} onChange={e=>setInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
           <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={inqForm.content} onChange={e=>setInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용을 적어주세요"/></div>
           <div><label className="text-xs font-semibold text-slate-500">이미지 첨부</label><div className="flex items-center gap-2 mt-1"><button onClick={()=>inqImgRef.current?.click()} className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-500">{inqImg?inqImg.name:"이미지 선택"}</button><input ref={inqImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setInqImg(e.target.files[0]);}}/>{inqImg&&<button onClick={()=>setInqImg(null)} className="text-xs text-red-400">삭제</button>}</div></div>
           <div className="flex gap-2"><button onClick={addInquiry} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>{setShowInqAdd(false);setInqImg(null);}} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="ios-glass-card p-5">
+        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50">
           {editInqId===q.id?<div className="space-y-3">
             <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={editInqForm.title} onChange={e=>setEditInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
             <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={editInqForm.content} onChange={e=>setEditInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용"/></div>
@@ -494,11 +487,11 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
             <div className="flex justify-between mb-2"><div className="flex items-center gap-2"><span className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{user.login_id||user.name}</span><h3 className="font-semibold text-sm">{q.title||"문의"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}<span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasReply?"bg-green-50 text-green-600":"bg-amber-50 text-amber-600"}`}>{hasReply?"답변 완료":"답변 대기중"}</span></div><div className="flex items-center gap-2"><span className="text-xs text-slate-400">{q.created_at?.slice(0,10)}</span>{!hasReply&&<button onClick={()=>startEditInq(q)} className="text-xs text-slate-300 hover:text-[#D4AF37]">수정</button>}<button onClick={()=>deleteInquiry(q.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div></div>
             <p className="text-sm text-slate-600 whitespace-pre-line">{cleanContent}</p>{imgMatch&&<img src={imgMatch[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}{hasReply&&<div className="mt-3 bg-[#D4AF37]/5 rounded-xl p-3"><p className="text-xs font-semibold text-[#D4AF37] mb-1">답변</p><p className="text-sm text-slate-700 whitespace-pre-line">{cleanReply}</p>{replyImg&&<img src={replyImg[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}</div>}
           </>}
-        </div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">문의사항이 없습니다</div>}
+        </div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">문의사항이 없습니다</div>}
       </div>}
       {tab==="shop"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">🏪 상점</h2><div className="bg-amber-50 px-4 py-2 rounded-xl"><span className="text-sm font-bold text-amber-600">🔥 {myTokens} 서서갈비</span></div></div>
-        {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-amber-600">🔥 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
+        {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-amber-600">🔥 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
         {purchases.length>0&&<div><h3 className="font-semibold text-sm mb-3">구매 내역</h3><div className="space-y-2">{purchases.map((p:any)=>(<div key={p.id} className="bg-slate-50 rounded-xl px-4 py-3 flex justify-between items-center"><span className="text-sm">{p.shop_items?.name||"아이템"}</span><div className="text-right"><span className="text-xs font-bold text-amber-600">-{p.price} 🔥</span><p className="text-[10px] text-slate-400">{p.created_at?.slice(0,10)}</p></div></div>))}</div></div>}
       </div>}
       {tab==="shorts"&&<div>
@@ -508,7 +501,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
       </div>}
       {tab==="review"&&<div>
         <div className="flex justify-between items-center mb-5"><h2 className="text-xl font-bold">✍️ 수강 후기</h2>{!showReviewForm&&<button onClick={()=>setShowReviewForm(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-2xl text-xs font-semibold">{myReview?"수정하기":"후기 작성"}</button>}</div>
-        {showReviewForm?<div className="ios-glass-card p-6 space-y-5">
+        {showReviewForm?<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 space-y-5">
           <div><label className="text-sm font-semibold text-slate-700 mb-2 block">📈 성적이 제일 많이 올랐을 때는?</label><input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20 transition-all" value={reviewForm.best_grade} onChange={e=>setReviewForm(p=>({...p,best_grade:e.target.value}))} placeholder="예: 1학년 1학기 기말고사, 500등 → 100등"/><p className="text-[10px] text-slate-400 mt-1">예: 60점 → 100점, 혹은 500등 → 100등</p></div>
           <div><label className="text-sm font-semibold text-slate-700 mb-2 block">⭐ 서정인 쌤의 장점 (순위별 선택)</label>
             <div className="space-y-2">
@@ -517,14 +510,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>
           <div><label className="text-sm font-semibold text-slate-700 mb-2 block">💬 수강 후기</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 resize-none h-32 focus:ring-2 focus:ring-[#D4AF37]/20 transition-all" value={reviewForm.content} onChange={e=>setReviewForm(p=>({...p,content:e.target.value}))} placeholder="서정인 수학을 수강하면서 느낀 점을 자유롭게 적어주세요"/></div>
           <div className="flex gap-2"><button onClick={saveReview} className="shimmer-action-btn text-white px-6 py-2.5 rounded-xl text-sm font-semibold">저장</button><button onClick={()=>setShowReviewForm(false)} className="text-xs text-slate-400 px-4 py-2.5">취소</button></div>
-        </div>:myReview?<div className="ios-glass-card p-6">
+        </div>:myReview?<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50">
           {myReview.best_grade&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-1">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{myReview.best_grade}</p></div>}
           {myReview.keywords&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-2">⭐ 장점 순위</p><div className="flex flex-wrap gap-2">{myReview.keywords.split(",").map((kw:string,i:number)=>(<span key={kw} className={`px-3 py-1 rounded-full text-xs font-semibold ${i===0?"bg-amber-100 text-amber-600":i===1?"bg-slate-100 text-slate-500":"bg-orange-50 text-orange-400"}`}>{i+1}순위 #{kw}</span>))}</div></div>}
           <div><p className="text-xs font-semibold text-slate-400 mb-1">💬 수강 후기</p><p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{myReview.content}</p></div>
           <div className="flex items-center justify-between mt-4"><p className="text-[10px] text-slate-300">{myReview.created_at?.slice(0,10)} 작성</p><button onClick={deleteReview} className="text-xs text-slate-300 hover:text-red-500 transition-colors">삭제</button></div>
-        </div>:<div className="ios-glass-card p-12 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="shimmer-action-btn text-white px-5 py-2 rounded-xl text-sm font-semibold">후기 작성하기</button></div>}
+        </div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="shimmer-action-btn text-white px-5 py-2 rounded-xl text-sm font-semibold">후기 작성하기</button></div>}
       </div>}
-      {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="ios-glass-card p-6 max-w-md"><div className="space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="shimmer-action-btn mt-4 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
+      {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 max-w-md"><div className="space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="shimmer-action-btn mt-4 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
     </div></main>
   </div>);
 }
