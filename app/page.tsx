@@ -83,8 +83,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
               <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border border-white/20"/>
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-white" >{nm}</h2>
-              {bio&&<div className="text-[9px] mt-0.5 line-clamp-2" >{bio}</div>}
+              <h2 className="text-sm font-semibold text-white" style={{fontFamily:"'Playfair Display',serif"}}>{nm}</h2>
+              {bio&&<div className="text-[9px] mt-0.5 line-clamp-2" style={{color:"rgba(255,255,255,0.5)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{bio}</div>}
             </div>
           </div>
         </div>
@@ -98,8 +98,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             <input className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
             <input type="password" className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
-          {err&&<p className="text-xs px-3 py-1.5 rounded-lg mt-2" >{err}</p>}
-          <button onClick={go} disabled={ld} className="w-full py-3 rounded-xl text-sm mt-3 relative overflow-hidden transition-all duration-300 disabled:opacity-60" >
+          {err&&<p className="text-xs px-3 py-1.5 rounded-lg mt-2" style={{color:"#e05555",background:"rgba(224,85,85,0.07)",fontFamily:"'Montserrat',sans-serif"}}>{err}</p>}
+          <button onClick={go} disabled={ld} className="w-full py-3 rounded-xl text-sm mt-3 relative overflow-hidden transition-all duration-300 disabled:opacity-60" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.12em",fontWeight:600,background:"linear-gradient(135deg,#1a1040,#2d2060)",color:"white",boxShadow:"0 4px 20px rgba(108,99,255,0.3)"}}>
             <span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span>
             <span className="shimmer-btn absolute inset-0 pointer-events-none"/>
           </button>
@@ -232,14 +232,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08),inset 0 1px 0 rgba(255,255,255,0.95)"}}>
         <div className="flex items-center justify-between mb-6 px-1">
-          <div className="rounded-2xl px-3 py-1.5" ><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div>
+          <div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(245,244,255,0.8)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div>
           <button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"rgba(212,175,55,0.8)"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(212,175,55,0.1)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
             <Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}
           </button>
         </div>
         <div className="px-2 mb-4 flex items-center gap-2">
           <span className="text-sm">🔥</span>
-          <span className="text-[11px] font-semibold" >{myTokens} 서서갈비</span>
+          <span className="text-[11px] font-semibold" style={{color:"rgba(200,140,0,0.9)",fontFamily:"'Montserrat',sans-serif"}}>{myTokens} 서서갈비</span>
           <div className="ml-auto h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent)"}}/>
         </div>
         <nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`} style={tab!==m.id?{}:{}}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
@@ -249,24 +249,24 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
             <p className="text-[10px]" >{user.school||""}</p>
           </div>
           <button onClick={()=>setTab("changepw")} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" ><Icon type="settings" size={16}/>비밀번호 변경</button>
-          <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" ><Icon type="logout" size={16}/>로그아웃</button>
+          <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button>
         </div>
       </div>
     </aside>
     <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid rgba(212,175,55,0.12)",boxShadow:"0 2px 20px rgba(108,99,255,0.07)"}}>
       <button onClick={()=>setMm(!mm)} className="p-1 rounded-xl transition-colors" ><Icon type={mm?"close":"menu"} size={22}/></button>
       <div className="flex items-center gap-2.5">
-        <span className="text-[10px] font-semibold" >🔥 {myTokens}</span>
+        <span className="text-[10px] font-semibold" style={{color:"rgba(200,140,0,0.9)",fontFamily:"'Montserrat',sans-serif"}}>🔥 {myTokens}</span>
         <span className="text-xs font-semibold" >{user.name}</span>
         <button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1 rounded-xl transition-colors" >
           <Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}
         </button>
-        <div className="rounded-xl px-2 py-1" ><img src="/logo.png" alt="" className="h-4 object-contain opacity-70"/></div>
+        <div className="rounded-xl px-2 py-1" style={{background:"rgba(245,244,255,0.8)"}}><img src="/logo.png" alt="" className="h-4 object-contain opacity-70"/></div>
       </div>
     </div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" ><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 z-50 rounded-r-3xl p-5 flex flex-col" style={{background:"rgba(255,255,255,0.95)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",boxShadow:"8px 0 48px rgba(108,99,255,0.12)",borderRight:"1px solid rgba(212,175,55,0.12)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{setTab("changepw");setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-2" style={{color:"rgba(130,120,150,0.8)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-1" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
     {/* 알림 패널 */}
-    {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" >알림이 없습니다</div>}</div></div></>}
+    {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.15)",backdropFilter:"blur(2px)"}}/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] z-50 overflow-hidden rounded-2xl border" style={{background:"rgba(255,255,255,0.95)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.12)"}}><div className="flex items-center justify-between px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.1)",background:"linear-gradient(135deg,rgba(108,99,255,0.03),rgba(212,175,55,0.02))"}}><h3 className="font-semibold text-sm" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="transition-colors" style={{color:"rgba(130,120,150,0.6)"}}><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className="px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.06)",background:n.is_read?"transparent":"rgba(108,99,255,0.03)"}}><div className="flex items-start gap-2"><div className="flex-1"><p className="text-sm" style={{color:"#1a1628",fontFamily:"'Montserrat',sans-serif",fontWeight:400}}>{n.message}</p><p className="text-[10px] mt-0.5" style={{color:"rgba(130,120,150,0.6)",fontFamily:"'Montserrat',sans-serif"}}>{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{background:"rgba(212,175,55,0.7)"}}/>}</div></div>)):<div className="p-8 text-center text-sm" style={{color:"rgba(130,120,150,0.5)",fontFamily:"'Montserrat',sans-serif"}}>알림이 없습니다</div>}</div></div></>}
     <main className="flex-1 lg:ml-64 pt-14 lg:pt-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
       {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 rounded-xl transition-all hover:bg-white/80"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
         {/* 학생 정보 + 공유 */}
@@ -296,7 +296,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                     {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
                     {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                   </div>
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" >
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"180px"}}>
                     {[0,0.5,1].map(r=>(<line key={r} x1={px} y1={py+gh*(1-r)} x2={w-px} y2={py+gh*(1-r)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>))}
                     <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6c63ff" stopOpacity="0.15"/><stop offset="100%" stopColor="#6c63ff" stopOpacity="0"/></linearGradient></defs>
                     {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
@@ -1091,17 +1091,17 @@ export default function Home(){
         {navEl()}
         <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}>
           <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" ><Icon type="user" size={14}/></div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"rgba(108,99,255,0.08)",color:"rgba(108,99,255,0.7)"}}><Icon type="user" size={14}/></div>
             <div><p className="text-xs font-semibold" style={{color:"#1a1628"}}>{user.name}</p><p className="text-[10px]" style={{color:"rgba(108,99,255,0.5)"}}>관리자</p></div>
           </div>
-          <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" ><Icon type="logout" size={16}/>로그아웃</button>
+          <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button>
         </div>
       </div>
     </aside>
     <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid rgba(212,175,55,0.12)",boxShadow:"0 2px 20px rgba(108,99,255,0.07)"}}><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm" style={{fontFamily:"'Playfair Display',serif"}}>서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
     {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" ><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
-      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" >확인</button></div></div>}
+      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08)"}}><div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl" style={{background:"linear-gradient(135deg,rgba(108,99,255,0.08),rgba(212,175,55,0.06))"}}><span style={{filter:"drop-shadow(0 2px 4px rgba(108,99,255,0.2))"}}>🔒</span></div><h2 className="text-lg font-semibold mb-1" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>관리 메뉴</h2><p className="text-xs mb-6" style={{color:"rgba(130,120,150,0.7)",fontFamily:"'Montserrat',sans-serif"}}>접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-center mb-3" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs mb-3" style={{color:"#e05555",fontFamily:"'Montserrat',sans-serif"}}>{adminPwErr}</p>}<button onClick={tryUnlock} className="shimmer-action-btn w-full py-3 rounded-2xl font-semibold text-sm text-white" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.1em",background:"linear-gradient(135deg,#1a1040,#2d2060)",boxShadow:"0 4px 20px rgba(108,99,255,0.3)"}}>확인</button></div></div>}
       {tab==="classes"&&<AdminClassManager users={users}/>}
       {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups}/>}
       {tab==="exams"&&adminUnlocked&&<AdminExamViewer users={users}/>}
