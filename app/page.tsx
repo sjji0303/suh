@@ -580,7 +580,7 @@ function AdminClassManager({users}:{users:any[]}){
               <span style={{fontSize:"10px",color:"#94a3b8",width:"34px",textAlign:"right"}}>{q.correct_rate}%</span>
             </div>))}
           </div>
-          {/* 오른쪽: 점수 + 등수 */}
+          {/* 오른쪽: 점수 */}
           <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
             <div style={{background:"linear-gradient(135deg, #ffffff, #f0edff)",borderRadius:"16px",padding:"14px",border:"1px solid #e8e5ff"}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",textAlign:"center"}}>
@@ -590,10 +590,10 @@ function AdminClassManager({users}:{users:any[]}){
                 <div><p style={{fontSize:"10px",color:"#94a3b8"}}>최고</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{best}<span style={{fontSize:"13px"}}>점</span></p></div>
               </div>
             </div>
-            {myRank>0&&<div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px",textAlign:"center"}}>
-              <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"6px"}}>등수</p>
-              <p style={{fontSize:"28px",fontWeight:"bold",color:"#6c63ff"}}>{myRank}<span style={{fontSize:"14px",color:"#94a3b8"}}>/{rankData.length}명</span></p>
-            </div>}
+            <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}><p style={{fontSize:"14px",fontWeight:"bold"}}>등수 변화</p><span style={{fontSize:"10px",color:"#94a3b8"}}>시험 2회 이상부터 추이 표시</span></div>
+              <div style={{height:"60px",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:"11px",color:"#cbd5e1"}}>앱에서 확인하세요</p></div>
+            </div>
           </div>
         </div>
         {/* 정답률 차트 */}
