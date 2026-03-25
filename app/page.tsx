@@ -206,11 +206,46 @@ function fmtDate(d:string){try{const dt=new Date(d+"T00:00:00");return`${d} (${d
 function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[_tab,_setTab]=useState("grades");const setTab=(t:string)=>{_setTab(t);window.scrollTo(0,0);};const tab=_tab;const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
+  const[showConfetti,setShowConfetti]=useState(false);
+  const confettiRef=useRef<HTMLCanvasElement>(null);
+  // confetti 실행 함수
+  const fireConfetti=()=>{
+    setShowConfetti(true);
+    setTimeout(()=>{
+      const canvas=confettiRef.current;if(!canvas)return;
+      canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+      const ctx=canvas.getContext("2d");if(!ctx)return;
+      const pieces:any[]=[];
+      const colors=["#D4AF37","#FFE566","#FF6B6B","#4ECDC4","#A78BFA","#F97316","#34D399","#60A5FA","#F472B6"];
+      for(let i=0;i<160;i++){pieces.push({x:Math.random()*canvas.width,y:-20-Math.random()*200,w:6+Math.random()*8,h:10+Math.random()*12,r:Math.random()*Math.PI*2,dr:0.1+Math.random()*0.3,dx:(Math.random()-0.5)*3,dy:2+Math.random()*4,color:colors[Math.floor(Math.random()*colors.length)],alpha:1});}
+      let frame=0;
+      const draw=()=>{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        pieces.forEach(p=>{
+          ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.rotate(p.r);
+          ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+          p.x+=p.dx;p.y+=p.dy;p.r+=p.dr;p.dy+=0.05;
+          if(frame>60)p.alpha=Math.max(0,p.alpha-0.015);
+        });
+        frame++;
+        if(frame<160)requestAnimationFrame(draw);else setShowConfetti(false);
+      };
+      requestAnimationFrame(draw);
+    },50);
+  };
   const[notifs,setNotifs]=useState<any[]>([]);const[showNotif,setShowNotif]=useState(false);
   const unreadCount=notifs.filter(n=>!n.is_read).length;
   const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data)setNotifs(data);};
   const markAllRead=async()=>{await supabase.from("notifications").update({is_read:true}).eq("user_id",user.id).eq("is_read",false);fNotifs();};
   useEffect(()=>{fNotifs();},[]);
+  // 등수 향상 시 confetti
+  useEffect(()=>{
+    if(rankHistory.length>=2){
+      const last=rankHistory[rankHistory.length-1];
+      const prev=rankHistory[rankHistory.length-2];
+      if(prev.rank-last.rank>0){fireConfetti();}
+    }
+  },[rankHistory]);
   useEffect(()=>{(async()=>{
     // 학생이 속한 반의 시험만 가져오기
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
@@ -260,8 +295,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     const subjects=isM?JSON.stringify({국어:{score:examForm.kor_score,grade:examForm.kor_grade},수학:{score:examForm.math_score,grade:examForm.math_grade},영어:{score:examForm.eng_score,grade:examForm.eng_grade},과학:{score:examForm.sci_score,grade:examForm.sci_grade},사회:{score:examForm.soc_score,grade:examForm.soc_grade}}):"";
     const payload={user_id:user.id,exam_type:examForm.exam_type,exam_name:examForm.exam_name,subject:isM?"전과목":"수학",score:isM?examForm.math_score:examForm.score,total:isM?subjects:"",grade:isM?examForm.math_grade:examForm.grade,memo:JSON.stringify({q1:examForm.q1,q2:examForm.q2,q3:examForm.q3}),exam_date:""};
     await supabase.from("student_exams").insert(payload);
-    setExamForm({exam_type:"모의고사",exam_name:"",subject:"",score:"",total:"",grade:"",memo:"",exam_date:"",q1:"",q2:"",q3:"",kor_score:"",kor_grade:"",math_score:"",math_grade:"",eng_score:"",eng_grade:"",sci_score:"",sci_grade:"",soc_score:"",soc_grade:""});
-    setShowExamAdd(false);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);
+    setExamForm({exam_type:examForm.exam_type,exam_name:"",subject:"",score:"",total:"",grade:"",memo:"",exam_date:"",q1:"",q2:"",q3:"",kor_score:"",kor_grade:"",math_score:"",math_grade:"",eng_score:"",eng_grade:"",sci_score:"",sci_grade:"",soc_score:"",soc_grade:""});
+    const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);
   };
   const delExam=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("student_exams").delete().eq("id",id);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);};
   const[editExamId,setEditExamId]=useState<number|null>(null);const[editExamForm,setEditExamForm]=useState({exam_type:"모의고사",exam_name:"",score:"",grade:"",q1:"",q2:"",q3:"",kor_score:"",kor_grade:"",math_score:"",math_grade:"",eng_score:"",eng_grade:"",sci_score:"",sci_grade:"",soc_score:"",soc_grade:""});
@@ -347,7 +382,6 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         100% { left: 200%; opacity: 0; }
       }
       .grade-label {
-        font-size: 10px;
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
@@ -367,6 +401,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         .grade-value { font-size: 22px; }
       }
     `}</style>
+    {/* 🎉 Confetti Canvas */}
+    {showConfetti&&<canvas ref={confettiRef} className="fixed inset-0 pointer-events-none z-[9999]" style={{width:"100%",height:"100%"}}/>}
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}>
         <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(212,175,55,0.15)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
@@ -402,7 +438,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   return(<div className="ios-glass-card p-4 sm:p-6 relative z-10">
                     <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-base">등수 변화</h3>
-                    {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
+                    {prev&&diff!==0&&<span onClick={()=>{if(diff>0)fireConfetti();}} className={`text-sm font-bold px-3 py-1 rounded-lg cursor-pointer select-none ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"🎉 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
                     {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
                     {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                   </div>
@@ -428,13 +464,13 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div className="ios-glass-card p-4 sm:p-6">
             <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
             <div className="space-y-1.5 relative z-10">
-              {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
+              {questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];const isCool=isCorrect&&rate<30;const isCry=!isCorrect&&rate>=80;return(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className="text-base w-6 text-center">{isCool?"😎":isCry?"😂":""}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${isCorrect?"text-[#D4AF37]":"text-red-400"}`}>{isCorrect?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>);})}
             </div>
           </div>
         </>:<div className="ios-glass-card p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
       </>:<div className="ios-glass-card p-12 text-center text-slate-400">시험 없음</div>}</div>}
       {tab==="myexam"&&<div>
-        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 시험 결과</h2><button onClick={()=>setShowExamAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1  transition-all"><Icon type="plus" size={14}/>성적 입력</button></div>
+        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 시험 결과</h2><button onClick={()=>{setShowExamAdd(true);setEditExamId(null);}} className="shimmer-action-btn text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-md transition-all" style={{background:"linear-gradient(135deg,#D4AF37,#B5952F)",boxShadow:"0 4px 14px rgba(212,175,55,0.4)"}}><Icon type="plus" size={15}/>성적 입력</button></div>
         {showExamAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-4">
           {/* 시험 유형 선택 */}
           <div><label className="text-xs font-semibold text-slate-500">시험 유형</label><div className="flex gap-2 mt-1">{["모의고사","내신"].map(t=>(<button key={t} onClick={()=>setExamForm(p=>({...p,exam_type:t,exam_name:"",score:"",grade:""}))} className={`px-4 py-2 rounded-xl text-sm font-semibold ${examForm.exam_type===t?"bg-[#D4AF37] text-white":"bg-white text-slate-500 border border-slate-200"}`}>{t}</button>))}</div></div>
@@ -466,7 +502,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div><label className="text-xs font-semibold text-slate-500">수학 성적이 올랐나요?</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q1} onChange={e=>setExamForm(p=>({...p,q1:e.target.value}))} placeholder="예: 저번보다 10점 올랐어요"/></div>
           <div><label className="text-xs font-semibold text-slate-500">공부에 가장 큰 고민은?</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q2} onChange={e=>setExamForm(p=>({...p,q2:e.target.value}))} placeholder="예: 시간이 부족해요"/></div>
           <div><label className="text-xs font-semibold text-slate-500">하고 싶은 말</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q3} onChange={e=>setExamForm(p=>({...p,q3:e.target.value}))} placeholder="자유롭게 적어주세요"/></div>
-          <div className="flex gap-2"><button onClick={addExam} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setShowExamAdd(false)} className="text-xs text-slate-400">취소</button></div>
+          <div className="flex gap-2"><button onClick={addExam} className="bg-[#D4AF37] text-white px-5 py-2 rounded-xl text-xs font-semibold">✓ 저장하고 계속 입력</button><button onClick={()=>setShowExamAdd(false)} className="text-xs text-slate-400 px-3 py-2 rounded-xl bg-slate-100">닫기</button></div>
         </div>}
         {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="ios-glass-card p-4">
           {editExamId===ex.id?<div className="space-y-4">
@@ -494,53 +530,27 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
               {subjects?<div className="mt-2 bg-gradient-to-r from-slate-50 to-white rounded-xl overflow-hidden border border-slate-100 shadow-sm"><table className="w-full text-xs"><thead><tr className="bg-gradient-to-r from-[#D4AF37]/5 to-[#D4AF37]/10"><th className="py-2 w-10 text-[10px] font-bold text-slate-400"></th>{["국어","수학","영어","과학","사회"].map(s=>(<th key={s} className="py-2 text-[10px] font-bold text-slate-600">{s}</th>))}</tr></thead><tbody><tr><td className="py-1.5 text-center text-[10px] font-bold text-slate-400">등급</td>{["국어","수학","영어","과학","사회"].map(s=>(<td key={s} className="py-1.5 text-center font-bold text-[#D4AF37]">{subjects[s]?.grade||"—"}</td>))}</tr><tr className="border-t border-slate-50"><td className="py-1.5 text-center text-[10px] font-bold text-slate-400">점수</td>{["국어","수학","영어","과학","사회"].map(s=>(<td key={s} className="py-1.5 text-center">{subjects[s]?.score||"—"}</td>))}</tr></tbody></table></div>:<><p className="font-semibold text-sm">{ex.subject}</p><div className="flex items-center gap-3 mt-1"><span className="text-lg font-bold text-[#D4AF37]">{ex.score}점</span>{ex.grade&&<span className="text-sm font-semibold text-slate-500">{ex.grade}</span>}</div></>}
               {(memoObj.q1||memoObj.q2||memoObj.q3)&&<div className="mt-2 space-y-1 text-xs text-slate-500">{memoObj.q1&&<p>📈 {memoObj.q1}</p>}{memoObj.q2&&<p>🤔 {memoObj.q2}</p>}{memoObj.q3&&<p>💬 {memoObj.q3}</p>}</div>}
             </div>
-            <div className="flex items-center gap-2 ml-2"><button onClick={()=>startEditExam(ex)} className="text-xs text-slate-300 hover:text-[#D4AF37]">수정</button><button onClick={()=>delExam(ex.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div>
+            <div className="flex items-center gap-2 ml-2 flex-shrink-0"><button onClick={()=>{setEditExamId(ex.id);startEditExam(ex);setShowExamAdd(false);}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">수정</button><button onClick={()=>delExam(ex.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button></div>
           </div>}
         </div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">시험 성적을 입력해보세요</div>}
       </div>}
-      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any,ni:number)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const postNum=notices.length-ni;return(<div key={n.id} className="ios-glass-card p-5" style={{wordBreak:"break-word",overflowWrap:"break-word"}}>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="text-[11px] font-bold text-slate-500">#{postNum}</span>
-            {isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}
-            <span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg font-semibold">{n.class_groups?.name||""}</span>
-            <span className="text-xs text-slate-400 ml-auto">{n.created_at?.slice(0,10)}</span>
-          </div>
-          <h3 className="font-bold text-sm text-slate-800 mb-2 pb-2" style={{borderBottom:"1px solid rgba(212,175,55,0.1)"}}>{n.title||"공지"}</h3>
-          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words" style={{maxWidth:"100%",overflowWrap:"break-word"}}>{nClean}</p>
-          {nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain" style={{maxWidth:"100%"}}/>}
-        </div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
+      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="ios-glass-card p-5" style={{wordBreak:"break-word",overflowWrap:"break-word"}}><div className="flex flex-wrap items-start justify-between gap-2 mb-2"><div className="flex items-center gap-2 flex-wrap"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2 flex-shrink-0"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words" style={{maxWidth:"100%",overflowWrap:"break-word"}}>{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain" style={{maxWidth:"100%"}}/>}</div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
       {tab==="inquiry"&&<div>
-        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">💬 문의사항</h2><button onClick={()=>setShowInqAdd(true)} className="shimmer-action-btn text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-md transition-all" style={{background:"linear-gradient(135deg,#D4AF37,#B5952F)",boxShadow:"0 4px 14px rgba(212,175,55,0.4)"}}><Icon type="plus" size={15}/>문의하기</button></div>
+        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">💬 문의사항</h2><button onClick={()=>setShowInqAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1  transition-all"><Icon type="plus" size={14}/>문의하기</button></div>
         {showInqAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-3">
           <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={inqForm.title} onChange={e=>setInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
           <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={inqForm.content} onChange={e=>setInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용을 적어주세요"/></div>
           <div><label className="text-xs font-semibold text-slate-500">이미지 첨부</label><div className="flex items-center gap-2 mt-1"><button onClick={()=>inqImgRef.current?.click()} className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-500">{inqImg?inqImg.name:"이미지 선택"}</button><input ref={inqImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setInqImg(e.target.files[0]);}}/>{inqImg&&<button onClick={()=>setInqImg(null)} className="text-xs text-red-400">삭제</button>}</div></div>
           <div className="flex gap-2"><button onClick={addInquiry} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>{setShowInqAdd(false);setInqImg(null);}} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any,qi:number)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const postNum=inquiries.length-qi;return(<div key={q.id} className="ios-glass-card p-5">
+        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="ios-glass-card p-5">
           {editInqId===q.id?<div className="space-y-3">
             <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={editInqForm.title} onChange={e=>setEditInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
             <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={editInqForm.content} onChange={e=>setEditInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용"/></div>
             <div className="flex gap-2"><button onClick={saveEditInq} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setEditInqId(null)} className="text-xs text-slate-400">취소</button></div>
           </div>:<>
-            {/* 1행: 번호 / N / 상태 / 날짜 / 수정·삭제 */}
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="text-[11px] font-bold text-slate-500">#{postNum}</span>
-              {isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasReply?"bg-green-50 text-green-600":"bg-amber-50 text-amber-600"}`}>{hasReply?"답변 완료":"답변 대기중"}</span>
-              <span className="text-xs text-slate-400 ml-auto">{q.created_at?.slice(0,10)}</span>
-              {!hasReply&&<button onClick={()=>startEditInq(q)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">수정</button>}
-              <button onClick={()=>deleteInquiry(q.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button>
-            </div>
-            {/* 2행: 제목 + 학생 이름 */}
-            <div className="flex items-center gap-2 mb-2 pb-2" style={{borderBottom:"1px solid rgba(212,175,55,0.1)"}}>
-              <h3 className="font-bold text-sm text-slate-800">{q.title||"문의"}</h3>
-              <span className="text-xs font-semibold text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg ml-auto flex-shrink-0">{user.login_id||user.name}</span>
-            </div>
-            {/* 3행: 내용 */}
-            <p className="text-sm text-slate-600 whitespace-pre-line leading-relaxed">{cleanContent}</p>
-            {imgMatch&&<img src={imgMatch[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}
-            {hasReply&&<div className="mt-3 bg-[#D4AF37]/5 rounded-xl p-3 border border-[#D4AF37]/10"><p className="text-xs font-semibold text-[#D4AF37] mb-1">✏️ 답변</p><p className="text-sm text-slate-700 whitespace-pre-line">{cleanReply}</p>{replyImg&&<img src={replyImg[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}</div>}
+            <div className="flex justify-between mb-2"><div className="flex items-center gap-2"><span className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{user.login_id||user.name}</span><h3 className="font-semibold text-sm">{q.title||"문의"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}<span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasReply?"bg-green-50 text-green-600":"bg-amber-50 text-amber-600"}`}>{hasReply?"답변 완료":"답변 대기중"}</span></div><div className="flex items-center gap-2"><span className="text-xs text-slate-400">{q.created_at?.slice(0,10)}</span>{!hasReply&&<button onClick={()=>startEditInq(q)} className="text-xs text-slate-300 hover:text-[#D4AF37]">수정</button>}<button onClick={()=>deleteInquiry(q.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div></div>
+            <p className="text-sm text-slate-600 whitespace-pre-line">{cleanContent}</p>{imgMatch&&<img src={imgMatch[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}{hasReply&&<div className="mt-3 bg-[#D4AF37]/5 rounded-xl p-3"><p className="text-xs font-semibold text-[#D4AF37] mb-1">답변</p><p className="text-sm text-slate-700 whitespace-pre-line">{cleanReply}</p>{replyImg&&<img src={replyImg[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}</div>}
           </>}
         </div>);})}</div>:<div className="ios-glass-card p-12 text-center text-slate-400">문의사항이 없습니다</div>}
       </div>}
@@ -570,7 +580,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           {myReview.best_grade&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-1">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{myReview.best_grade}</p></div>}
           {myReview.keywords&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-2">⭐ 장점 순위</p><div className="flex flex-wrap gap-2">{myReview.keywords.split(",").map((kw:string,i:number)=>(<span key={kw} className={`px-3 py-1 rounded-full text-xs font-semibold ${i===0?"bg-amber-100 text-amber-600":i===1?"bg-slate-100 text-slate-500":"bg-orange-50 text-orange-400"}`}>{i+1}순위 #{kw}</span>))}</div></div>}
           <div><p className="text-xs font-semibold text-slate-400 mb-1">💬 수강 후기</p><p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{myReview.content}</p></div>
-          <div className="flex items-center justify-between mt-4"><p className="text-[10px] text-slate-400">{myReview.created_at?.slice(0,10)} 작성</p><div className="flex items-center gap-2"><button onClick={()=>setShowReviewForm(true)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">수정</button><button onClick={deleteReview} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button></div></div>
+          <div className="flex items-center justify-between mt-4"><p className="text-[10px] text-slate-300">{myReview.created_at?.slice(0,10)} 작성</p><button onClick={deleteReview} className="text-xs text-slate-300 hover:text-red-500 transition-colors">삭제</button></div>
         </div>:<div className="ios-glass-card p-12 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="shimmer-action-btn text-white px-5 py-2 rounded-xl text-sm font-semibold">후기 작성하기</button></div>}
       </div>}
       {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="ios-glass-card p-6 max-w-md"><div className="space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#D4AF37]/20" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="shimmer-action-btn mt-4 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
