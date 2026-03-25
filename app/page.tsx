@@ -133,7 +133,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     </div>}
   </div>);
 }
-\n/* ═══ STUDENT VIEW ═══ */
+
+/* ═══ STUDENT VIEW ═══ */
 const dayNames=["일","월","화","수","목","금","토"];
 function fmtDate(d:string){try{const dt=new Date(d+"T00:00:00");return`${d} (${dayNames[dt.getDay()]})`;}catch{return d;}}
 
