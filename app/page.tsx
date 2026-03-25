@@ -275,73 +275,93 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
-  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
+  return(<div className="min-h-screen flex" style={{background:"radial-gradient(circle at 50% 0%, rgb(238, 238, 238) 0%, rgb(230, 230, 230) 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
       .ios-glass-card {
-        /* 투명한 리퀴드 글라스 배경 */
+        /* Pristine crystal-clear Liquid Glass base */
         background: linear-gradient(
           145deg,
-          rgba(255,255,255,0.62) 0%,
-          rgba(255,255,255,0.35) 50%,
-          rgba(255,255,255,0.55) 100%
+          rgba(255, 255, 255, 0.85) 0%,
+          rgba(255, 255, 255, 0.4) 40%,
+          rgba(255, 255, 255, 0.6) 60%,
+          rgba(255, 255, 255, 0.2) 100%
         );
-        backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
-        -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
+        backdrop-filter: blur(48px) saturate(220%) contrast(105%) brightness(1.1);
+        -webkit-backdrop-filter: blur(48px) saturate(220%) contrast(105%) brightness(1.1);
         border-radius: 22px;
         position: relative;
         overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        /* 골드 테두리 + 내부 하이라이트 */
-        border: 1px solid rgba(212,175,55,0.55);
-        box-shadow:
-          0 0 0 1px rgba(255,255,255,0.55),
-          0 8px 32px rgba(212,175,55,0.10),
-          0 2px 8px rgba(0,0,0,0.04),
-          inset 0 1px 0 rgba(255,255,255,0.88),
-          inset 0 -1px 0 rgba(212,175,55,0.12);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        
+        /* Thin, cold, ethereal border with faint gold hint for consistency */
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        border-bottom-color: rgba(255, 255, 255, 0.4);
+        border-right-color: rgba(255, 255, 255, 0.4);
+
+        /* Depth framing, shadow & subtle reflections */
+        box-shadow: 
+          0 25px 50px rgba(0,0,0,0.06), 
+          0 10px 20px rgba(0,0,0,0.03), 
+          inset 0 2px 12px rgba(255,255,255,1),
+          inset 0 -2px 10px rgba(255,255,255,0.3),
+          inset 0 0 18px rgba(212,175,55,0.1);
       }
       .ios-glass-card:hover {
         transform: translateY(-2px);
-        border-color: rgba(212,175,55,0.8);
-        box-shadow:
-          0 0 0 1px rgba(255,255,255,0.7),
-          0 16px 48px rgba(212,175,55,0.16),
-          0 4px 12px rgba(0,0,0,0.06),
-          inset 0 1px 0 rgba(255,255,255,0.95),
-          inset 0 -1px 0 rgba(212,175,55,0.18);
+        box-shadow: 
+          0 35px 60px rgba(0,0,0,0.08), 
+          0 12px 24px rgba(0,0,0,0.04), 
+          inset 0 2px 14px rgba(255,255,255,1),
+          inset 0 -2px 12px rgba(255,255,255,0.4),
+          inset 0 0 20px rgba(212,175,55,0.2);
       }
-      /* 상단 유리 하이라이트 */
+
+      /* Advanced Iridescent reflections (Spectral Highlights) */
       .ios-glass-card::before {
         content: "";
         position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 45%;
-        background: linear-gradient(180deg,
-          rgba(255,255,255,0.5) 0%,
-          rgba(255,255,255,0) 100%);
-        border-radius: 22px 22px 0 0;
+        inset: 0;
+        border-radius: inherit;
         pointer-events: none;
-        z-index: 1;
+        padding: 2px;
+        background: linear-gradient(
+          135deg,
+          rgba(255,255,255,0.9) 0%,
+          rgba(200, 230, 255, 0.7) 15%, /* cyan/blue hint */
+          rgba(255, 215, 230, 0.7) 30%, /* pink hint */
+          rgba(255, 255, 255, 0.3) 50%,
+          rgba(245, 245, 210, 0.7) 70%, /* yellow/gold hint */
+          rgba(215, 210, 255, 0.8) 85%, /* violet hint */
+          rgba(255,255,255,0.95) 100%
+        );
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        z-index: 10;
+        opacity: 0.85;
+        mix-blend-mode: overlay;
       }
-      /* 빛 쉬머 */
+
+      /* Abstract studio light reflections and micro-undulations */
       .ios-glass-card::after {
         content: "";
         position: absolute;
-        top: 0; left: -150%; width: 45%; height: 100%;
-        background: linear-gradient(to right,
-          transparent,
-          rgba(255,255,255,0.65),
-          transparent);
-        transform: skewX(-20deg);
-        animation: iosShimmerAnim 7s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        top: -100%; left: -100%; width: 300%; height: 300%;
+        background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.9), transparent 20%),
+                    radial-gradient(circle at 60% 50%, rgba(255,255,255,0.6), transparent 25%),
+                    linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%);
+        transform: rotate(25deg);
         pointer-events: none;
         z-index: 2;
+        mix-blend-mode: soft-light;
+        opacity: 0.5;
+        animation: liquidGlassShimmer 12s infinite linear;
       }
-      @keyframes iosShimmerAnim {
-        0%   { left: -150%; opacity: 0; }
-        10%  { opacity: 1; }
-        45%  { left: 200%; opacity: 0; }
-        100% { left: 200%; opacity: 0; }
+
+      @keyframes liquidGlassShimmer {
+        0% { transform: translate(-10%, -10%) rotate(0deg); }
+        50% { transform: translate(10%, 10%) rotate(3deg); }
+        100% { transform: translate(-10%, -10%) rotate(0deg); }
       }
       .grade-label {
         font-size: 10px;
