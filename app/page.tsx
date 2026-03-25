@@ -238,12 +238,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data)setNotifs(data);};
   const markAllRead=async()=>{await supabase.from("notifications").update({is_read:true}).eq("user_id",user.id).eq("is_read",false);fNotifs();};
   useEffect(()=>{fNotifs();},[]);
-  // 등수 향상 시 confetti
+  // 등수 향상 시 confetti (퍼센타일 기준, 5% 초과 상승)
   useEffect(()=>{
     if(rankHistory.length>=2){
       const last=rankHistory[rankHistory.length-1];
       const prev=rankHistory[rankHistory.length-2];
-      if(prev.rank-last.rank>0){fireConfetti();}
+      const lastPct=last.total<=1?50:Math.round(((last.total-last.rank)/(last.total-1))*100);
+      const prevPct=prev.total<=1?50:Math.round(((prev.total-prev.rank)/(prev.total-1))*100);
+      if(lastPct-prevPct>5){fireConfetti();}
     }
   },[rankHistory]);
   useEffect(()=>{(async()=>{
@@ -440,28 +442,34 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div className="space-y-5 mb-5">
                 {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-3 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl font-bold leading-none tracking-tight" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-xl font-semibold leading-none tracking-tight mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
-                  const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
-                  const maxVal=Math.max(...data.map(d=>d.total),1);
-                  const w=320;const h=160;const px=40;const py=25;const gw=w-px*2;const gh=h-py*2;
-                  const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.value/maxVal)*gh;return{x,y,...d};});
+                  // 퍼센타일: 상위 몇% (1등=100%, 꼴등=0%)
+                  // total=1명이면 50%로 고정
+                  const data=rankHistory.map(h=>{const pct=h.total<=1?50:Math.round(((h.total-h.rank)/(h.total-1))*100);return{date:h.date,pct,rank:h.rank,total:h.total};});
+                  const w=320;const h=160;const px=40;const py=20;const gw=w-px*2;const gh=h-py*2;
+                  const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.pct/100)*gh;return{x,y,...d};});
                   const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
                   const prev=points.length>=2?points[points.length-2]:null;
-                  const diff=prev?prev.rank-points[points.length-1].rank:0;
+                  const last=points[points.length-1];
+                  const diff=prev?last.pct-prev.pct:0;
+                  const status=Math.abs(diff)<=5?"maintain":diff>0?"up":"down";
                   return(<div className="ios-glass-card p-4 sm:p-6 relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-base">등수 변화</h3>
-                    {prev&&diff!==0&&<span onClick={()=>{if(diff>0)fireConfetti();}} className={`text-sm font-bold px-3 py-1 rounded-lg cursor-pointer select-none ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"🎉 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
-                    {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
-                    {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
-                  </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-semibold text-base">등수 변화</h3>
+                      {prev&&status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
+                      {prev&&status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
+                      {prev&&status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
+                      {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
+                    </div>
+                    <p className="text-right text-[10px] text-slate-400 mb-3">상위 {last.pct}% · {last.rank}/{last.total}등</p>
                   <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"180px"}}>
-                    {[0,0.5,1].map(r=>(<line key={r} x1={px} y1={py+gh*(1-r)} x2={w-px} y2={py+gh*(1-r)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>))}
-                    <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.15"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
+                    {[0,25,50,75,100].map(r=>(<g key={r}><line x1={px} y1={py+gh*(1-r/100)} x2={w-px} y2={py+gh*(1-r/100)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/><text x={px-4} y={py+gh*(1-r/100)+3} textAnchor="end" fontSize="8" fill="#cbd5e1">{r}%</text></g>))}
+                    <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.18"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
                     {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
                     <path d={line} fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
                     {points.map((p,i)=>(<g key={i}>
                       <circle cx={p.x} cy={p.y} r="5" fill="white" stroke="#D4AF37" strokeWidth="2.5"/>
-                      <text x={p.x} y={h-4} textAnchor="middle" fontSize="9" fill="#94a3b8">{p.date.slice(5)}</text>
+                      <text x={p.x} y={p.y-9} textAnchor="middle" fontSize="8" fill="#D4AF37" fontWeight="700">상위{p.pct}%</text>
+                      <text x={p.x} y={h-4} textAnchor="middle" fontSize="8" fill="#94a3b8">{p.date.slice(5)}</text>
                     </g>))}
                   </svg>
                 </div>);
