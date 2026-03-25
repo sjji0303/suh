@@ -206,6 +206,7 @@ function fmtDate(d:string){try{const dt=new Date(d+"T00:00:00");return`${d} (${d
 function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[_tab,_setTab]=useState("grades");const setTab=(t:string)=>{_setTab(t);window.scrollTo(0,0);};const tab=_tab;const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
+  const[topWrong,setTopWrong]=useState<any[]>([]);
   const[showConfetti,setShowConfetti]=useState(false);
   const confettiRef=useRef<HTMLCanvasElement>(null);
   const prevTabRef=useRef<string>("");
@@ -282,7 +283,31 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     const{data:noticeData}=await supabase.from("class_notices").select("*, class_groups(name)").in("class_group_id",gids).order("created_at",{ascending:false});
     if(noticeData)setNotices(noticeData);
   })();},[]);
-  const ld=async(t:any)=>{currentTestRef.current=t;const sid=user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
+  const ld=async(t:any)=>{
+    currentTestRef.current=t;
+    const sid=user.id;
+    const[q,r,si]=await Promise.all([
+      supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),
+      supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),
+      supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()
+    ]);
+    if(q.data)setQuestions(q.data);
+    if(r.data){
+      setResults(r.data);
+      // 학생이 틀린 문제 번호 추출
+      const wrongNums=r.data.filter((x:any)=>!x.is_correct).map((x:any)=>x.question_number);
+      if(wrongNums.length>0&&q.data){
+        // DB에서 정답률 낮은 순으로 정렬 → 학생이 틀린 것만 필터 → TOP3
+        const sorted=[...q.data]
+          .filter((x:any)=>wrongNums.includes(x.question_number))
+          .sort((a:any,b:any)=>(a.correct_rate||0)-(b.correct_rate||0));
+        setTopWrong(sorted.slice(0,3));
+      } else {
+        setTopWrong([]);
+      }
+    }
+    setInfo(si.data||null);
+  };
   // 성적표 탭 진입 시 현재 시험 재로드 → 최다오답 최신화
   useEffect(()=>{
     if(tab==="grades"&&prevTabRef.current!=="grades"&&currentTestRef.current){
@@ -331,7 +356,6 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const startEditInq=(q:any)=>{const clean=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim()||"";setEditInqId(q.id);setEditInqForm({title:q.title||"",content:clean});setEditInqImg(null);setEditInqKeepImg(true);};
   const saveEditInq=async()=>{if(!editInqId||!editInqForm.content)return;let imgUrl="";if(editInqImg){imgUrl=await uploadImage(editInqImg,`inquiry_edit_${editInqId}`)||"";}const orig=inquiries.find((q:any)=>q.id===editInqId);const oldImgMatch=orig?.content?.match(/\[IMG\](.*?)\[\/IMG\]/);let imgPart="";if(imgUrl)imgPart=`\n[IMG]${imgUrl}[/IMG]`;else if(editInqKeepImg&&oldImgMatch)imgPart=`\n[IMG]${oldImgMatch[1]}[/IMG]`;await supabase.from("inquiries").update({title:editInqForm.title,content:editInqForm.content+imgPart}).eq("id",editInqId);setEditInqId(null);setEditInqImg(null);const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
-  const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
@@ -482,41 +506,53 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div className="space-y-5 mb-5">
                 {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-4 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl font-bold leading-none tracking-tight" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">반 평균</p><p className="grade-stat mt-1">{info.class_average}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">표준편차</p><p className="grade-stat mt-1">{info.std_dev||"—"}<span className="text-xs font-bold ml-1 text-slate-400">{info.std_dev?"점":""}</span></p></div><div><p className="grade-label">최고 점수</p><p className="grade-stat mt-1">{info.class_best}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
-                  const data=rankHistory.map(h=>{const pct=h.total<=1?50:Math.round(((h.total-h.rank)/(h.total-1))*100);return{date:h.date,pct,rank:h.rank,total:h.total};});
-                  const w=320;const h=140;const px=20;const py=20;const gw=w-px*2;const gh=h-py*2;
-                  const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.pct/100)*gh;return{x,y,...d};});
+                  // 퍼센타일 계산
+                  const pcts=rankHistory.map(h=>h.total<=1?50:Math.round(((h.total-h.rank)/(h.total-1))*100));
+                  // 첫 시험=0 기준, 이후 diff 누적
+                  const deltas:number[]=pcts.map((p,i)=>i===0?0:p-pcts[i-1]);
+                  const cumulative:number[]=[0];
+                  for(let i=1;i<deltas.length;i++)cumulative.push(cumulative[i-1]+deltas[i]);
+                  // 상태 판단 (마지막 delta 기준, ±5% 이내 유지)
+                  const lastDelta=deltas[deltas.length-1];
+                  const status=rankHistory.length<2?"first":Math.abs(lastDelta)<=5?"maintain":lastDelta>0?"up":"down";
+                  // SVG 계산 — 중앙=0, 위=+, 아래=-
+                  const w=320;const svgH=140;const px=24;const py=20;const gw=w-px*2;const gh=svgH-py*2;
+                  const maxAbs=Math.max(...cumulative.map(Math.abs),10);
+                  const toY=(v:number)=>py+gh/2-(v/maxAbs)*(gh/2-4);
+                  const points=cumulative.map((v,i)=>({x:cumulative.length===1?w/2:px+(gw/(cumulative.length-1))*i,y:toY(v),date:rankHistory[i].date,delta:deltas[i]}));
                   const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
-                  const prev=points.length>=2?points[points.length-2]:null;
-                  const last=points[points.length-1];
-                  const diff=prev?last.pct-prev.pct:0;
-                  const status=Math.abs(diff)<=5?"maintain":diff>0?"up":"down";
-                  const cardStyle:React.CSSProperties={background:"linear-gradient(145deg,rgba(255,255,255,0.62) 0%,rgba(255,255,255,0.35) 50%,rgba(255,255,255,0.55) 100%)",backdropFilter:"blur(36px) saturate(200%)",WebkitBackdropFilter:"blur(36px) saturate(200%)",borderRadius:"22px",border:"1px solid rgba(212,175,55,0.55)",boxShadow:"0 0 0 1px rgba(255,255,255,0.55),0 8px 32px rgba(212,175,55,0.10),inset 0 1px 0 rgba(255,255,255,0.88)",padding:"20px 24px",display:"flex",flexDirection:"column",gap:"16px"};
+                  const midY=toY(0);
+                  const cardStyle:React.CSSProperties={background:"linear-gradient(145deg,rgba(255,255,255,0.62) 0%,rgba(255,255,255,0.35) 50%,rgba(255,255,255,0.55) 100%)",backdropFilter:"blur(36px) saturate(200%)",WebkitBackdropFilter:"blur(36px) saturate(200%)",borderRadius:"22px",border:"1px solid rgba(212,175,55,0.55)",boxShadow:"0 0 0 1px rgba(255,255,255,0.55),0 8px 32px rgba(212,175,55,0.10),inset 0 1px 0 rgba(255,255,255,0.88)",padding:"20px 24px",display:"flex",flexDirection:"column" as const,gap:"14px"};
                   return(<div style={cardStyle}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                       <h3 className="font-semibold text-base">등수 변화</h3>
-                      {prev&&status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
-                      {prev&&status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
-                      {prev&&status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
-                      {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
+                      {status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
+                      {status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
+                      {status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
+                      {status==="first"&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                     </div>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%"}}>
-                      <svg viewBox={`0 0 ${w} ${h}`} style={{width:"100%",maxHeight:"130px",display:"block"}}>
-                        <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.18"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
-                        {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
-                        <path d={line} fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
-                        {points.map((p,i)=>(<g key={i}>
-                          <circle cx={p.x} cy={p.y} r="5" fill="white" stroke="#D4AF37" strokeWidth="2.5"/>
-                          <text x={p.x} y={h-2} textAnchor="middle" fontSize="8" fill="#94a3b8">{p.date.slice(5)}</text>
-                        </g>))}
-                      </svg>
-                    </div>
+                    <svg viewBox={`0 0 ${w} ${svgH}`} style={{width:"100%",maxHeight:"130px",display:"block"}}>
+                      {/* 가운데 기준선 */}
+                      <line x1={px} y1={midY} x2={w-px} y2={midY} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3"/>
+                      <text x={px-2} y={midY+3} textAnchor="end" fontSize="7" fill="#cbd5e1">0</text>
+                      <defs><linearGradient id="rankGradUp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22c55e" stopOpacity="0.15"/><stop offset="100%" stopColor="#22c55e" stopOpacity="0"/></linearGradient><linearGradient id="rankGradDown" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ef4444" stopOpacity="0"/><stop offset="100%" stopColor="#ef4444" stopOpacity="0.12"/></linearGradient></defs>
+                      {line&&<path d={`${line} L${points[points.length-1].x},${midY} L${points[0].x},${midY} Z`} fill={lastDelta>=0?"url(#rankGradUp)":"url(#rankGradDown)"}/>}
+                      {line&&<path d={line} fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>}
+                      {points.map((p,i)=>(
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r="5" fill="white" stroke={i===0?"#94a3b8":p.delta>0?"#22c55e":p.delta<0?"#ef4444":"#D4AF37"} strokeWidth="2.5"/>
+                          {i>0&&p.delta!==0&&<text x={p.x} y={p.y-(p.delta>0?9:-3)} textAnchor="middle" fontSize="8" fill={p.delta>0?"#16a34a":"#ef4444"} fontWeight="700">{p.delta>0?`+${p.delta}`:`${p.delta}`}</text>}
+                          <text x={p.x} y={svgH-2} textAnchor="middle" fontSize="8" fill="#94a3b8">{p.date.slice(5)}</text>
+                        </g>
+                      ))}
+                    </svg>
                   </div>);
               })()}
           </div>
           {/* 4. 정답률 → 최다오답 */}
           <div className="space-y-4 mb-5">
             <div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const step=Math.min(Math.floor(rate/10),9);const colors=["#ef4444","#f97316","#fb923c","#fbbf24","#a3e635","#84cc16","#34d399","#22d3ee","#60a5fa","#3b82f6"];const barColor=colors[step];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:barColor}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
-            {wrong.length>0&&<div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
+            {topWrong.length>0&&<div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{topWrong.map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
           </div>
           {/* 5. 맨 밑: 문항별 결과 */}
           <div className="ios-glass-card p-4 sm:p-6">
@@ -876,9 +912,10 @@ function AdminClassManager({users}:{users:any[]}){
     for(let i=0;i<ranked.length;i++){const rank=i+1;const{error:rkErr}=await supabase.from("test_student_info").update({rank}).eq("test_id",testId).eq("student_id",ranked[i].uid);if(rkErr)errors.push("등수저장:"+rkErr.message);}
     if(errors.length>0)setSaveMsg("❌ "+errors.slice(0,3).join(" | "));
     else{setSaveMsg("✅ 저장 완료!");
-      // 저장 후 문항별 정답률 재조회 → 최다 오답 TOP3 즉시 반영
-      const{data:freshQs}=await supabase.from("test_questions").select("*").eq("test_id",testId).order("question_number");
-      if(freshQs)setQs(freshQs);
+      // 정답률 재조회 먼저 → qs state 업데이트 (관리자 뷰 즉시 반영)
+      const{data:freshQs}=await supabase.from("test_questions").select("*").eq("test_id",testId).order("correct_rate",{ascending:true});
+      if(freshQs)setQs([...freshQs].sort((a,b)=>a.question_number-b.question_number));
+      // 알림 발송 → 학생 뷰에서 fNotifs 감지 → ld() 재호출 → questions 갱신 → wrong 재계산
       for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}
       // 자동 서서갈비 지급 (오답/과제 성취도 기준)
       try{
