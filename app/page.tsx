@@ -16,51 +16,190 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
   return(<div className="min-h-screen relative flex flex-col overflow-hidden">
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
-      /* ── 쉬머 버튼 ── */
-      .shimmer-btn{background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;}
-      @keyframes shimmerSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}
-      .shimmer-action-btn{position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1040,#2d2060);box-shadow:0 4px 16px rgba(108,99,255,0.25);}
-      .shimmer-action-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;pointer-events:none;}
-      .shimmer-action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(108,99,255,0.4)!important;}
-      .shimmer-action-btn:active{transform:scale(0.98);}
-      /* ── 럭셔리 nav ── */
-      .luxury-nav-btn{transition:all 0.2s ease;position:relative;overflow:hidden;}
-      .luxury-nav-btn.active,.luxury-nav-btn.admin-active{background:linear-gradient(135deg,#1a1040,#2d2060)!important;color:white!important;box-shadow:0 4px 16px rgba(108,99,255,0.25);}
-      .luxury-nav-btn.active .shimmer-nav,.luxury-nav-btn.admin-active .shimmer-nav{background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.15) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;}
-      .shimmer-nav{position:absolute;inset:0;pointer-events:none;}
-      /* ── 럭셔리 카드 ── */
-      .lux-card{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(212,175,55,0.12);box-shadow:0 4px 32px rgba(108,99,255,0.06),inset 0 1px 0 rgba(255,255,255,0.9);}
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+KR:wght@300;400;500;600&display=swap');
+
+      /* ── CSS 변수 토큰 ── */
+      :root {
+        --c-indigo: #6c63ff;
+        --c-indigo-deep: #5a52e0;
+        --c-indigo-soft: rgba(108,99,255,0.08);
+        --c-bg: #f4f3ff;
+        --c-surface: rgba(255,255,255,0.92);
+        --c-border: rgba(108,99,255,0.1);
+        --c-border-strong: rgba(108,99,255,0.18);
+        --c-text-primary: #1a1535;
+        --c-text-secondary: #5b5880;
+        --c-text-muted: #9896b8;
+        --c-shadow-soft: 0 2px 20px rgba(108,99,255,0.07), 0 1px 4px rgba(108,99,255,0.04);
+        --c-shadow-card: 0 8px 40px rgba(108,99,255,0.10), 0 2px 8px rgba(108,99,255,0.05), inset 0 1px 0 rgba(255,255,255,0.95);
+        --c-shadow-hover: 0 16px 48px rgba(108,99,255,0.16), 0 4px 12px rgba(108,99,255,0.08);
+        --radius: 20px;
+        --font-sans: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        --font-serif: 'Playfair Display', Georgia, serif;
+      }
+
+      /* ── 기본 폰트 ── */
+      body, * { letter-spacing: -0.01em; }
+
+      /* ── 쉬머 애니메이션 ── */
+      @keyframes shimmerSlide { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+      @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+      /* ── 쉬머 버튼 (로그인) ── */
+      .shimmer-btn {
+        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%);
+        background-size: 300% 100%;
+        animation: shimmerSlide 2.2s ease-in-out infinite;
+      }
+
+      /* ── 액션 버튼 (shimmer-action-btn) ── */
+      .shimmer-action-btn {
+        position: relative; overflow: hidden;
+        background: linear-gradient(135deg, #3d35c8 0%, #6c63ff 50%, #3d35c8 100%);
+        box-shadow: 0 4px 18px rgba(108,99,255,0.3), inset 0 1px 0 rgba(255,255,255,0.18);
+        transition: all 0.22s cubic-bezier(.4,0,.2,1);
+        letter-spacing: 0.03em;
+      }
+      .shimmer-action-btn::after {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
+        background-size: 300% 100%;
+        animation: shimmerSlide 2.2s ease-in-out infinite;
+      }
+      .shimmer-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(108,99,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+      }
+      .shimmer-action-btn:active { transform: scale(0.97); }
+
+      /* ── 럭셔리 사이드바 nav ── */
+      .luxury-nav-btn {
+        transition: all 0.18s cubic-bezier(.4,0,.2,1);
+        position: relative; overflow: hidden;
+        border-radius: 14px;
+        color: var(--c-text-secondary);
+        font-weight: 500;
+      }
+      .luxury-nav-btn:hover:not(.active):not(.admin-active) {
+        background: rgba(108,99,255,0.06);
+        color: var(--c-indigo);
+      }
+      .luxury-nav-btn.active, .luxury-nav-btn.admin-active {
+        background: linear-gradient(135deg, #3d35c8 0%, #6c63ff 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 18px rgba(108,99,255,0.28), inset 0 1px 0 rgba(255,255,255,0.2);
+        font-weight: 600;
+      }
+      .luxury-nav-btn.active .shimmer-nav,
+      .luxury-nav-btn.admin-active .shimmer-nav {
+        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+        background-size: 300% 100%;
+        animation: shimmerSlide 2.2s ease-in-out infinite;
+      }
+      .shimmer-nav { position: absolute; inset: 0; pointer-events: none; }
+
+      /* ── 럭셔리 카드 (컨텐츠 카드) ── */
+      .lux-card {
+        background: rgba(255,255,255,0.88);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(108,99,255,0.09);
+        box-shadow: var(--c-shadow-card);
+        border-radius: var(--radius);
+      }
+      .lux-card:hover { box-shadow: var(--c-shadow-hover); }
+
+      /* ── 인풋 포커스 링 ── */
+      .lux-input:focus {
+        outline: none;
+        border-color: rgba(108,99,255,0.45) !important;
+        box-shadow: 0 0 0 3px rgba(108,99,255,0.1) !important;
+      }
+
+      /* ── 사이드바 패널 ── */
+      .lux-sidebar {
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        border-right: 1px solid rgba(108,99,255,0.08);
+        box-shadow: 4px 0 32px rgba(108,99,255,0.06);
+      }
+
+      /* ── 배경 (로그인 이후 화면) ── */
+      .lux-bg {
+        background:
+          radial-gradient(ellipse 80% 60% at 10% 0%, rgba(108,99,255,0.07) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 50% at 90% 100%, rgba(108,99,255,0.05) 0%, transparent 60%),
+          linear-gradient(160deg, #f0eeff 0%, #f7f6ff 40%, #faf9ff 70%, #f3f2ff 100%);
+      }
+
+      /* ── 헤더/탑바 ── */
+      .lux-topbar {
+        background: rgba(248,247,255,0.92);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-bottom: 1px solid rgba(108,99,255,0.08);
+        box-shadow: 0 1px 16px rgba(108,99,255,0.05);
+      }
+
       /* ── 리뷰 스크롤 ── */
-      .review-scroll{animation:reviewScroll 60s linear infinite;}
-      .review-scroll:hover{animation-play-state:paused;}
-      @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-272px * var(--review-count,10)))}}
-      .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+      .review-scroll { animation: reviewScroll 60s linear infinite; }
+      .review-scroll:hover { animation-play-state: paused; }
+      @keyframes reviewScroll {
+        0% { transform: translateX(0) }
+        100% { transform: translateX(calc(-272px * var(--review-count, 10))) }
+      }
+      .review-clamp {
+        display: -webkit-box; -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical; overflow: hidden;
+      }
+
+      /* ── 타이포그래피 유틸 ── */
+      .text-label {
+        font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--c-text-muted);
+      }
+      .text-heading {
+        font-family: var(--font-serif);
+        color: var(--c-text-primary);
+        letter-spacing: -0.02em;
+      }
+
+      /* ── 스크롤바 커스텀 ── */
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(108,99,255,0.2); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(108,99,255,0.35); }
+
+      /* ── 페이드업 애니메이션 ── */
+      .fade-up { animation: fadeUp 0.6s cubic-bezier(.4,0,.2,1) both; }
+      .fade-up-d1 { animation-delay: 0.1s; }
+      .fade-up-d2 { animation-delay: 0.2s; }
     `}</style>
     {/* 배경 */}
     <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(5px)"}}/>
     <div className="absolute inset-0 z-0" style={{background:"linear-gradient(160deg,rgba(10,8,20,0.72) 0%,rgba(20,16,45,0.62) 40%,rgba(10,8,20,0.78) 100%)"}}/>
-    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"520px",height:"520px",top:"15%",right:"10%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,rgba(197,160,48,0.05) 50%,transparent 75%)",filter:"blur(70px)"}}/>
-    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"380px",height:"380px",bottom:"20%",left:"5%",background:"radial-gradient(circle,rgba(108,99,255,0.1) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"600px",height:"600px",top:"10%",right:"5%",background:"radial-gradient(circle,rgba(108,99,255,0.12) 0%,rgba(108,99,255,0.04) 55%,transparent 75%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"420px",height:"420px",bottom:"15%",left:"3%",background:"radial-gradient(circle,rgba(139,83,255,0.1) 0%,transparent 70%)",filter:"blur(90px)"}}/>
 
     {/* 메인 영역 — 위쪽으로 */}
     <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-12 px-4 relative z-10">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="w-[300px] flex-shrink-0 rounded-3xl p-6 flex flex-col border" style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderColor:"rgba(212,175,55,0.2)",boxShadow:"0 8px 48px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.12)"}}>
+        <div className="w-[300px] flex-shrink-0 rounded-3xl p-6 flex flex-col border" style={{background:"rgba(255,255,255,0.06)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",borderColor:"rgba(255,255,255,0.15)",boxShadow:"0 8px 48px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.14)"}}>
           <div className="text-center mb-3">
             <div className="relative inline-block mb-3"><img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
             <h2 className="text-xl font-semibold text-white mb-2" style={{fontFamily:"'Playfair Display',serif",letterSpacing:"0.02em"}}>{nm}</h2>
-            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"}}/><div className="w-1.5 h-1.5 rounded-full" style={{background:"rgba(212,175,55,0.7)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"}}/></div>
+            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)"}}/><div className="w-1.5 h-1.5 rounded-full" style={{background:"rgba(255,255,255,0.4)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)"}}/></div>
           </div>
           {bio&&<div className="text-[11px] leading-relaxed whitespace-pre-line text-center px-2" style={{color:"rgba(255,255,255,0.55)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{bio}</div>}
-          <div className="mt-auto pt-4 border-t text-center" style={{borderColor:"rgba(212,175,55,0.15)"}}><p className="text-[10px] tracking-widest uppercase" style={{color:"rgba(212,175,55,0.45)",fontFamily:"'Montserrat',sans-serif"}}>수학의 자신감을 키우는 곳</p></div>
+          <div className="mt-auto pt-4 border-t text-center" style={{borderColor:"rgba(212,175,55,0.15)"}}><p className="text-[10px] tracking-widest uppercase" style={{color:"rgba(255,255,255,0.35)",letterSpacing:"0.12em"}}>수학의 자신감을 키우는 곳</p></div>
         </div>
-        <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" style={{background:"rgba(255,255,255,0.9)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",borderColor:"rgba(212,175,55,0.25)",boxShadow:"0 8px 64px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.9)"}}>
-          <div className="mb-7"><p className="text-[10px] tracking-[0.25em] uppercase mb-2" style={{color:"rgba(212,175,55,0.8)",fontFamily:"'Montserrat',sans-serif",fontWeight:500}}>Welcome</p><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.6rem",lineHeight:1.3,color:"#1a1628"}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1><div className="mt-3 h-px max-w-[120px]" style={{background:"linear-gradient(90deg,rgba(212,175,55,0.5),transparent)"}}/></div>
+        <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" style={{background:"rgba(255,255,255,0.94)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.12)",boxShadow:"0 12px 60px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.98)"}}>
+          <div className="mb-7"><p className="text-[10px] tracking-[0.25em] uppercase mb-2" style={{color:"var(--c-indigo)",letterSpacing:"0.15em",fontWeight:600}}>Welcome</p><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.6rem",lineHeight:1.3,color:"#1a1628"}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1><div className="mt-3 h-px max-w-[120px]" style={{background:"linear-gradient(90deg,rgba(108,99,255,0.3),transparent)"}}/></div>
           <div className="space-y-3 max-w-sm">
-            <div><label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>아이디</label><input className="w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            <div><label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>비밀번호</label><input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>아이디</label><input className="lux-input w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             {err&&<p className="text-xs px-3 py-2 rounded-xl" style={{color:"#e05555",background:"rgba(224,85,85,0.07)",fontFamily:"'Montserrat',sans-serif"}}>{err}</p>}
             <button onClick={go} disabled={ld} className="w-full py-3.5 rounded-2xl font-semibold text-sm relative overflow-hidden transition-all duration-300 disabled:opacity-60" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.12em",background:"linear-gradient(135deg,#1a1040 0%,#2d2060 40%,#1a1040 100%)",color:"white",boxShadow:"0 4px 24px rgba(108,99,255,0.35)"}}><span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
           </div>
@@ -68,7 +207,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       </div>
       {/* 모바일 — 컴팩트: 간격 줄이고 프로필 가운데 정렬 */}
       <div className={`md:hidden w-full max-w-xs transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-2xl p-4 px-5 mb-4 border" style={{background:"rgba(255,255,255,0.08)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.2)",boxShadow:"0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.1)"}}>
+        <div className="rounded-2xl p-4 px-5 mb-4 border" style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderColor:"rgba(255,255,255,0.14)",boxShadow:"0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.12)"}}>
           <div className="flex items-center gap-4 justify-center">
             <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.35)",boxShadow:"0 0 0 3px rgba(212,175,55,0.08),0 6px 20px rgba(0,0,0,0.5)"}}/>
             <div className="min-w-0">
@@ -77,12 +216,12 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             </div>
           </div>
         </div>
-        <div className="rounded-2xl p-5 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",borderColor:"rgba(212,175,55,0.2)",boxShadow:"0 8px 48px rgba(0,0,0,0.35)"}}>
+        <div className="rounded-2xl p-5 border" style={{background:"rgba(255,255,255,0.94)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.1)",boxShadow:"0 10px 50px rgba(0,0,0,0.24),inset 0 1px 0 rgba(255,255,255,0.98)"}}>
           <h1 className="mb-4" style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:"#1a1628",lineHeight:1.35}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1>
           <div className="rounded-xl px-3 py-2 mb-3" style={{background:"rgba(108,99,255,0.04)",border:"1px solid rgba(108,99,255,0.1)"}}><p className="text-[10px]" style={{color:"rgba(100,100,130,0.7)",fontFamily:"'Montserrat',sans-serif"}}>아이디: <span style={{fontWeight:500,color:"rgba(80,80,110,0.8)"}}>이름+학부모번호뒷4자리</span></p><p className="text-[10px]" style={{color:"rgba(100,100,130,0.7)",fontFamily:"'Montserrat',sans-serif"}}>비밀번호: <span style={{fontWeight:500,color:"rgba(80,80,110,0.8)"}}>학부모번호뒷4자리</span></p></div>
           <div className="space-y-2.5">
-            <input className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input className="lux-input w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
           {err&&<p className="text-xs px-3 py-1.5 rounded-lg mt-2" style={{color:"#e05555",background:"rgba(224,85,85,0.07)",fontFamily:"'Montserrat',sans-serif"}}>{err}</p>}
           <button onClick={go} disabled={ld} className="w-full py-3 rounded-xl text-sm mt-3 relative overflow-hidden transition-all duration-300 disabled:opacity-60" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.12em",fontWeight:600,background:"linear-gradient(135deg,#1a1040,#2d2060)",color:"white",boxShadow:"0 4px 20px rgba(108,99,255,0.3)"}}><span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
@@ -92,12 +231,12 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
     {/* 후기 슬라이더 */}
     {reviews.length>0&&<div className={`relative z-10 pb-6 pt-2 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-[10px] tracking-[0.3em] uppercase mb-3" style={{color:"rgba(212,175,55,0.45)",fontFamily:"'Montserrat',sans-serif"}}>Student Reviews</p>
+      <p className="text-center text-[10px] tracking-[0.3em] uppercase mb-3" style={{color:"rgba(255,255,255,0.35)",letterSpacing:"0.2em"}}>Student Reviews</p>
       <div className="overflow-hidden">
         <div className="flex gap-4 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-64 flex-shrink-0 rounded-2xl p-4 border cursor-default transition-all duration-300" style={{background:hasBestGrade?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderColor:hasBestGrade?"rgba(212,175,55,0.25)":"rgba(255,255,255,0.1)",boxShadow:hasBestGrade?"0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 rgba(212,175,55,0.15)":"0 4px 16px rgba(0,0,0,0.2)"}}>
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-64 flex-shrink-0 rounded-2xl p-4 border cursor-default transition-all duration-300" style={{background:hasBestGrade?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderColor:hasBestGrade?"rgba(108,99,255,0.3)":"rgba(255,255,255,0.1)",boxShadow:hasBestGrade?"0 4px 24px rgba(0,0,0,0.2),inset 0 1px 0 rgba(108,99,255,0.2)":"0 4px 16px rgba(0,0,0,0.15)"}}>
             <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{background:"rgba(255,255,255,0.12)"}}>{animalIcon}</div><div><span className="text-[11px] font-semibold text-white block leading-none pb-0.5" style={{fontFamily:"'Montserrat',sans-serif"}}>{r.display_name||"학생"}</span><span className="text-[9px]" style={{color:"rgba(255,255,255,0.35)",fontFamily:"'Montserrat',sans-serif"}}>{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-0.5 rounded-lg" style={{color:"rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",fontFamily:"'Montserrat',sans-serif"}}>수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{color:"#fff",background:"linear-gradient(135deg,rgba(212,175,55,0.7),rgba(197,160,48,0.6))",fontFamily:"'Montserrat',sans-serif"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{color:"#fff",background:"linear-gradient(135deg,rgba(108,99,255,0.85),rgba(90,82,224,0.8))"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
             {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-medium px-1.5 py-0.5 rounded-full" style={{color:"rgba(180,176,255,0.9)",background:"rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif"}}>#{kw}</span>))}</div>}
             <p className="text-[10px] leading-relaxed review-clamp" style={{color:"rgba(255,255,255,0.6)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{r.content}</p>
           </div>)})}
@@ -189,19 +328,19 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
-  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#f8f7ff 0%,#fdfcff 40%,#f5f3ff 100%)",fontFamily:"'Montserrat',sans-serif"}}>
+  return(<div className="min-h-screen flex lux-bg" style={{fontFamily:"var(--font-sans)"}}>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
-      <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08),inset 0 1px 0 rgba(255,255,255,0.95)"}}>
-        <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(245,244,255,0.8)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"rgba(212,175,55,0.8)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
-        <div className="px-2 mb-4 flex items-center gap-2"><span className="text-sm">🔥</span><span className="text-[11px] font-semibold" style={{color:"rgba(200,140,0,0.9)",fontFamily:"'Montserrat',sans-serif"}}>{myTokens} 서서갈비</span><div className="ml-auto h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent)"}}/></div>
+      <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.08)",boxShadow:"var(--c-shadow-card)"}}>
+        <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"var(--c-indigo-soft)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-indigo)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
+        <div className="px-2 mb-4 flex items-center gap-2"><span className="text-sm">🔥</span><span className="text-[11px] font-semibold" style={{color:"var(--c-indigo)",fontWeight:600}}>{myTokens} 서서갈비</span><div className="ml-auto h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(108,99,255,0.15),transparent)"}}/></div>
         <nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
-        <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}><div className="px-1 mb-3"><p className="text-xs font-semibold" style={{color:"#1a1628",fontFamily:"'Playfair Display',serif"}}>{user.name}</p><p className="text-[10px]" style={{color:"rgba(108,99,255,0.5)",fontFamily:"'Montserrat',sans-serif"}}>{user.school||""}</p></div><button onClick={()=>setTab("changepw")} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"rgba(130,120,150,0.8)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div>
+        <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(108,99,255,0.08)"}}><div className="px-1 mb-3"><p className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</p><p className="text-[10px]" style={{color:"var(--c-text-muted)",letterSpacing:"0.02em"}}>{user.school||""}</p></div><button onClick={()=>setTab("changepw")} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"var(--c-text-secondary)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div>
       </div>
     </aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid rgba(212,175,55,0.12)",boxShadow:"0 2px 20px rgba(108,99,255,0.07)"}}><button onClick={()=>setMm(!mm)} className="p-1 rounded-xl transition-colors" style={{color:"#1a1628"}}><Icon type={mm?"close":"menu"} size={22}/></button><div className="flex items-center gap-2.5"><span className="text-[10px] font-semibold" style={{color:"rgba(200,140,0,0.9)",fontFamily:"'Montserrat',sans-serif"}}>🔥 {myTokens}</span><span className="text-xs font-semibold" style={{color:"#1a1628",fontFamily:"'Playfair Display',serif"}}>{user.name}</span><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1 rounded-xl transition-colors" style={{color:"rgba(212,175,55,0.8)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button><div className="rounded-xl px-2 py-1" style={{background:"rgba(245,244,255,0.8)"}}><img src="/logo.png" alt="" className="h-4 object-contain opacity-70"/></div></div></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 z-50 rounded-r-3xl p-5 flex flex-col" style={{background:"rgba(255,255,255,0.95)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",boxShadow:"8px 0 48px rgba(108,99,255,0.12)",borderRight:"1px solid rgba(212,175,55,0.12)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{setTab("changepw");setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-2" style={{color:"rgba(130,120,150,0.8)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-1" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    <div className="lux-topbar lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center"><button onClick={()=>setMm(!mm)} className="p-1 rounded-xl transition-colors" style={{color:"var(--c-text-primary)"}}><Icon type={mm?"close":"menu"} size={22}/></button><div className="flex items-center gap-2.5"><span className="text-[10px] font-semibold" style={{color:"var(--c-indigo)",fontWeight:600}}>🔥 {myTokens}</span><span className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</span><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1 rounded-xl transition-colors" style={{color:"var(--c-indigo)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button><div className="rounded-xl px-2 py-1" style={{background:"var(--c-indigo-soft)"}}><img src="/logo.png" alt="" className="h-4 object-contain opacity-70"/></div></div></div>
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 z-50 rounded-r-3xl p-5 flex flex-col" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",boxShadow:"8px 0 40px rgba(108,99,255,0.1)",borderRight:"1px solid rgba(108,99,255,0.08)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{setTab("changepw");setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-2" style={{color:"var(--c-text-secondary)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-1" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
     {/* 알림 패널 */}
-    {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.15)",backdropFilter:"blur(2px)"}}/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] z-50 overflow-hidden rounded-2xl border" style={{background:"rgba(255,255,255,0.95)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.12)"}}><div className="flex items-center justify-between px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.1)",background:"linear-gradient(135deg,rgba(108,99,255,0.03),rgba(212,175,55,0.02))"}}><h3 className="font-semibold text-sm" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="transition-colors" style={{color:"rgba(130,120,150,0.6)"}}><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className="px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.06)",background:n.is_read?"transparent":"rgba(108,99,255,0.03)"}}><div className="flex items-start gap-2"><div className="flex-1"><p className="text-sm" style={{color:"#1a1628",fontFamily:"'Montserrat',sans-serif"}}>{n.message}</p><p className="text-[10px] mt-0.5" style={{color:"rgba(130,120,150,0.6)",fontFamily:"'Montserrat',sans-serif"}}>{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{background:"rgba(212,175,55,0.7)"}}/>}</div></div>)):<div className="p-8 text-center text-sm" style={{color:"rgba(130,120,150,0.5)",fontFamily:"'Montserrat',sans-serif"}}>알림이 없습니다</div>}</div></div></>}
+    {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.15)",backdropFilter:"blur(2px)"}}/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] z-50 overflow-hidden rounded-2xl border" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.1)",boxShadow:"0 12px 40px rgba(108,99,255,0.12),0 2px 8px rgba(108,99,255,0.06)"}}><div className="flex items-center justify-between px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.1)",background:"linear-gradient(135deg,rgba(108,99,255,0.03),rgba(212,175,55,0.02))"}}><h3 className="font-semibold text-sm" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="transition-colors" style={{color:"rgba(130,120,150,0.6)"}}><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className="px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.06)",background:n.is_read?"transparent":"rgba(108,99,255,0.03)"}}><div className="flex items-start gap-2"><div className="flex-1"><p className="text-sm" style={{color:"#1a1628",fontFamily:"'Montserrat',sans-serif"}}>{n.message}</p><p className="text-[10px] mt-0.5" style={{color:"rgba(130,120,150,0.6)",fontFamily:"'Montserrat',sans-serif"}}>{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{background:"var(--c-indigo)"}}/>}</div></div>)):<div className="p-8 text-center text-sm" style={{color:"rgba(130,120,150,0.5)",fontFamily:"'Montserrat',sans-serif"}}>알림이 없습니다</div>}</div></div></>}
     <main className="flex-1 lg:ml-64 pt-14 lg:pt-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
       {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
         {/* 학생 정보 + 공유 */}
@@ -458,7 +597,7 @@ function AdminClassManager({users}:{users:any[]}){
     if(!capRef.current){setCapId(null);return;}
     try{
       const html2canvas=(await import("html2canvas")).default;
-      const canvas=await html2canvas(capRef.current,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false,allowTaint:true});
+      const canvas=await html2canvas(capRef.current,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false,allowTaint:true,removeContainer:true,imageTimeout:0});
       const blob:Blob=await new Promise(r=>canvas.toBlob(b=>r(b!),"image/png"));
       if(!blob){setCapId(null);return;}
       // 먼저 클립보드 복사 시도
@@ -620,20 +759,27 @@ function AdminClassManager({users}:{users:any[]}){
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(capComputedRates[a.question_number]??a.correct_rate??0)-(capComputedRates[b.question_number]??b.correct_rate??0));
       const rankData=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>({uid:m2.user_id,score:getS(m2.user_id)})).sort((a,b)=>b.score-a.score);
       const myRank=rankData.findIndex(r=>r.uid===uid)+1;
-      return(<div style={{position:"fixed",left:0,top:0,zIndex:-1,opacity:0.01,pointerEvents:"none"}}><div ref={capRef} style={{width:"520px",padding:"28px",background:"white",fontFamily:"sans-serif"}}>
+      return(<div style={{position:"fixed",left:"-9999px",top:0,pointerEvents:"none"}}><div ref={capRef} style={{width:"520px",padding:"28px",background:"white",fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif",WebkitFontSmoothing:"antialiased",MozOsxFontSmoothing:"grayscale",lineHeight:1.5,boxSizing:"border-box"}}>
         {/* 날짜 */}
-        <div style={{textAlign:"center",marginBottom:"8px"}}><p style={{fontSize:"20px",fontWeight:"bold"}}>{fmtDate(selT.date)}</p></div>
+        <div style={{textAlign:"center",marginBottom:"10px"}}><p style={{fontSize:"18px",fontWeight:"bold",margin:0,padding:0,color:"#1e293b"}}>{fmtDate(selT.date)}</p></div>
         {/* 학생 정보 */}
-        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px"}}><span style={{fontSize:"11px",background:"#f0edff",color:"#6c63ff",padding:"3px 10px",borderRadius:"8px",fontWeight:"bold"}}>{selT.class_name||""}</span><span style={{fontSize:"14px",fontWeight:"bold"}}>{usr?.school||""} {usr?.name}</span></div>
+        <div style={{marginBottom:"14px",paddingBottom:"12px",borderBottom:"1px solid #f1f5f9"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"6px",marginBottom:"4px"}}>
+            <span style={{fontSize:"10px",background:"#f0edff",color:"#6c63ff",padding:"2px 8px",borderRadius:"6px",fontWeight:"700",letterSpacing:"0.03em"}}>{selT.class_name||""}</span>
+            <span style={{fontSize:"11px",color:"#94a3b8"}}>{usr?.school||""}</span>
+          </div>
+          <p style={{fontSize:"17px",fontWeight:"700",color:"#1e293b",margin:0}}>{usr?.name}</p>
+          <p style={{fontSize:"11px",color:"#94a3b8",margin:"2px 0 0 0"}}>#{myRank}등 / {rankData.length}명</p>
+        </div>
         {/* 출석/클리닉/과제/오답 */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>출석</p><p style={{fontSize:"15px",fontWeight:"bold",color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444"}}>{inf.attendance||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>클리닉</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.clinic_time||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>오답 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>출석</p><p style={{fontSize:"15px",fontWeight:"bold",color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444",margin:"2px 0 0 0"}}>{inf.attendance||"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>클리닉</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{inf.clinic_time||"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>오답 성취도</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
         </div>
         {/* 개인 코멘트 */}
-        {inf.comment&&<div style={{background:"#f5f3ff",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}><p style={{fontSize:"12px",fontWeight:"bold",color:"#6c63ff",marginBottom:"4px"}}>개인 코멘트</p><p style={{fontSize:"14px",color:"#334155",whiteSpace:"pre-line",lineHeight:"1.6"}}>{inf.comment}</p></div>}
+        {inf.comment&&<div style={{background:"#f5f3ff",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}><p style={{fontSize:"11px",fontWeight:"bold",color:"#6c63ff",margin:"0 0 4px 0"}}>개인 코멘트</p><p style={{fontSize:"13px",color:"#334155",whiteSpace:"pre-line",lineHeight:1.6,margin:0}}>{inf.comment}</p></div>}
         {/* 2단 레이아웃: 왼쪽 문항별 결과 / 오른쪽 점수+등수 */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
           {/* 왼쪽: 문항별 결과 */}
@@ -650,10 +796,10 @@ function AdminClassManager({users}:{users:any[]}){
           <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
             <div style={{background:"linear-gradient(135deg, #ffffff, #f0edff)",borderRadius:"16px",padding:"14px",border:"1px solid #e8e5ff"}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",textAlign:"center"}}>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>내 점수</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#6c63ff"}}>{sc}<span style={{fontSize:"13px"}}>점</span></p></div>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>반 평균</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(avg*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>표준편차</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(stdDev*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>최고</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{best}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>내 점수</p><p style={{fontSize:"24px",fontWeight:"bold",color:"#6c63ff",margin:"2px 0 0 0"}}>{sc}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>반 평균</p><p style={{fontSize:"24px",fontWeight:"bold",color:"#475569",margin:"2px 0 0 0"}}>{(Math.round(avg*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>표준편차</p><p style={{fontSize:"24px",fontWeight:"bold",color:"#475569",margin:"2px 0 0 0"}}>{(Math.round(stdDev*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>최고</p><p style={{fontSize:"24px",fontWeight:"bold",color:"#475569",margin:"2px 0 0 0"}}>{best}<span style={{fontSize:"13px"}}>점</span></p></div>
               </div>
             </div>
             <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
@@ -983,7 +1129,7 @@ export default function Home(){
 
   if(initializing)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(!user)return<LoginScreen onLogin={handleLogin} settings={settings}/>;
-  if(loading)return<div className="min-h-screen flex items-center justify-center" style={{background:"linear-gradient(135deg,#f8f7ff,#fdfcff)"}}><img src="/logo.png" alt="" className="h-10 opacity-40 animate-pulse mx-auto"/></div>;
+  if(loading)return<div className="lux-bg min-h-screen flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-40 animate-pulse mx-auto"/></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
   const ADMIN_SECRET="Tjwjddls1!";
@@ -996,18 +1142,18 @@ export default function Home(){
 
   const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
     {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
-    <div className="pt-2 mt-2" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}>
+    <div className="pt-2 mt-2" style={{borderTop:"1px solid rgba(108,99,255,0.08)"}}>
       <button onClick={()=>{if(adminUnlocked){setAdminUnlocked(false);setAdminPwInput("");setTab("classes");if(mob)setMm(false);}else{setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 mb-1 text-[10px] font-semibold" style={{color:"rgba(212,175,55,0.65)",fontFamily:"'Montserrat',sans-serif"}}>{adminUnlocked?"🔓 관리 메뉴 (잠그기)":"🔒 관리 메뉴 (잠김)"}</button>
       {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
     </div>
   </nav>);
 
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#f8f7ff 0%,#fdfcff 40%,#f5f3ff 100%)",fontFamily:"'Montserrat',sans-serif"}}>
-    <aside className="hidden lg:flex flex-col w-56 min-h-screen p-2 fixed left-0 top-0 bottom-0 z-40"><div className="flex flex-col flex-1 rounded-3xl p-5 border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08),inset 0 1px 0 rgba(255,255,255,0.95)"}}><div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" style={{color:"#1a1628",fontFamily:"'Playfair Display',serif"}}>서정인 수학</span></div>{navEl()}<div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"rgba(108,99,255,0.08)",color:"rgba(108,99,255,0.7)"}}><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold" style={{color:"#1a1628"}}>{user.name}</p><p className="text-[10px]" style={{color:"rgba(108,99,255,0.5)"}}>관리자</p></div></div><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></div></aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid rgba(212,175,55,0.12)",boxShadow:"0 2px 20px rgba(108,99,255,0.07)"}}><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm" style={{fontFamily:"'Playfair Display',serif"}}>서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 z-50 p-5" style={{background:"rgba(255,255,255,0.96)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",boxShadow:"-8px 0 48px rgba(108,99,255,0.12)",borderLeft:"1px solid rgba(212,175,55,0.12)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm mt-3" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    <aside className="hidden lg:flex flex-col w-56 min-h-screen p-2 fixed left-0 top-0 bottom-0 z-40"><div className="flex flex-col flex-1 rounded-3xl p-5 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.08)",boxShadow:"var(--c-shadow-card)"}}><div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" style={{color:"var(--c-text-primary)",fontFamily:"var(--font-serif)",fontWeight:600,letterSpacing:"-0.02em"}}>서정인 수학</span></div>{navEl()}<div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(108,99,255,0.08)"}}><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"var(--c-indigo-soft)",color:"var(--c-indigo)"}}><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</p><p className="text-[10px]" style={{color:"var(--c-text-muted)"}}>관리자</p></div></div><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></div></aside>
+    <div className="lux-topbar lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center"><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm" style={{color:"var(--c-text-primary)",fontFamily:"var(--font-serif)",fontWeight:600}}>서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 z-50 p-5" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",boxShadow:"-8px 0 40px rgba(108,99,255,0.1)",borderLeft:"1px solid rgba(108,99,255,0.08)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm mt-3" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
-      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08)"}}><div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl" style={{background:"linear-gradient(135deg,rgba(108,99,255,0.08),rgba(212,175,55,0.06))"}}>🔒</div><h2 className="text-lg font-semibold mb-1" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>관리 메뉴</h2><p className="text-xs mb-6" style={{color:"rgba(130,120,150,0.7)",fontFamily:"'Montserrat',sans-serif"}}>접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-center mb-3" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs mb-3" style={{color:"#e05555",fontFamily:"'Montserrat',sans-serif"}}>{adminPwErr}</p>}<button onClick={tryUnlock} className="shimmer-action-btn w-full py-3 rounded-2xl font-semibold text-sm text-white" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.1em"}}>확인</button></div></div>}
+      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" style={{background:"rgba(250,249,255,0.97)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.1)",boxShadow:"var(--c-shadow-card)"}}><div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl" style={{background:"linear-gradient(135deg,rgba(108,99,255,0.08),rgba(212,175,55,0.06))"}}>🔒</div><h2 className="text-lg font-semibold mb-1" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>관리 메뉴</h2><p className="text-xs mb-6" style={{color:"rgba(130,120,150,0.7)",fontFamily:"'Montserrat',sans-serif"}}>접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-center mb-3" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs mb-3" style={{color:"#e05555",fontFamily:"'Montserrat',sans-serif"}}>{adminPwErr}</p>}<button onClick={tryUnlock} className="shimmer-action-btn w-full py-3 rounded-2xl font-semibold text-sm text-white" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.1em"}}>확인</button></div></div>}
       {tab==="classes"&&<AdminClassManager users={users}/>}
       {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups}/>}
       {tab==="exams"&&adminUnlocked&&<AdminExamViewer users={users}/>}
