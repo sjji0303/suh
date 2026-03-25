@@ -209,6 +209,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[showConfetti,setShowConfetti]=useState(false);
   const confettiRef=useRef<HTMLCanvasElement>(null);
   const prevTabRef=useRef<string>("");
+  const currentTestRef=useRef<any>(null);
   // confetti 실행 함수
   const fireConfetti=()=>{
     setShowConfetti(true);
@@ -236,18 +237,16 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   };
   const[notifs,setNotifs]=useState<any[]>([]);const[showNotif,setShowNotif]=useState(false);
   const unreadCount=notifs.filter(n=>!n.is_read).length;
-  const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data){const prev=notifs;setNotifs(data);// 새 성적 알림이 있으면 현재 시험 재로드
-    const hasNewGrade=data.some((n:any)=>!n.is_read&&n.type==="grade");const hadNewGrade=prev.some((n:any)=>!n.is_read&&n.type==="grade");if(hasNewGrade&&!hadNewGrade&&tests.length>0){ld(tests[idx]);}}};
+  const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data){const prev=notifs;setNotifs(data);const hasNewGrade=data.some((n:any)=>!n.is_read&&n.type==="grade");const hadNewGrade=prev.some((n:any)=>!n.is_read&&n.type==="grade");if(hasNewGrade&&!hadNewGrade&&currentTestRef.current){ld(currentTestRef.current);}}};
 
   const markAllRead=async()=>{await supabase.from("notifications").update({is_read:true}).eq("user_id",user.id).eq("is_read",false);fNotifs();};
   useEffect(()=>{fNotifs();},[]);
   // 30초마다 현재 시험 정답률 재조회 → 최다오답 항상 최신 유지
   useEffect(()=>{
-    if(!tests.length)return;
-    const timer=setInterval(()=>{if(tab==="grades")ld(tests[idx]);},30000);
+    const timer=setInterval(()=>{if(currentTestRef.current)ld(currentTestRef.current);},30000);
     return()=>clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[tab,tests,idx]);
+  },[]);
   // 등수 향상 시 confetti (퍼센타일 기준, 5% 초과 상승)
   useEffect(()=>{
     if(rankHistory.length>=2){
@@ -283,11 +282,11 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     const{data:noticeData}=await supabase.from("class_notices").select("*, class_groups(name)").in("class_group_id",gids).order("created_at",{ascending:false});
     if(noticeData)setNotices(noticeData);
   })();},[]);
-  const ld=async(t:any)=>{const sid=user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
+  const ld=async(t:any)=>{currentTestRef.current=t;const sid=user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
   // 성적표 탭 진입 시 현재 시험 재로드 → 최다오답 최신화
   useEffect(()=>{
-    if(tab==="grades"&&prevTabRef.current!=="grades"&&tests.length>0){
-      ld(tests[idx]);
+    if(tab==="grades"&&prevTabRef.current!=="grades"&&currentTestRef.current){
+      ld(currentTestRef.current);
     }
     prevTabRef.current=tab;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -491,15 +490,16 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   const last=points[points.length-1];
                   const diff=prev?last.pct-prev.pct:0;
                   const status=Math.abs(diff)<=5?"maintain":diff>0?"up":"down";
-                  return(<div className="ios-glass-card p-4 sm:p-5 relative z-10">
-                    <div className="flex items-center justify-between mb-4">
+                  const cardStyle:React.CSSProperties={background:"linear-gradient(145deg,rgba(255,255,255,0.62) 0%,rgba(255,255,255,0.35) 50%,rgba(255,255,255,0.55) 100%)",backdropFilter:"blur(36px) saturate(200%)",WebkitBackdropFilter:"blur(36px) saturate(200%)",borderRadius:"22px",border:"1px solid rgba(212,175,55,0.55)",boxShadow:"0 0 0 1px rgba(255,255,255,0.55),0 8px 32px rgba(212,175,55,0.10),inset 0 1px 0 rgba(255,255,255,0.88)",padding:"20px 24px",display:"flex",flexDirection:"column",gap:"16px"};
+                  return(<div style={cardStyle}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                       <h3 className="font-semibold text-base">등수 변화</h3>
                       {prev&&status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
                       {prev&&status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
                       {prev&&status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
                       {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                     </div>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"8px 0"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%"}}>
                       <svg viewBox={`0 0 ${w} ${h}`} style={{width:"100%",maxHeight:"130px",display:"block"}}>
                         <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.18"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
                         {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
@@ -510,7 +510,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                         </g>))}
                       </svg>
                     </div>
-                </div>);
+                  </div>);
               })()}
           </div>
           {/* 4. 정답률 → 최다오답 */}
