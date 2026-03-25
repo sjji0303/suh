@@ -13,12 +13,12 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
   useEffect(()=>{setTimeout(()=>setReady(true),100);(async()=>{const{data}=await supabase.from("reviews").select("*").eq("is_featured",true).order("created_at",{ascending:false}).limit(20);if(data){/* 성적향상 사례 우선 + 랜덤 셔플 */const shuffle=(a:any[])=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};const up=shuffle(data.filter(r=>r.best_grade&&r.best_grade.trim()));const normal=shuffle(data.filter(r=>!r.best_grade||!r.best_grade.trim()));setReviews([...up,...normal]);}})();},[]);
   const go=async()=>{setLd(true);setErr(await onLogin(id,pw));setLd(false);};
   const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
-  const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
-  return(<div className="min-h-screen relative flex flex-col overflow-hidden bg-[#faf9f7]">
-    {/* 원본 배경 이미지 재적용 및 고급스러운 오버레이 (글래스를 돋보이게) */}
-    <div className="absolute inset-0 z-0 scale-105" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(8px)"}}/>
-    <div className="absolute inset-0 z-0" style={{background:"linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(250,249,247,0.85) 100%)"}}/>
-    <div className="absolute inset-0 z-0 opacity-40" style={{backgroundImage: "radial-gradient(#AA8C2C 0.5px, transparent 0.5px)", backgroundSize: "32px 32px"}} />
+  const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bioLines=(settings.profile_bio||"").split(/[\\n\n]+/).filter(Boolean);
+  return(<div className="min-h-screen relative flex flex-col overflow-y-auto overflow-x-hidden bg-[#faf9f7]">
+    {/* 원본 배경 이미지 재적용 및 덜 흐릿하게 */}
+    <div className="fixed inset-0 z-0 scale-105" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(3px)"}}/>
+    <div className="fixed inset-0 z-0" style={{background:"linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(250,249,247,0.5) 100%)"}}/>
+    <div className="fixed inset-0 z-0 opacity-20" style={{backgroundImage: "radial-gradient(#AA8C2C 0.5px, transparent 0.5px)", backgroundSize: "32px 32px"}} />
 
     <style>{`
       /* 최고급 명조체(Nanum Myeongjo) 추가 임포트 */
@@ -60,14 +60,14 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       }
 
       .glass-card {
-        background: rgba(255, 255, 255, 0.55);
+        background: rgba(255, 255, 255, 0.65);
         backdrop-filter: blur(28px);
         -webkit-backdrop-filter: blur(28px);
         border: 1px solid rgba(212, 175, 55, 0.4);
         box-shadow: 0 12px 48px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1);
       }
       .glass-card-strong {
-        background: rgba(255, 255, 255, 0.75);
+        background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(40px);
         -webkit-backdrop-filter: blur(40px);
         border: 1px solid rgba(212, 175, 55, 0.7);
@@ -86,11 +86,11 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       }
     `}</style>
     {/* 골드 빛망울 포인트 */}
-    <div className="absolute z-0 rounded-full pointer-events-none opacity-60 mix-blend-multiply" style={{width:"800px",height:"800px",top:"-10%",right:"-10%",background:"radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)",filter:"blur(80px)"}}/>
-    <div className="absolute z-0 rounded-full pointer-events-none opacity-60 mix-blend-multiply" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none opacity-50 mix-blend-multiply" style={{width:"800px",height:"800px",top:"-10%",right:"-10%",background:"radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none opacity-50 mix-blend-multiply" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
 
     {/* 메인 영역 */}
-    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-16 px-4 relative z-10 w-full">
+    <div className="flex flex-col items-center justify-center pt-8 md:pt-16 px-4 relative z-10 w-full flex-shrink-0">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
         <div className="w-[320px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
@@ -101,20 +101,22 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
             <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
           </div>
-          {bio&&<div className="text-[13px] leading-relaxed whitespace-pre-line text-center px-4" style={{color:"#444"}}>{bio}</div>}
-          <div className="mt-auto pt-6 border-t text-center" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">Premium Education</p></div>
+          {bioLines.length>0&&<div className="text-[13px] leading-relaxed text-center px-4 text-[#444]">
+            {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
+          </div>}
+          <div className="mt-auto pt-6 border-t text-center" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">AGREESUH</p></div>
         </div>
         <div className="flex-1 rounded-[32px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
           <div className="mb-8 pl-5 border-l-[3px] border-[#D4AF37]" style={{position: "relative", zIndex: 2}}>
-            <p className="text-[11px] font-bold tracking-[0.25em] uppercase mb-3 text-[#AA8C2C]">Members Only</p>
+            <p className="text-[11px] font-bold tracking-[0.25em] uppercase mb-3 text-[#AA8C2C]">AGREESUH</p>
             <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.4rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
               <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
               <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800}}>뚜렷한 선택으로.</strong>
             </h1>
           </div>
           <div className="space-y-4 max-w-[360px] pl-5 relative z-10">
-            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 홍길동1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50">{err}</p>}
             <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em]"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
           </div>
@@ -124,30 +126,28 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       {/* 모바일 (특히 온라인에서 가장 중요한 부분) */}
       <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
         <div className="rounded-[30px] p-7 glass-card-strong relative overflow-hidden">
-          <div className="mb-7 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
-            <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-2 text-[#AA8C2C]">Members Only</p>
+          <div className="mb-6 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
+            <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-2 text-[#AA8C2C]">AGREESUH</p>
             <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.75rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
               <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
               <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
             </h1>
           </div>
-          <div className="rounded-[28px] p-5 mb-6 bg-white/40 border border-[#D4AF37]/20 flex items-center gap-4 justify-center shadow-sm relative z-10 backdrop-blur-md">
+          <div className="rounded-[28px] p-5 mb-5 bg-white/50 border border-[#D4AF37]/30 flex items-center gap-4 justify-center shadow-md relative z-10 backdrop-blur-md">
             <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.8)", padding:"2px", background:"#fff", boxShadow:"0 6px 16px rgba(212,175,55,0.25)"}}/>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h2 className="text-[18px] text-[#111]" style={{fontFamily:"var(--font-serif)", fontWeight:800}}>{nm}</h2>
-              {bio&&<div className="text-[11px] mt-1 line-clamp-2 text-[#555] leading-relaxed font-medium">{bio}</div>}
+              {bioLines.length>0&&<div className="text-[11px] mt-1 text-[#555] leading-relaxed font-medium">
+                {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
+              </div>}
             </div>
           </div>
-          <div className="rounded-2xl px-4 py-3.5 mb-6 bg-white/70 border border-[#D4AF37]/30 shadow-sm relative z-10">
-            <p className="text-[11px] text-[#555] mb-1.5 flex items-center justify-between"><span>아이디</span> <strong className="text-[#222]">이름+학부모번호뒷4자리</strong></p>
-            <p className="text-[11px] text-[#555] flex items-center justify-between"><span>비밀번호</span> <strong className="text-[#222]">학부모번호뒷4자리</strong></p>
-          </div>
           <div className="space-y-3.5 relative z-10">
-            <input className="lux-input w-full rounded-[20px] px-5 py-4 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-[20px] px-5 py-4 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 홍길동1234 (이름+학부모뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
           {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50/80 border border-red-100">{err}</p>}
-          <button onClick={go} disabled={ld} className="btn-gold w-full mt-6 py-4 rounded-[20px] font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-4 rounded-[20px] font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
