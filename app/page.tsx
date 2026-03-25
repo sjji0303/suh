@@ -96,7 +96,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         <div className="w-[320px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
           <div className="text-center mb-6">
             <div className="relative inline-block mb-5">
-              <img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"4px", background:"#fff"}}/>
+              <img src={pi} alt="" className="w-[168px] h-[168px] rounded-full shadow-2xl object-cover transition-transform duration-500 hover:scale-105" style={{border:"4px solid rgba(212,175,55,0.8)", padding:"5px", background:"#fff", margin:"0 auto"}}/>
             </div>
             <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
             <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
@@ -134,7 +134,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             </h1>
           </div>
           <div className="rounded-[24px] p-4 mb-5 bg-white/60 border border-[#D4AF37]/30 flex items-center gap-4 justify-center shadow-sm relative z-10 backdrop-blur-md">
-            <img src={pi} alt="" className="w-14 h-14 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.8)", padding:"2px", background:"#fff", boxShadow:"0 4px 12px rgba(212,175,55,0.15)"}}/>
+            <img src={pi} alt="" className="w-[84px] h-[84px] rounded-full object-cover flex-shrink-0" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"3px", background:"#fff", boxShadow:"0 4px 12px rgba(212,175,55,0.15)"}}/>
             <div className="min-w-0 flex-1">
               <h2 className="text-[17px] text-[#111]" style={{fontFamily:"var(--font-serif)", fontWeight:800}}>{nm}</h2>
               {bioLines.length>0&&<div className="text-[11px] mt-1 text-[#555] leading-relaxed font-medium">
@@ -252,6 +252,52 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
+    <style>{`
+      .ios-glass-card {
+        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
+        backdrop-filter: blur(28px) saturate(180%);
+        -webkit-backdrop-filter: blur(28px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 1);
+        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.06), inset 0 2px 5px rgba(255,255,255,1);
+        border-radius: 28px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .ios-glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 50px rgba(212, 175, 55, 0.1), inset 0 2px 5px rgba(255,255,255,1);
+      }
+      .ios-glass-card::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -150%; width: 50%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
+        transform: skewX(-25deg);
+        animation: iosShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+      }
+      @keyframes iosShimmerAnim {
+        0% { left: -150%; opacity: 0; }
+        15% { opacity: 1; }
+        50% { left: 200%; opacity: 0; }
+        100% { left: 200%; opacity: 0; }
+      }
+      .grade-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 6px;
+      }
+      .grade-value {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #334155;
+      }
+    `}</style>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}>
         <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(212,175,55,0.15)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
@@ -270,24 +316,29 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#D4AF37] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
-          {info&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-slate-100/50 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="text-center"><p className="text-xs text-slate-400">출석</p><p className={`text-base font-bold ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">클리닉</p><p className="text-base font-semibold text-slate-600">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">과제 성취도</p><p className="text-base font-semibold text-slate-600">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">오답 성취도</p><p className="text-base font-semibold text-slate-600">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
+          {info&&<div className="ios-glass-card p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
           {/* 2. 개인 코멘트 */}
-          {info?.comment&&<div className="bg-gradient-to-r from-[#D4AF37]/5 to-[#D4AF37]/10 rounded-2xl p-5 mb-4 border border-[#D4AF37]/10"><p className="text-sm font-semibold text-[#D4AF37] mb-1">개인 코멘트</p><p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{info.comment}</p></div>}
+          {info?.comment&&<div className="ios-glass-card p-6 mb-5 relative group" style={{borderLeft:"4px solid #D4AF37"}}><p className="text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[15px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 text-center">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
-            <div className="space-y-4">
-              {info&&<div className="bg-gradient-to-br from-white to-[#D4AF37]/5 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-[#D4AF37]/10"><div className="grid grid-cols-2 gap-3 text-center"><div><p className="text-xs text-slate-400">내 점수</p><p className="text-2xl font-bold text-[#D4AF37]">{info.total_score}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">반 평균</p><p className="text-2xl font-bold text-slate-600">{info.class_average}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">표준편차</p><p className="text-2xl font-bold text-slate-600">{info.std_dev||"—"}<span className="text-sm font-semibold">{info.std_dev?"점":""}</span></p></div><div><p className="text-xs text-slate-400">최고</p><p className="text-2xl font-bold text-slate-600">{info.class_best}<span className="text-sm font-semibold">점</span></p></div></div></div>}
-              {rankHistory.length>=1&&(()=>{
-                const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
-                const maxVal=Math.max(...data.map(d=>d.total),1);
-                const w=320;const h=160;const px=40;const py=25;const gw=w-px*2;const gh=h-py*2;
-                const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.value/maxVal)*gh;return{x,y,...d};});
-                const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
-                const prev=points.length>=2?points[points.length-2]:null;
-                const diff=prev?prev.rank-points[points.length-1].rank:0;
-                return(<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50">
-                  <div className="flex items-center justify-between mb-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+              <div className="ios-glass-card p-6 flex flex-col min-h-[280px]">
+                <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
+                <div className="space-y-1.5 flex-1 relative z-10">
+                  {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
+                </div>
+              </div>
+              <div className="space-y-5">
+                {info&&<div className="ios-glass-card p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-6 gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {rankHistory.length>=1&&(()=>{
+                  const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
+                  const maxVal=Math.max(...data.map(d=>d.total),1);
+                  const w=320;const h=160;const px=40;const py=25;const gw=w-px*2;const gh=h-py*2;
+                  const points=data.map((d,i)=>{const x=data.length===1?w/2:px+(gw/(data.length-1))*i;const y=py+gh-(d.value/maxVal)*gh;return{x,y,...d};});
+                  const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
+                  const prev=points.length>=2?points[points.length-2]:null;
+                  const diff=prev?prev.rank-points[points.length-1].rank:0;
+                  return(<div className="ios-glass-card p-6 relative z-10">
+                    <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-base">등수 변화</h3>
                     {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
                     {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
