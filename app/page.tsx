@@ -208,6 +208,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
   const[showConfetti,setShowConfetti]=useState(false);
   const confettiRef=useRef<HTMLCanvasElement>(null);
+  const prevTabRef=useRef<string>("");
   // confetti 실행 함수
   const fireConfetti=()=>{
     setShowConfetti(true);
@@ -274,10 +275,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     if(noticeData)setNotices(noticeData);
   })();},[]);
   const ld=async(t:any)=>{const sid=user.id;const[q,r,si]=await Promise.all([supabase.from("test_questions").select("*").eq("test_id",t.id).order("question_number"),supabase.from("test_results").select("*").eq("test_id",t.id).eq("student_id",sid),supabase.from("test_student_info").select("*").eq("test_id",t.id).eq("student_id",sid).single()]);if(q.data)setQuestions(q.data);if(r.data)setResults(r.data);setInfo(si.data||null);};
-  // 성적 알림 수신 시 현재 보고있는 시험 자동 갱신
-  useEffect(()=>{if(tab==="grades"&&test){ld(test);}},[tab]);
-  // Supabase Realtime: test_questions 변경 구독 → 최다오답 즉시 반영
-  useEffect(()=>{if(!test)return;const ch=supabase.channel(`tq_${test.id}`).on("postgres_changes",{event:"UPDATE",schema:"public",table:"test_questions",filter:`test_id=eq.${test.id}`},()=>{ld(test);}).subscribe();return()=>{supabase.removeChannel(ch);};},[test?.id]);
+  // 성적표 탭 진입 시 현재 시험 재로드 → 최다오답 최신화
+  useEffect(()=>{
+    if(tab==="grades"&&prevTabRef.current!=="grades"&&tests.length>0){
+      ld(tests[idx]);
+    }
+    prevTabRef.current=tab;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[tab]);
   const nav=(d:number)=>{const n=idx+d;if(n>=0&&n<tests.length){setIdx(n);ld(tests[n]);}};
   const chPw=async()=>{if(pw.n1!==pw.n2){setPwMsg("불일치");return;}await supabase.from("users").update({password:pw.n1}).eq("id",user.id);setPwMsg("변경 완료!");setPw({n1:"",n2:""});};
   const[notices,setNotices]=useState<any[]>([]);
