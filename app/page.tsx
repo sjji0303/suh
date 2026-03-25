@@ -153,22 +153,22 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     </div>
 
     {/* 후기 슬라이더 */}
-    {reviews.length>0&&<div className={`relative z-10 mt-auto pb-8 pt-4 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+    {reviews.length>0&&<div className={`relative z-10 mt-6 md:mt-auto pb-8 pt-0 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
       <p className="text-center text-[10px] font-bold tracking-[0.3em] uppercase mb-4 text-[#AA8C2C] opacity-90 drop-shadow-sm">Student Reviews</p>
       <div className="overflow-hidden">
-        <div className="flex gap-4 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[260px] flex-shrink-0 rounded-[28px] p-5 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.3)",boxShadow:hasBestGrade?"0 12px 40px rgba(212,175,55,0.15),inset 0 1px 0 rgba(255,255,255,1)":"0 8px 30px rgba(0,0,0,0.05)"}}>
-            <div className="flex items-center gap-3 mb-3"><div className="w-9 h-9 rounded-full flex items-center justify-center text-[15px] bg-white border border-[#D4AF37]/50 shadow-md">{animalIcon}</div><div><span className="text-[13px] font-bold text-[#111] block leading-none pb-1" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[10px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-1 rounded-lg font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-3"><span className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-md inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-3">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-bold px-2 py-1 rounded-lg text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/25 mix-blend-multiply">#{kw}</span>))}</div>}
-            <p className="text-[12px] leading-[1.6] review-clamp text-[#333] font-medium">{r.content}</p>
+        <div className="flex gap-3 review-scroll pl-4">
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[220px] flex-shrink-0 rounded-[24px] p-4 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.3)",boxShadow:hasBestGrade?"0 12px 40px rgba(212,175,55,0.15),inset 0 1px 0 rgba(255,255,255,1)":"0 8px 30px rgba(0,0,0,0.05)"}}>
+            <div className="flex items-center gap-2.5 mb-2.5"><div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] bg-white border border-[#D4AF37]/50 shadow-md">{animalIcon}</div><div><span className="text-[12px] font-bold text-[#111] block leading-none pb-0.5" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[9px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[8.5px] px-1.5 py-0.5 rounded-md font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-2.5"><span className="text-[9px] font-bold px-2 py-1 rounded-full text-white shadow-md inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2.5">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-md text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/25 mix-blend-multiply">#{kw}</span>))}</div>}
+            <p className="text-[11px] leading-[1.5] review-clamp text-[#333] font-medium">{r.content}</p>
           </div>)})}
         </div>
       </div>
       <style>{`
         .review-scroll{animation:reviewScroll ${Math.max(reviews.length*8,30)}s linear infinite;}
         .review-scroll:hover{animation-play-state:paused;}
-        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-300px * ${reviews.length}))}}
+        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-232px * ${reviews.length}))}}
         .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
       `}</style>
     </div>}
