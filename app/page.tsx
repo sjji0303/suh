@@ -61,53 +61,49 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
       .glass-card, .glass-card-strong {
         position: relative;
-      }
-      
-      .glass-card, .glass-card-strong {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(24px) saturate(140%);
-        -webkit-backdrop-filter: blur(24px) saturate(140%);
-        border: 1px solid rgba(255, 255, 255, 1);
-        box-shadow: 
-          0 20px 50px rgba(0, 0, 0, 0.03),
-          0 0 30px rgba(212, 175, 55, 0.1),
-          inset 0 2px 4px rgba(255, 255, 255, 1);
-        position: relative;
         overflow: hidden;
       }
-      
       .glass-card::after, .glass-card-strong::after {
-        content: '';
+        content: "";
         position: absolute;
-        top: 0; left: -100%;
-        width: 50%; height: 100%;
-        background: linear-gradient(to right, transparent, rgba(255,255,255,0.7), transparent);
+        top: 0; left: -150%; width: 50%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
         transform: skewX(-25deg);
-        animation: premiumGlow 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        animation: loginShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
         pointer-events: none;
+        z-index: 1;
       }
-      @keyframes premiumGlow {
-        0% { left: -100%; opacity: 0; }
-        20% { opacity: 1; }
-        40% { left: 200%; opacity: 0; }
+      @keyframes loginShimmerAnim {
+        0% { left: -150%; opacity: 0; }
+        15% { opacity: 1; }
+        50% { left: 200%; opacity: 0; }
         100% { left: 200%; opacity: 0; }
+      }
+      .glass-card {
+        background: linear-gradient(145deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border: 1px solid rgba(255,255,255,1);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08), inset 0 2px 5px rgba(255,255,255,1);
+      }
+      .glass-card-strong {
+        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
+        backdrop-filter: blur(48px) saturate(200%);
+        -webkit-backdrop-filter: blur(48px) saturate(200%);
+        border: 1px solid rgba(255,255,255,1);
+        box-shadow: 0 30px 80px rgba(212,175,55,0.15), inset 0 2px 6px rgba(255,255,255,1);
       }
 
       .lux-input {
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(212, 175, 55, 0.2);
-        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.01);
-        color: #111;
-        transition: all 0.4s ease;
-      }
-      .lux-input::placeholder {
-        color: rgba(0,0,0,0.3);
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(255,255,255,0.8);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        transition: all 0.3s;
       }
       .lux-input:focus {
-        border-color: rgba(212, 175, 55, 0.7) !important;
-        background: #fff !important;
-        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15) !important;
-        outline: none;
+        border-color: #D4AF37 !important;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.2), inset 0 2px 4px rgba(0,0,0,0.02) !important;
       }
     `}</style>
     {/* 골드 빛망울 포인트 */}
@@ -117,79 +113,79 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     {/* 메인 영역 */}
     <div className="flex flex-col items-center justify-start md:justify-center pt-12 md:pt-16 px-4 relative z-10 w-full flex-shrink-0">
       {/* PC */}
-      <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
-        <div className="w-[300px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
-          <div className="text-center mb-5 relative z-10">
-            <div className="relative inline-block mb-4">
-              <img src={pi} alt="" className="w-[140px] h-[140px] rounded-full shadow-xl object-cover transition-transform duration-500 hover:scale-105" style={{border:"2px solid #fff", padding:"4px", background:"linear-gradient(135deg, #D4AF37, #f6e8b6)", margin:"0 auto"}}/>
+      <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
+        <div className="w-[320px] flex-shrink-0 rounded-[36px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
+          <div className="text-center mb-6 relative z-10">
+            <div className="relative inline-block mb-5">
+              <img src={pi} alt="" className="w-[168px] h-[168px] rounded-full shadow-2xl object-cover transition-transform duration-500 hover:scale-105" style={{border:"4px solid rgba(212,175,55,0.8)", padding:"5px", background:"#fff", margin:"0 auto"}}/>
             </div>
-            <h2 className="text-xl mb-1.5" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
-            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-10" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 6px rgba(212,175,55,0.6)"}}/><div className="h-px w-10" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
+            <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
+            <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
           </div>
-          {bioLines.length>0&&<div className="text-[12px] leading-relaxed text-center px-2 text-[#555] font-medium relative z-10">
+          {bioLines.length>0&&<div className="text-[13px] leading-relaxed text-center px-4 text-[#444] relative z-10">
             {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
           </div>}
-          <div className="mt-auto pt-5 border-t text-center relative z-10" style={{borderColor:"rgba(212,175,55,0.2)"}}><p className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#D4AF37]">AGREESUH</p></div>
+          <div className="mt-auto pt-6 border-t text-center relative z-10" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">AGREESUH</p></div>
         </div>
-        <div className="flex-1 rounded-[32px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
-          <div className="mb-6 pl-4 border-l-[2px] border-[#D4AF37]" style={{position: "relative", zIndex: 10}}>
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.2rem",lineHeight:1.3, letterSpacing:"-0.02em"}}>
-              <span style={{color:"#666", fontWeight:300, fontSize:"1.6rem"}}>흐릿한 시작을,</span><br/>
+        <div className="flex-1 rounded-[36px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
+          <div className="mb-8 pl-5 border-l-[3px] border-[#D4AF37]" style={{position: "relative", zIndex: 10}}>
+            <p className="text-[11px] font-bold tracking-[0.25em] uppercase mb-3 text-[#AA8C2C]">AGREESUH</p>
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.4rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
+              <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
               <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800}}>뚜렷한 선택으로.</strong>
             </h1>
           </div>
-          <div className="space-y-3 max-w-[340px] pl-4 relative z-10">
-            <input className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          <div className="space-y-4 max-w-[360px] pl-5 relative z-10">
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50 text-center">{err}</p>}
-            <button onClick={go} disabled={ld} className="btn-gold w-full mt-3 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+            <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
           </div>
         </div>
       </div>
       
-      <div className={`md:hidden w-full max-w-[380px] transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-[28px] p-5 glass-card-strong relative overflow-hidden flex flex-col justify-center">
+      {/* 모바일 (완전한 중심 정렬의 애플 리퀴드 글래스 스타일) */}
+      <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+        <div className="rounded-[36px] p-6 glass-card-strong relative overflow-hidden flex flex-col items-center">
           
-          <div className="flex flex-row items-center gap-3 mb-4 relative z-10 w-full">
-            <div className="flex-shrink-0">
-              <img src={pi} alt="" className="w-[56px] h-[56px] rounded-full object-cover shadow-md" style={{border:"2px solid #fff", padding:"2px", background:"linear-gradient(135deg, #D4AF37, #f6e8b6)"}}/>
+          <div className="text-center mt-2 mb-5 relative z-10 w-full">
+            <div className="relative inline-block mb-4">
+              <img src={pi} alt="" className="w-[100px] h-[100px] rounded-full object-cover transition-transform duration-500 hover:scale-105" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"3px", background:"#fff", margin:"0 auto", boxShadow:"0 8px 24px rgba(212,175,55,0.2)"}}/>
             </div>
-            <div className="flex flex-col flex-1">
-              <h2 className="text-[16px] mb-0.5" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
-              <div className="flex items-center gap-1.5 mb-1"><div className="h-[1px] w-4" style={{background:"linear-gradient(90deg,#D4AF37,transparent)"}}/><div className="w-1 h-1 rounded-full bg-[#D4AF37]"/></div>
-              {bioLines.length>0&&<div className="text-[9px] leading-snug text-[#666] font-medium">
-                {bioLines.slice(0,2).map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
-              </div>}
-            </div>
+            <h2 className="text-[20px] mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
+            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
+            {bioLines.length>0&&<div className="text-[12px] leading-relaxed text-[#555] font-medium px-4">
+              {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
+            </div>}
           </div>
 
-          <div className="mb-4 relative z-10 w-full pl-1">
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.25rem",lineHeight:1.3, letterSpacing:"-0.02em"}}>
-              <span style={{color:"#666", fontWeight:300, fontSize:"15px"}}>흐릿한 시작을,</span><br/>
-              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800}}>뚜렷한 선택으로.</strong>
+          <div className="text-center mb-6 relative z-10 w-full">
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.4rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
+              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
             </h1>
+            <p className="text-[8px] font-bold tracking-[0.25em] uppercase mt-2 text-[#AA8C2C]">AGREESUH</p>
           </div>
 
-          <div className="w-full space-y-2.5 relative z-10">
-            <input className="lux-input w-full rounded-[14px] px-4 py-3 text-[12px] outline-none" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-[14px] px-4 py-3 text-[12px] outline-none" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            {err&&<p className="w-full text-[11px] px-3 py-1.5 rounded-xl text-red-500 bg-red-50 text-center">{err}</p>}
-            <button onClick={go} disabled={ld} className="btn-gold w-full mt-2 py-3.5 rounded-[14px] font-bold text-[12px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-md"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          <div className="w-full space-y-3 relative z-10 px-1">
+            <input className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
+          {err&&<p className="w-full text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50 text-center relative z-10 mx-1">{err}</p>}
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg relative z-10 mx-1"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
 
-    {/* 후기 슬라이더 (모바일에서 뷰포트 내에 꽉 차게 들어오도록 여백 최소화) */}
-    {reviews.length>0&&<div className={`relative z-10 mt-3 md:mt-auto pb-4 pt-0 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-[9px] font-bold tracking-[0.3em] uppercase mb-2 text-[#D4AF37] opacity-90 drop-shadow-sm">Student Reviews</p>
+    {/* 후기 슬라이더 */}
+    {reviews.length>0&&<div className={`relative z-10 mt-6 md:mt-auto pb-8 pt-0 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <p className="text-center text-[10px] font-bold tracking-[0.3em] uppercase mb-3 text-[#AA8C2C] opacity-90 drop-shadow-sm">Student Reviews</p>
       <div className="overflow-hidden">
         <div className="flex gap-3 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[190px] flex-shrink-0 rounded-[20px] p-3 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.4)":"rgba(255,255,255,1)", boxShadow:"0 10px 30px rgba(0,0,0,0.02)"}}>
-            <div className="flex items-center gap-2 mb-2"><div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] bg-white border border-[#D4AF37]/30 shadow-sm">{animalIcon}</div><div><span className="text-[11px] font-bold text-[#222] block leading-none pb-0.5" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[8px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[8px] px-1.5 py-0.5 rounded-md font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-2"><span className="text-[8px] font-bold px-2 py-0.5 rounded-full text-white shadow-sm inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-bold px-1 py-0.5 rounded text-[#B5952F] bg-[#D4AF37]/10 border border-[#D4AF37]/20">#{kw}</span>))}</div>}
-            <p className="text-[10px] leading-[1.4] review-clamp text-[#555] font-medium">{r.content}</p>
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[200px] flex-shrink-0 rounded-[22px] p-3.5 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.3)",boxShadow:hasBestGrade?"0 12px 40px rgba(212,175,55,0.15),inset 0 1px 0 rgba(255,255,255,1)":"0 8px 30px rgba(0,0,0,0.05)"}}>
+            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] bg-white border border-[#D4AF37]/50 shadow-md">{animalIcon}</div><div><span className="text-[11.5px] font-bold text-[#111] block leading-none pb-0.5" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[8px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[8px] px-1.5 py-0.5 rounded-md font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-2"><span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full text-white shadow-md inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-bold px-1.5 py-0.5 rounded-md text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/25 mix-blend-multiply">#{kw}</span>))}</div>}
+            <p className="text-[10px] leading-[1.5] review-clamp text-[#333] font-medium">{r.content}</p>
           </div>)})}
         </div>
       </div>
@@ -282,25 +278,34 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
       .ios-glass-card {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 100%);
-        backdrop-filter: blur(16px) contrast(105%) saturate(120%);
-        -webkit-backdrop-filter: blur(16px) contrast(105%) saturate(120%);
-        border: 1px solid rgba(255, 255, 255, 0.7);
-        border-right-color: rgba(255, 255, 255, 0.25);
-        border-bottom-color: rgba(255, 255, 255, 0.25);
-        box-shadow: 
-          0 12px 30px rgba(0, 0, 0, 0.05),
-          inset 1px 1px 2px rgba(255, 255, 255, 0.95),
-          inset -1px -1px 2px rgba(0, 0, 0, 0.02);
+        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
+        backdrop-filter: blur(28px) saturate(180%);
+        -webkit-backdrop-filter: blur(28px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 1);
+        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.06), inset 0 2px 5px rgba(255,255,255,1);
         border-radius: 28px;
         position: relative;
+        overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
       }
       .ios-glass-card:hover {
         transform: translateY(-2px);
-        box-shadow: 
-          0 16px 40px rgba(0, 0, 0, 0.08),
-          inset 1px 1px 3px rgba(255, 255, 255, 1);
+        box-shadow: 0 16px 50px rgba(212, 175, 55, 0.1), inset 0 2px 5px rgba(255,255,255,1);
+      }
+      .ios-glass-card::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -150%; width: 50%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
+        transform: skewX(-25deg);
+        animation: iosShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+      }
+      @keyframes iosShimmerAnim {
+        0% { left: -150%; opacity: 0; }
+        15% { opacity: 1; }
+        50% { left: 200%; opacity: 0; }
+        100% { left: 200%; opacity: 0; }
       }
       .grade-label {
         font-size: 10px;
@@ -385,8 +390,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>
           {/* 4. 하단 풀폭: 정답률 → 최다오답 */}
           <div className="space-y-4">
-            <div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#D4AF37":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
-            {wrong.length>0&&<div className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#D4AF37":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
+            {wrong.length>0&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
           </div>
         </>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400 text-sm">결과 미입력</div>}
       </>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">시험 없음</div>}</div>}
@@ -425,7 +430,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div><label className="text-xs font-semibold text-slate-500">하고 싶은 말</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q3} onChange={e=>setExamForm(p=>({...p,q3:e.target.value}))} placeholder="자유롭게 적어주세요"/></div>
           <div className="flex gap-2"><button onClick={addExam} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setShowExamAdd(false)} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="ios-glass-card p-4">
+        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-slate-100/50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${ex.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-blue-50 text-blue-600"}`}>{ex.exam_type}</span>{ex.exam_name&&<span className="text-xs text-slate-500">{ex.exam_name}</span>}</div>
@@ -436,7 +441,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>
         </div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">시험 성적을 입력해보세요</div>}
       </div>}
-      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="ios-glass-card p-5"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}</div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
+      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}</div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
       {tab==="inquiry"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">💬 문의사항</h2><button onClick={()=>setShowInqAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1  transition-all"><Icon type="plus" size={14}/>문의하기</button></div>
         {showInqAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-3">
@@ -445,7 +450,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div><label className="text-xs font-semibold text-slate-500">이미지 첨부</label><div className="flex items-center gap-2 mt-1"><button onClick={()=>inqImgRef.current?.click()} className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-500">{inqImg?inqImg.name:"이미지 선택"}</button><input ref={inqImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setInqImg(e.target.files[0]);}}/>{inqImg&&<button onClick={()=>setInqImg(null)} className="text-xs text-red-400">삭제</button>}</div></div>
           <div className="flex gap-2"><button onClick={addInquiry} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>{setShowInqAdd(false);setInqImg(null);}} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="ios-glass-card p-5">
+        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50">
           {editInqId===q.id?<div className="space-y-3">
             <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={editInqForm.title} onChange={e=>setEditInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
             <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={editInqForm.content} onChange={e=>setEditInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용"/></div>
@@ -458,7 +463,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
       </div>}
       {tab==="shop"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">🏪 상점</h2><div className="bg-amber-50 px-4 py-2 rounded-xl"><span className="text-sm font-bold text-amber-600">🔥 {myTokens} 서서갈비</span></div></div>
-        {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="ios-glass-card p-5"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-amber-600">🔥 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
+        {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-amber-600">🔥 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
         {purchases.length>0&&<div><h3 className="font-semibold text-sm mb-3">구매 내역</h3><div className="space-y-2">{purchases.map((p:any)=>(<div key={p.id} className="bg-slate-50 rounded-xl px-4 py-3 flex justify-between items-center"><span className="text-sm">{p.shop_items?.name||"아이템"}</span><div className="text-right"><span className="text-xs font-bold text-amber-600">-{p.price} 🔥</span><p className="text-[10px] text-slate-400">{p.created_at?.slice(0,10)}</p></div></div>))}</div></div>}
       </div>}
       {tab==="shorts"&&<div>
