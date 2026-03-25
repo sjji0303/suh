@@ -704,10 +704,13 @@ function AdminClassManager({users}:{users:any[]}){
 function AdminNoticeManager({groups}:{groups:any[]}){
   const[notices,setNotices]=useState<any[]>([]);const[showAdd,setShowAdd]=useState(false);
   const[form,setForm]=useState({class_group_id:0,title:"",content:""});const[noticeImg,setNoticeImg]=useState<File|null>(null);const noticeImgRef=useRef<HTMLInputElement>(null);
+  const[editNoticeId,setEditNoticeId]=useState<number|null>(null);const[editNoticeForm,setEditNoticeForm]=useState({title:"",content:""});
   const fN=async()=>{const{data}=await supabase.from("class_notices").select("*, class_groups(name)").order("created_at",{ascending:false});if(data)setNotices(data);};
   useEffect(()=>{fN();},[]);
   const addNotice=async()=>{if(!form.class_group_id||!form.content)return;let imgUrl="";if(noticeImg){imgUrl=await uploadImage(noticeImg,`notice_${form.class_group_id}`)||"";}const finalContent=form.content+(imgUrl?`\n[IMG]${imgUrl}[/IMG]`:"");await supabase.from("class_notices").insert({class_group_id:form.class_group_id,title:form.title,content:finalContent});const{data:cms}=await supabase.from("class_members").select("user_id").eq("class_group_id",form.class_group_id);if(cms)for(const cm of cms){await sendNotif(cm.user_id,"notice",`📢 새 공지: ${form.title||"공지사항"}`);}setForm({class_group_id:0,title:"",content:""});setNoticeImg(null);setShowAdd(false);fN();};
   const delNotice=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("class_notices").delete().eq("id",id);fN();};
+  const startEditNotice=(n:any)=>{const clean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim()||"";setEditNoticeId(n.id);setEditNoticeForm({title:n.title||"",content:clean});};
+  const saveEditNotice=async()=>{if(!editNoticeId)return;const orig=notices.find(n=>n.id===editNoticeId);const imgMatch=orig?.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const imgPart=imgMatch?`\n[IMG]${imgMatch[1]}[/IMG]`:"";await supabase.from("class_notices").update({title:editNoticeForm.title,content:editNoticeForm.content+imgPart}).eq("id",editNoticeId);setEditNoticeId(null);fN();};
   return(<div>
     <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">📢 공지사항 관리</h2><button onClick={()=>setShowAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>새 공지</button></div>
     {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3">
@@ -720,8 +723,15 @@ function AdminNoticeManager({groups}:{groups:any[]}){
       <div className="flex gap-2"><button onClick={addNotice} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>{setShowAdd(false);setNoticeImg(null);}} className="text-xs text-slate-400">취소</button></div>
     </div>}
     <div className="space-y-3">{notices.map((n:any)=>{const nImgMatch=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanNoticeContent=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="bg-white rounded-2xl p-5 shadow-sm">
-      <div className="flex items-start justify-between mb-2"><div><h3 className="font-semibold text-sm">{n.title||"공지"}</h3><div className="flex items-center gap-2 mt-1"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><button onClick={()=>delNotice(n.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div>
-      <p className="text-sm text-slate-600 whitespace-pre-line">{cleanNoticeContent}</p>{nImgMatch&&<img src={nImgMatch[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}
+      {editNoticeId===n.id?<div className="space-y-3">
+        <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={editNoticeForm.title} onChange={e=>setEditNoticeForm(p=>({...p,title:e.target.value}))}/></div>
+        <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm mt-1 border-0 resize-none h-28" value={editNoticeForm.content} onChange={e=>setEditNoticeForm(p=>({...p,content:e.target.value}))}/></div>
+        {nImgMatch&&<div><p className="text-xs text-slate-400 mb-1">기존 첨부 이미지:</p><img src={nImgMatch[1]} alt="" className="rounded-xl max-h-32 object-contain"/></div>}
+        <div className="flex gap-2"><button onClick={saveEditNotice} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setEditNoticeId(null)} className="text-xs text-slate-400">취소</button></div>
+      </div>:<>
+        <div className="flex items-start justify-between mb-2"><div><h3 className="font-semibold text-sm">{n.title||"공지"}</h3><div className="flex items-center gap-2 mt-1"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><div className="flex items-center gap-2"><button onClick={()=>startEditNotice(n)} className="text-xs text-slate-300 hover:text-[#6c63ff]">수정</button><button onClick={()=>delNotice(n.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div></div>
+        <p className="text-sm text-slate-600 whitespace-pre-line">{cleanNoticeContent}</p>{nImgMatch&&<img src={nImgMatch[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}
+      </>}
     </div>);})}{notices.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">공지사항을 작성해보세요</div>}</div>
   </div>);
 }
