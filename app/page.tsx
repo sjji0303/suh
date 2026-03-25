@@ -6,6 +6,73 @@ const Icon=({type,size=20}:{type:string;size?:number})=>{const s:any={width:size
 async function uploadImage(file:File,path:string){const ext=file.name.split(".").pop()||"jpg";const safePath=path.replace(/[^a-zA-Z0-9_-]/g,"_");const fn=`${safePath}_${Date.now()}.${ext}`;const{error}=await supabase.storage.from("images").upload(fn,file,{upsert:true,contentType:file.type});if(error){console.error("Upload error:",error);alert("이미지 업로드 실패: "+error.message);return null;}return supabase.storage.from("images").getPublicUrl(fn).data.publicUrl;}
 async function sendNotif(userId:number,type:string,message:string){await supabase.from("notifications").insert({user_id:userId,type,message});}
 
+/* ═══ GLOBAL CSS ═══ */
+function GlobalStyles(){return(<style>{`
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
+  :root {
+    --c-gold: #D4AF37;
+    --c-gold-light: #F3E5AB;
+    --c-gold-deep: #AA8C2C;
+    --c-bg: #faf9f7;
+    --c-text-primary: #1a1535;
+    --c-text-secondary: #5b5880;
+    --c-text-muted: #9896b8;
+    --c-shadow-card: 0 8px 32px rgba(212,175,55,0.08), 0 2px 8px rgba(212,175,55,0.04), inset 0 1px 0 rgba(255,255,255,0.95);
+    --font-sans: 'Noto Sans KR','Montserrat',sans-serif;
+    --font-serif: 'Playfair Display','Nanum Myeongjo',serif;
+  }
+  body { margin:0; font-family:var(--font-sans); background:var(--c-bg); }
+
+  /* ── 쉬머 ── */
+  @keyframes shimmerSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @keyframes iosShimmerAnim{0%{left:-150%;opacity:0}15%{opacity:1}50%{left:200%;opacity:0}100%{left:200%;opacity:0}}
+  @keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  .shimmer-btn{background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.7) 50%,transparent 70%);background-size:300% 100%;animation:shimmerSlide 5s ease-in-out infinite;}
+
+  .btn-gold{background:linear-gradient(135deg,#DFBE52 0%,#D4AF37 50%,#B5952F 100%);color:#fff;box-shadow:0 4px 18px rgba(212,175,55,0.3);transition:all 0.3s ease;}
+  .btn-gold:hover{box-shadow:0 8px 24px rgba(212,175,55,0.5);transform:translateY(-2px);}
+
+  .glass-card,.glass-card-strong{position:relative;overflow:hidden;}
+  .glass-card::after,.glass-card-strong::after{content:"";position:absolute;top:0;left:-150%;width:50%;height:100%;background:linear-gradient(to right,transparent,rgba(255,255,255,0.9),transparent);transform:skewX(-25deg);animation:iosShimmerAnim 6s infinite cubic-bezier(0.4,0,0.2,1);pointer-events:none;z-index:1;}
+  .glass-card{background:linear-gradient(145deg,rgba(255,255,255,0.8) 0%,rgba(255,255,255,0.4) 100%);backdrop-filter:blur(32px) saturate(200%);-webkit-backdrop-filter:blur(32px) saturate(200%);border:1px solid rgba(255,255,255,1);box-shadow:0 20px 60px rgba(0,0,0,0.08),inset 0 2px 5px rgba(255,255,255,1);}
+  .glass-card-strong{background:linear-gradient(145deg,rgba(255,255,255,0.95) 0%,rgba(255,255,255,0.6) 100%);backdrop-filter:blur(48px) saturate(200%);-webkit-backdrop-filter:blur(48px) saturate(200%);border:1px solid rgba(255,255,255,1);box-shadow:0 30px 80px rgba(212,175,55,0.15),inset 0 2px 6px rgba(255,255,255,1);}
+  .lux-input{background:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.8);box-shadow:inset 0 2px 4px rgba(0,0,0,0.03);transition:all 0.3s;}
+  .lux-input:focus{border-color:#D4AF37 !important;background:#fff;box-shadow:0 0 0 3px rgba(212,175,55,0.2),inset 0 2px 4px rgba(0,0,0,0.02) !important;}
+
+  .ios-glass-card{background:linear-gradient(145deg,rgba(255,255,255,0.95) 0%,rgba(255,255,255,0.6) 100%);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,1);box-shadow:0 10px 40px rgba(212,175,55,0.06),inset 0 2px 5px rgba(255,255,255,1);border-radius:20px;position:relative;overflow:hidden;transition:transform 0.3s ease,box-shadow 0.3s ease;}
+  .ios-glass-card:hover{transform:translateY(-2px);box-shadow:0 16px 50px rgba(212,175,55,0.1),inset 0 2px 5px rgba(255,255,255,1);}
+  .ios-glass-card::after{content:"";position:absolute;top:0;left:-150%;width:50%;height:100%;background:linear-gradient(to right,transparent,rgba(255,255,255,0.9),transparent);transform:skewX(-25deg);animation:iosShimmerAnim 6s infinite cubic-bezier(0.4,0,0.2,1);pointer-events:none;}
+
+  .grade-label{font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;}
+  @media(min-width:640px){.grade-label{font-size:11px;letter-spacing:0.1em;margin-bottom:6px;}}
+  .grade-value{font-size:18px;font-weight:800;letter-spacing:-0.02em;color:#334155;}
+  @media(min-width:640px){.grade-value{font-size:22px;}}
+
+  .luxury-nav-btn{transition:all 0.18s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;border-radius:14px;font-weight:500;}
+  .luxury-nav-btn:hover:not(.active):not(.admin-active){background:rgba(212,175,55,0.08);color:#AA8C2C;}
+  .luxury-nav-btn.active,.luxury-nav-btn.admin-active{background:linear-gradient(135deg,#B5952F 0%,#D4AF37 100%) !important;color:white !important;box-shadow:0 4px 18px rgba(212,175,55,0.3);}
+  .luxury-nav-btn.active .shimmer-nav,.luxury-nav-btn.admin-active .shimmer-nav{background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%);background-size:300% 100%;animation:shimmerSlide 2.2s ease-in-out infinite;}
+  .shimmer-nav{position:absolute;inset:0;pointer-events:none;}
+
+  .shimmer-action-btn{position:relative;overflow:hidden;background:linear-gradient(135deg,#B5952F 0%,#D4AF37 100%);box-shadow:0 4px 16px rgba(212,175,55,0.3);}
+  .shimmer-action-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.25) 50%,transparent 70%);background-size:300% 100%;animation:shimmerSlide 2.2s ease-in-out infinite;pointer-events:none;}
+  .shimmer-action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(212,175,55,0.45) !important;}
+  .shimmer-action-btn:active{transform:scale(0.98);}
+
+  .lux-topbar{background:rgba(250,248,240,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(212,175,55,0.12);box-shadow:0 1px 16px rgba(212,175,55,0.06);}
+
+  .review-scroll{animation:reviewScroll 60s linear infinite;}
+  .review-scroll:hover{animation-play-state:paused;}
+  .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:99px;}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.4);}
+`}</style>);}
+
+
 /* ═══ LOGIN ═══ */
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
   const[id,setId]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const[ready,setReady]=useState(false);
@@ -20,92 +87,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     <div className="fixed inset-0 z-0" style={{background:"linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(250,249,247,0.5) 100%)"}}/>
     <div className="fixed inset-0 z-0 opacity-20" style={{backgroundImage: "radial-gradient(#AA8C2C 0.5px, transparent 0.5px)", backgroundSize: "32px 32px"}} />
 
-    <style>{`
-      /* 최고급 명조체(Nanum Myeongjo) 추가 임포트 */
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
-
-      :root {
-        --c-gold: #D4AF37;
-        --c-gold-light: #F3E5AB;
-        --c-gold-deep: #AA8C2C;
-        --c-bg: #faf9f7;
-        --font-sans: 'Noto Sans KR', 'Montserrat', sans-serif;
-        --font-serif: 'Playfair Display', 'Nanum Myeongjo', serif;
-      }
-
-      body {
-        margin: 0;
-        font-family: var(--font-sans);
-        background: var(--c-bg);
-      }
-
-      @keyframes shimmerSlide { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-      @keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-
-      .shimmer-btn {
-        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.7) 50%, transparent 70%);
-        background-size: 300% 100%;
-        animation: shimmerSlide 5s ease-in-out infinite;
-      }
-
-      .btn-gold {
-        background: linear-gradient(135deg, #DFBE52 0%, #D4AF37 50%, #B5952F 100%);
-        color: #fff;
-        box-shadow: 0 4px 18px rgba(212,175,55,0.3);
-        transition: all 0.3s ease;
-      }
-      .btn-gold:hover {
-        box-shadow: 0 8px 24px rgba(212,175,55,0.5);
-        transform: translateY(-2px);
-      }
-
-      .glass-card, .glass-card-strong {
-        position: relative;
-        overflow: hidden;
-      }
-      .glass-card::after, .glass-card-strong::after {
-        content: "";
-        position: absolute;
-        top: 0; left: -150%; width: 50%; height: 100%;
-        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
-        transform: skewX(-25deg);
-        animation: loginShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-        z-index: 1;
-      }
-      @keyframes loginShimmerAnim {
-        0% { left: -150%; opacity: 0; }
-        15% { opacity: 1; }
-        50% { left: 200%; opacity: 0; }
-        100% { left: 200%; opacity: 0; }
-      }
-      .glass-card {
-        background: linear-gradient(145deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
-        backdrop-filter: blur(32px) saturate(200%);
-        -webkit-backdrop-filter: blur(32px) saturate(200%);
-        border: 1px solid rgba(255,255,255,1);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.08), inset 0 2px 5px rgba(255,255,255,1);
-      }
-      .glass-card-strong {
-        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
-        backdrop-filter: blur(48px) saturate(200%);
-        -webkit-backdrop-filter: blur(48px) saturate(200%);
-        border: 1px solid rgba(255,255,255,1);
-        box-shadow: 0 30px 80px rgba(212,175,55,0.15), inset 0 2px 6px rgba(255,255,255,1);
-      }
-
-      .lux-input {
-        background: rgba(255,255,255,0.9);
-        border: 1px solid rgba(255,255,255,0.8);
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-        transition: all 0.3s;
-      }
-      .lux-input:focus {
-        border-color: #D4AF37 !important;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(212,175,55,0.2), inset 0 2px 4px rgba(0,0,0,0.02) !important;
-      }
-    `}</style>
+    <GlobalStyles/>
     {/* 골드 빛망울 포인트 */}
     <div className="absolute z-0 rounded-full pointer-events-none opacity-50 mix-blend-multiply" style={{width:"800px",height:"800px",top:"-10%",right:"-10%",background:"radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)",filter:"blur(80px)"}}/>
     <div className="absolute z-0 rounded-full pointer-events-none opacity-50 mix-blend-multiply" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
@@ -276,58 +258,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
-    <style>{`
-      .ios-glass-card {
-        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
-        backdrop-filter: blur(28px) saturate(180%);
-        -webkit-backdrop-filter: blur(28px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 1);
-        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.06), inset 0 2px 5px rgba(255,255,255,1);
-        border-radius: 28px;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-      }
-      .ios-glass-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 16px 50px rgba(212, 175, 55, 0.1), inset 0 2px 5px rgba(255,255,255,1);
-      }
-      .ios-glass-card::after {
-        content: "";
-        position: absolute;
-        top: 0; left: -150%; width: 50%; height: 100%;
-        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
-        transform: skewX(-25deg);
-        animation: iosShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-      }
-      @keyframes iosShimmerAnim {
-        0% { left: -150%; opacity: 0; }
-        15% { opacity: 1; }
-        50% { left: 200%; opacity: 0; }
-        100% { left: 200%; opacity: 0; }
-      }
-      .grade-label {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: #94a3b8;
-        margin-bottom: 4px;
-      }
-      @media (min-width: 640px) {
-        .grade-label { font-size: 11px; letter-spacing: 0.1em; margin-bottom: 6px; }
-      }
-      .grade-value {
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        color: #334155;
-      }
-      @media (min-width: 640px) {
-        .grade-value { font-size: 22px; }
-      }
-    `}</style>
+    <GlobalStyles/>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}>
         <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(212,175,55,0.15)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
@@ -351,14 +282,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group" style={{borderLeft:"4px solid #D4AF37"}}><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="ios-glass-card p-4 sm:p-6 flex flex-col min-h-[280px]">
+              <div className="ios-glass-card p-4 sm:p-6 flex flex-col">
                 <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
                 <div className="space-y-1.5 flex-1 relative z-10">
                   {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
                 </div>
               </div>
               <div className="space-y-5">
-                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-5 sm:gap-y-6 gap-x-3 sm:gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-3xl sm:text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-2xl sm:text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-4 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl sm:text-3xl leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-xl sm:text-2xl leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
                   const maxVal=Math.max(...data.map(d=>d.total),1);
@@ -1132,7 +1063,7 @@ export default function Home(){
   const logout=()=>{setUser(null);setTab("classes");};
 
   if(initializing)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
-  if(!user)return<LoginScreen onLogin={handleLogin} settings={settings}/>;
+  if(!user)return<><GlobalStyles/><LoginScreen onLogin={handleLogin} settings={settings}/></>;
   if(loading)return<div className="lux-bg min-h-screen flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-40 animate-pulse mx-auto"/></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
