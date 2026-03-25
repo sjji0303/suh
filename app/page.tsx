@@ -115,7 +115,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             </h1>
           </div>
           <div className="space-y-4 max-w-[360px] pl-5 relative z-10">
-            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 홍길동1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50">{err}</p>}
             <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em]"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
@@ -123,8 +123,8 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         </div>
       </div>
       
-      {/* 모바일 (특히 온라인에서 가장 중요한 부분) */}
-      <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+      {/* 모바일 (특히 온라인에서 가장 중요한 부분) - 85% 크기 축소 축소로 리뷰를 더 위로 끌어올림 */}
+      <div className={`md:hidden w-full max-w-sm origin-top transform scale-[0.85] -mb-16 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
         <div className="rounded-[30px] p-7 glass-card-strong relative overflow-hidden">
           <div className="mb-6 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
             <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-2 text-[#AA8C2C]">AGREESUH</p>
@@ -143,7 +143,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             </div>
           </div>
           <div className="space-y-3.5 relative z-10">
-            <input className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 홍길동1234 (이름+학부모뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
             <input type="password" className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
           {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50/80 border border-red-100">{err}</p>}
