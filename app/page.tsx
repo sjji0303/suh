@@ -491,24 +491,24 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   const last=points[points.length-1];
                   const diff=prev?last.pct-prev.pct:0;
                   const status=Math.abs(diff)<=5?"maintain":diff>0?"up":"down";
-                  return(<div className="ios-glass-card p-4 sm:p-6 relative z-10 flex flex-col justify-between" style={{minHeight:"160px"}}>
-                    <div className="flex items-center justify-between mb-3">
+                  return(<div className="ios-glass-card p-4 sm:p-5 relative z-10">
+                    <div className="flex items-center justify-between mb-4">
                       <h3 className="font-semibold text-base">등수 변화</h3>
                       {prev&&status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
                       {prev&&status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
                       {prev&&status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
                       {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                     </div>
-                    <div className="flex-1 flex items-center">
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"130px"}}>
-                    <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.18"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
-                    {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
-                    <path d={line} fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
-                    {points.map((p,i)=>(<g key={i}>
-                      <circle cx={p.x} cy={p.y} r="5" fill="white" stroke="#D4AF37" strokeWidth="2.5"/>
-                      <text x={p.x} y={h-2} textAnchor="middle" fontSize="8" fill="#94a3b8">{p.date.slice(5)}</text>
-                    </g>))}
-                  </svg>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"8px 0"}}>
+                      <svg viewBox={`0 0 ${w} ${h}`} style={{width:"100%",maxHeight:"130px",display:"block"}}>
+                        <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.18"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
+                        {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
+                        <path d={line} fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
+                        {points.map((p,i)=>(<g key={i}>
+                          <circle cx={p.x} cy={p.y} r="5" fill="white" stroke="#D4AF37" strokeWidth="2.5"/>
+                          <text x={p.x} y={h-2} textAnchor="middle" fontSize="8" fill="#94a3b8">{p.date.slice(5)}</text>
+                        </g>))}
+                      </svg>
                     </div>
                 </div>);
               })()}
