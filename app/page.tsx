@@ -146,10 +146,10 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       
       {/* 모바일 (완전한 중심 정렬의 애플 리퀴드 글래스 스타일) */}
       <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-[36px] p-6 glass-card-strong relative overflow-hidden flex flex-col items-center">
+        <div className="rounded-[36px] p-5 glass-card-strong relative overflow-hidden flex flex-col items-center">
           
-          <div className="text-center mt-2 mb-5 relative z-10 w-full">
-            <div className="relative inline-block mb-4">
+          <div className="text-center mt-1 mb-3 relative z-10 w-full">
+            <div className="relative inline-block mb-2">
               <img src={pi} alt="" className="w-[100px] h-[100px] rounded-full object-cover transition-transform duration-500 hover:scale-105" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"3px", background:"#fff", margin:"0 auto", boxShadow:"0 8px 24px rgba(212,175,55,0.2)"}}/>
             </div>
             <h2 className="text-[20px] mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
@@ -159,19 +159,20 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             </div>}
           </div>
 
-          <div className="text-center mb-6 relative z-10 w-full">
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.4rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
-              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
+          <div className="text-center mb-4 relative z-10 w-full">
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.2rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
+              <span style={{color:"#555", fontWeight:400}}>흐릿한 시작을,</span><br/>
+              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800}}>뚜렷한 선택으로.</strong>
             </h1>
-            <p className="text-[8px] font-bold tracking-[0.25em] uppercase mt-2 text-[#AA8C2C]">AGREESUH</p>
+            <p className="text-[8px] font-bold tracking-[0.25em] uppercase mt-1.5 text-[#AA8C2C]">AGREESUH</p>
           </div>
 
-          <div className="w-full space-y-3 relative z-10 px-1">
-            <input className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          <div className="w-full space-y-2 relative z-10 px-1">
+            <input className="lux-input w-full rounded-2xl px-5 py-2.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-2xl px-5 py-2.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
           {err&&<p className="w-full text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50 text-center relative z-10 mx-1">{err}</p>}
-          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg relative z-10 mx-1"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-3 py-2.5 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg relative z-10 mx-1"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
