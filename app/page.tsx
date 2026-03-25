@@ -275,74 +275,35 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
-  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
+  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#ede8dc 0%,#f5f0e6 40%,#e8e2d5 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
-      .ios-glass-card {
-        /* 투명한 리퀴드 글라스 배경 */
-        background: linear-gradient(
-          145deg,
-          rgba(255,255,255,0.62) 0%,
-          rgba(255,255,255,0.35) 50%,
-          rgba(255,255,255,0.55) 100%
-        );
-        backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
-        -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
-        border-radius: 22px;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        /* 골드 테두리 + 내부 하이라이트 */
-        border: 1px solid rgba(212,175,55,0.55);
+            .ios-glass-card {
+        border-radius: 20px;
+        background: rgba(255,255,255,0.22);
+        backdrop-filter: blur(40px) saturate(200%);
+        -webkit-backdrop-filter: blur(40px) saturate(200%);
+        border-top: 1.5px solid rgba(255,255,255,0.9);
+        border-left: 1.5px solid rgba(255,255,255,0.65);
+        border-right: 1px solid rgba(212,175,55,0.5);
+        border-bottom: 1px solid rgba(212,175,55,0.55);
         box-shadow:
-          0 0 0 1px rgba(255,255,255,0.55),
-          0 8px 32px rgba(212,175,55,0.10),
-          0 2px 8px rgba(0,0,0,0.04),
-          inset 0 1px 0 rgba(255,255,255,0.88),
-          inset 0 -1px 0 rgba(212,175,55,0.12);
+          inset 0 1.5px 0 rgba(255,255,255,0.85),
+          inset 0 -1px 0 rgba(212,175,55,0.18),
+          0 8px 32px rgba(0,0,0,0.08),
+          0 2px 8px rgba(0,0,0,0.04);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
       }
       .ios-glass-card:hover {
         transform: translateY(-2px);
-        border-color: rgba(212,175,55,0.8);
+        border-right-color: rgba(212,175,55,0.78);
+        border-bottom-color: rgba(212,175,55,0.78);
         box-shadow:
-          0 0 0 1px rgba(255,255,255,0.7),
-          0 16px 48px rgba(212,175,55,0.16),
-          0 4px 12px rgba(0,0,0,0.06),
-          inset 0 1px 0 rgba(255,255,255,0.95),
-          inset 0 -1px 0 rgba(212,175,55,0.18);
+          inset 0 1.5px 0 rgba(255,255,255,0.95),
+          inset 0 -1px 0 rgba(212,175,55,0.28),
+          0 16px 40px rgba(0,0,0,0.10),
+          0 4px 12px rgba(0,0,0,0.06);
       }
-      /* 상단 유리 하이라이트 */
-      .ios-glass-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 45%;
-        background: linear-gradient(180deg,
-          rgba(255,255,255,0.5) 0%,
-          rgba(255,255,255,0) 100%);
-        border-radius: 22px 22px 0 0;
-        pointer-events: none;
-        z-index: 1;
-      }
-      /* 빛 쉬머 */
-      .ios-glass-card::after {
-        content: "";
-        position: absolute;
-        top: 0; left: -150%; width: 45%; height: 100%;
-        background: linear-gradient(to right,
-          transparent,
-          rgba(255,255,255,0.65),
-          transparent);
-        transform: skewX(-20deg);
-        animation: iosShimmerAnim 7s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-        z-index: 2;
-      }
-      @keyframes iosShimmerAnim {
-        0%   { left: -150%; opacity: 0; }
-        10%  { opacity: 1; }
-        45%  { left: 200%; opacity: 0; }
-        100% { left: 200%; opacity: 0; }
-      }
+      
       .grade-label {
         font-size: 10px;
         font-weight: 700;
