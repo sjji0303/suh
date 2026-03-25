@@ -10,82 +10,128 @@ async function sendNotif(userId:number,type:string,message:string){await supabas
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
   const[id,setId]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const[ready,setReady]=useState(false);
   const[reviews,setReviews]=useState<any[]>([]);
-  useEffect(()=>{setTimeout(()=>setReady(true),100);(async()=>{const{data}=await supabase.from("reviews").select("*").eq("is_featured",true).order("created_at",{ascending:false}).limit(20);if(data){/* 성적향상 사례 우선 + 랜덤 셔플 */const shuffle=(a:any[])=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};const up=shuffle(data.filter(r=>r.best_grade&&r.best_grade.trim()));const normal=shuffle(data.filter(r=>!r.best_grade||!r.best_grade.trim()));setReviews([...up,...normal]);}})();},[]);
+  const[mouse,setMouse]=useState({x:0,y:0});
+  const containerRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{setTimeout(()=>setReady(true),100);(async()=>{const{data}=await supabase.from("reviews").select("*").eq("is_featured",true).order("created_at",{ascending:false}).limit(20);if(data){const shuffle=(a:any[])=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};const up=shuffle(data.filter(r=>r.best_grade&&r.best_grade.trim()));const normal=shuffle(data.filter(r=>!r.best_grade||!r.best_grade.trim()));setReviews([...up,...normal]);}})();},[]);
+  useEffect(()=>{const h=(e:MouseEvent)=>{const x=(e.clientX/window.innerWidth-0.5)*2;const y=(e.clientY/window.innerHeight-0.5)*2;setMouse({x,y});};window.addEventListener("mousemove",h);return()=>window.removeEventListener("mousemove",h);},[]);
   const go=async()=>{setLd(true);setErr(await onLogin(id,pw));setLd(false);};
   const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
-  return(<div className="min-h-screen relative flex flex-col overflow-hidden">
-    {/* 배경 */}
-    <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(4px)"}}/>
-    <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70"/>
-    <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#6c63ff]/15 rounded-full blur-3xl z-0"/>
-    <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#6c63ff]/10 rounded-full blur-3xl z-0"/>
+  const px=mouse.x*-18;const py=mouse.y*-12;
+  const lx=mouse.x*30;const ly=mouse.y*20;
+  return(<div ref={containerRef} className="min-h-screen relative flex flex-col overflow-hidden" >
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    {/* 패럴랙스 배경 */}
+    <div className="absolute inset-0 z-0 scale-125 transition-transform duration-75" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(5px)",transform:`scale(1.15) translate(${px}px,${py}px)`}}/>
+    <div className="absolute inset-0 z-0" style={{background:"linear-gradient(160deg,rgba(10,8,20,0.72) 0%,rgba(20,16,45,0.62) 40%,rgba(10,8,20,0.78) 100%)"}}/>
+    {/* 골드 앰비언트 조명 — 마우스 추적 */}
+    <div className="absolute z-0 rounded-full pointer-events-none transition-all duration-300" style={{width:"520px",height:"520px",top:`calc(20% + ${ly*0.6}px)`,left:`calc(60% + ${lx*0.6}px)`,background:"radial-gradient(circle,rgba(212,175,55,0.13) 0%,rgba(197,160,48,0.06) 50%,transparent 75%)",filter:"blur(60px)",transform:"translate(-50%,-50%)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none transition-all duration-500" style={{width:"380px",height:"380px",bottom:`calc(25% - ${ly*0.4}px)`,left:`calc(15% - ${lx*0.3}px)`,background:"radial-gradient(circle,rgba(108,99,255,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"200px",height:"200px",top:"10%",right:"10%",background:"radial-gradient(circle,rgba(212,175,55,0.08) 0%,transparent 70%)",filter:"blur(40px)"}}/>
 
-    {/* 메인 영역 — 위쪽으로 */}
-    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-12 px-4 relative z-10">
-      {/* PC */}
-      <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="w-[320px] bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-2xl flex-shrink-0 border border-white/20">
-          <div className="text-center mb-3">
-            <div className="relative inline-block mb-3"><img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
-            <h2 className="text-xl font-bold text-white mb-1">{nm}</h2>
-            <div className="w-8 h-0.5 bg-[#6c63ff] mx-auto mb-2 rounded-full"/>
+    {/* 메인 영역 */}
+    <div className="md:flex-1 flex items-start justify-center pt-28 md:pt-10 px-4 relative z-10">
+      {/* PC 레이아웃 */}
+      <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-10"}`}>
+        {/* 프로필 카드 — 글래스모피즘 */}
+        <div className="w-[300px] flex-shrink-0 rounded-3xl p-6 flex flex-col border" >
+          <div className="text-center mb-4">
+            <div className="relative inline-block mb-4">
+              <div className="absolute inset-0 rounded-full animate-pulse" style={{background:"radial-gradient(circle,rgba(212,175,55,0.3),transparent 70%)",filter:"blur(8px)",transform:"scale(1.3)"}}/>
+              <img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover relative" style={{border:"2px solid rgba(212,175,55,0.4)",boxShadow:"0 0 0 4px rgba(212,175,55,0.1),0 8px 32px rgba(0,0,0,0.5)"}}/>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-white/20 shadow-lg"/>
+            </div>
+            <h2 className="text-xl font-semibold text-white mb-2" >{nm}</h2>
+            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"}}/><div className="w-1.5 h-1.5 rounded-full" style={{background:"rgba(212,175,55,0.7)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"}}/></div>
           </div>
-          {bio&&<div className="text-[11px] text-white/70 leading-relaxed whitespace-pre-line text-center px-3">{bio}</div>}
-          <div className="mt-4 pt-3 border-t border-white/10 text-center"><p className="text-[10px] text-white/40">수학의 자신감을 키우는 곳</p></div>
+          {bio&&<div className="text-[11px] leading-relaxed whitespace-pre-line text-center px-2" >{bio}</div>}
+          <div className="mt-auto pt-4 border-t text-center" >수학의 자신감을 키우는 곳</p></div>
         </div>
-        <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl flex flex-col justify-center">
-          <div className="mb-6"><p className="text-xs text-[#6c63ff] font-semibold mb-1 tracking-wider">WELCOME</p><h1 className="text-xl font-bold"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1></div>
-          <div className="space-y-3 max-w-sm">
-            <div><label className="text-xs font-semibold text-slate-500 mb-1 block">아이디</label><input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            <div><label className="text-xs font-semibold text-slate-500 mb-1 block">비밀번호</label><input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] focus:ring-2 focus:ring-[#6c63ff]/10 transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-2 rounded-lg">{err}</p>}
-            <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-[#6c63ff]/25 hover:shadow-xl transition-all active:scale-[0.98]">{ld?"로그인 중...":"로그인"}</button>
+
+        {/* 로그인 카드 — 글래스모피즘 (밝음) */}
+        <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" >
+          <div className="mb-7">
+            <p className="text-[10px] tracking-[0.25em] uppercase mb-2" >Welcome</p>
+            <h1 >뚜렷한 선택으로</span></h1>
+            <div className="mt-3 h-px max-w-[120px]" style={{background:"linear-gradient(90deg,rgba(212,175,55,0.5),transparent)"}}/>
+          </div>
+          <div className="space-y-4 max-w-sm">
+            <div>
+              <label className="text-[10px] tracking-widest uppercase mb-1.5 block" >아이디</label>
+              <input className="w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()} onFocus={e=>{e.target.style.border="1px solid rgba(108,99,255,0.5)";e.target.style.boxShadow="0 0 0 3px rgba(108,99,255,0.08)";}} onBlur={e=>{e.target.style.border="1px solid rgba(108,99,255,0.15)";e.target.style.boxShadow="none";}}/>
+            </div>
+            <div>
+              <label className="text-[10px] tracking-widest uppercase mb-1.5 block" >비밀번호</label>
+              <input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()} onFocus={e=>{e.target.style.border="1px solid rgba(108,99,255,0.5)";e.target.style.boxShadow="0 0 0 3px rgba(108,99,255,0.08)";}} onBlur={e=>{e.target.style.border="1px solid rgba(108,99,255,0.15)";e.target.style.boxShadow="none";}}/>
+            </div>
+            {err&&<p className="text-xs px-3 py-2 rounded-xl" >{err}</p>}
+            {/* 쉬머 버튼 */}
+            <button onClick={go} disabled={ld} className="w-full py-3.5 rounded-2xl font-semibold text-sm relative overflow-hidden transition-all duration-300 disabled:opacity-60" >
+              <span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span>
+              <span className="shimmer-btn absolute inset-0 pointer-events-none"/>
+            </button>
           </div>
         </div>
       </div>
-      {/* 모바일 — 컴팩트: 간격 줄이고 프로필 가운데 정렬 */}
-      <div className={`md:hidden w-full max-w-xs transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 px-5 shadow-2xl border border-white/20 mb-5">
-          <div className="flex items-center gap-4 justify-center">
-            <img src={pi} alt="" className="w-[67px] h-[67px] -ml-4 rounded-full shadow-xl object-cover border-2 border-white/30 flex-shrink-0"/>
+
+      {/* 모바일 */}
+      <div className={`md:hidden w-full max-w-xs transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-10"}`}>
+        <div className="rounded-2xl p-4 px-5 mb-4 border" >
+          <div className="flex items-center gap-3 justify-center">
+            <div className="relative flex-shrink-0">
+              <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover" style={{border:"2px solid rgba(212,175,55,0.35)",boxShadow:"0 0 0 3px rgba(212,175,55,0.08),0 6px 20px rgba(0,0,0,0.5)"}}/>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border border-white/20"/>
+            </div>
             <div className="min-w-0">
-              <h2 className="text-base font-bold text-white">{nm}</h2>
-              {bio&&<div className="text-[10px] text-white/60 leading-relaxed whitespace-pre-line mt-0.5 line-clamp-3">{bio}</div>}
+              <h2 className="text-sm font-semibold text-white" >{nm}</h2>
+              {bio&&<div className="text-[9px] mt-0.5 line-clamp-2" >{bio}</div>}
             </div>
           </div>
         </div>
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl">
-          <h1 className="text-sm font-bold mb-3"><span className="text-slate-800">흐릿한 시작을, </span><span className="text-[#6c63ff]">뚜렷한 선택으로</span></h1>
-          <div className="bg-slate-50 rounded-xl px-3 py-2 mb-3"><p className="text-[10px] text-slate-400 leading-relaxed">아이디: <span className="font-semibold text-slate-500">이름+학부모번호뒷4자리</span></p><p className="text-[10px] text-slate-400 leading-relaxed">비밀번호: <span className="font-semibold text-slate-500">학부모번호뒷4자리</span></p></div>
-          <div className="space-y-2.5">
-            <input className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:border-[#6c63ff] transition-all" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:border-[#6c63ff] transition-all" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+        <div className="rounded-2xl p-5 border" >
+          <h1 className="mb-4" >뚜렷한 선택으로</span></h1>
+          <div className="rounded-xl px-3 py-2 mb-3" >
+            <p className="text-[10px]" >이름+학부모번호뒷4자리</span></p>
+            <p className="text-[10px]" >학부모번호뒷4자리</span></p>
           </div>
-          {err&&<p className="text-red-400 text-xs bg-red-50 px-3 py-1.5 rounded-lg mt-2">{err}</p>}
-          <button onClick={go} disabled={ld} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-2.5 rounded-xl font-semibold text-sm mt-3 shadow-lg shadow-[#6c63ff]/25 active:scale-[0.98] transition-all">{ld?"로그인 중...":"로그인"}</button>
+          <div className="space-y-2.5">
+            <input className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          </div>
+          {err&&<p className="text-xs px-3 py-1.5 rounded-lg mt-2" >{err}</p>}
+          <button onClick={go} disabled={ld} className="w-full py-3 rounded-xl text-sm mt-3 relative overflow-hidden transition-all duration-300 disabled:opacity-60" >
+            <span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span>
+            <span className="shimmer-btn absolute inset-0 pointer-events-none"/>
+          </button>
         </div>
       </div>
     </div>
 
     {/* 후기 슬라이더 */}
-    {reviews.length>0&&<div className={`relative z-10 pb-6 pt-2 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-white/40 text-[10px] font-semibold tracking-widest mb-3">STUDENT REVIEWS</p>
+    {reviews.length>0&&<div className={`relative z-10 pb-6 pt-3 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <p className="text-center text-[10px] tracking-[0.3em] uppercase mb-3" >Student Reviews</p>
       <div className="overflow-hidden">
         <div className="flex gap-4 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className={`w-64 flex-shrink-0 backdrop-blur-md rounded-2xl p-4 pt-5 border transition-all cursor-default ${hasBestGrade?"bg-white/15 border-[#6c63ff]/30 ring-1 ring-[#6c63ff]/20":"bg-white/10 border-white/15 hover:bg-white/15"}`}>
-            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center text-sm">{animalIcon}</div><div><span className="text-[11px] font-bold text-white/90 block leading-none pb-0.5">{r.display_name||"학생"}</span><span className="text-[9px] text-white/40">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] font-bold text-white/30 bg-white/10 px-2 py-0.5 rounded-lg">수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-bold text-white bg-gradient-to-r from-amber-500 to-amber-400 px-2 py-0.5 rounded-full shadow-sm">🏆 성적 향상 | 📈 {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-semibold text-[#a5a0ff] bg-white/10 px-1.5 py-0.5 rounded-full">#{kw}</span>))}</div>}
-            <p className="text-[10px] text-white/70 leading-relaxed review-clamp">{r.content}</p>
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className={`w-64 flex-shrink-0 rounded-2xl p-4 pt-4.5 border cursor-default transition-all duration-300`} >
+            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" >수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" >🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-medium px-1.5 py-0.5 rounded-full" >#{kw}</span>))}</div>}
+            <p className="text-[10px] leading-relaxed review-clamp" >{r.content}</p>
           </div>)})}
         </div>
       </div>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
         .review-scroll{animation:reviewScroll ${Math.max(reviews.length*8,25)}s linear infinite;}
         .review-scroll:hover{animation-play-state:paused;}
         @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-272px * ${reviews.length}))}}
         .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+        /* 쉬머 버튼 애니메이션 */
+        .shimmer-btn{background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;}
+        @keyframes shimmerSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        button:hover .shimmer-btn{animation-duration:1.6s;}
+        button:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(108,99,255,0.45)!important;}
+        button:active{transform:scale(0.98);}
       `}</style>
     </div>}
   </div>);
@@ -167,33 +213,74 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
-  return(<div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#6c63ff]/5 flex">
+  return(<div className="min-h-screen flex" >
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+      .luxury-nav-btn{transition:all 0.2s ease;position:relative;overflow:hidden;}
+      .luxury-nav-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(108,99,255,0.06));opacity:0;transition:opacity 0.2s;}
+      .luxury-nav-btn:hover::before{opacity:1;}
+      .luxury-nav-btn.active{background:linear-gradient(135deg,#1a1040,#2d2060)!important;color:white!important;box-shadow:0 4px 16px rgba(108,99,255,0.25);}
+      .luxury-nav-btn.active .shimmer-nav{background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.15) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;}
+      @keyframes shimmerSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      .shimmer-nav{position:absolute;inset:0;pointer-events:none;}
+      .lux-card{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(212,175,55,0.12);box-shadow:0 4px 32px rgba(108,99,255,0.06),0 1px 0 rgba(255,255,255,0.9) inset;}
+      .shimmer-action-btn{position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1040,#2d2060);box-shadow:0 4px 16px rgba(108,99,255,0.25);}
+      .shimmer-action-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;pointer-events:none;}
+      .shimmer-action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(108,99,255,0.4)!important;}
+      .shimmer-action-btn:active{transform:scale(0.98);}
+    `}</style>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
-      <div className="flex-1 bg-white rounded-3xl shadow-lg border border-slate-100/80 p-5 flex flex-col m-2">
-        <div className="flex items-center justify-between mb-8 px-1"><div className="bg-slate-50 rounded-2xl px-3 py-1.5"><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 hover:bg-amber-50 rounded-xl transition-colors text-amber-500"><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
-        <div className="px-2 mb-3 flex items-center gap-1.5"><span className="text-sm">🔥</span><span className="text-[11px] font-semibold text-amber-600">{myTokens} 서서갈비</span></div>
-        <nav className="flex-1 space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all ${tab===m.id?"bg-[#6c63ff] text-white shadow-md shadow-[#6c63ff]/25":"text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
-        <div className="border-t border-slate-100 pt-4 mt-4"><div className="px-1 mb-2"><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">{user.school||""}</p></div><button onClick={()=>setTab("changepw")} className="flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors"><Icon type="logout" size={16}/>로그아웃</button></div>
+      <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" >
+        <div className="flex items-center justify-between mb-6 px-1">
+          <div className="rounded-2xl px-3 py-1.5" ><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div>
+          <button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"rgba(212,175,55,0.8)"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(212,175,55,0.1)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+            <Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}
+          </button>
+        </div>
+        <div className="px-2 mb-4 flex items-center gap-2">
+          <span className="text-sm">🔥</span>
+          <span className="text-[11px] font-semibold" >{myTokens} 서서갈비</span>
+          <div className="ml-auto h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent)"}}/>
+        </div>
+        <nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`} style={tab!==m.id?{}:{}}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
+        <div className="pt-4 mt-4" >
+          <div className="px-1 mb-3">
+            <p className="text-xs font-semibold" >{user.name}</p>
+            <p className="text-[10px]" >{user.school||""}</p>
+          </div>
+          <button onClick={()=>setTab("changepw")} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" ><Icon type="settings" size={16}/>비밀번호 변경</button>
+          <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" ><Icon type="logout" size={16}/>로그아웃</button>
+        </div>
       </div>
     </aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-b border-slate-100/50 z-40 px-4 py-3 flex justify-between items-center shadow-sm"><button onClick={()=>setMm(!mm)} className="p-1 hover:bg-slate-100 rounded-xl transition-colors"><Icon type={mm?"close":"menu"} size={22}/></button><div className="flex items-center gap-2.5"><span className="text-[10px] font-semibold text-amber-600">🔥 {myTokens}</span><span className="text-xs font-semibold text-slate-600">{user.name}</span><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1 hover:bg-amber-50 rounded-xl transition-colors text-amber-500"><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button><div className="bg-slate-50 rounded-xl px-2 py-1"><img src="/logo.png" alt="" className="h-4 object-contain opacity-70"/></div></div></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40"/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 bg-white z-50 rounded-r-3xl shadow-2xl p-5 flex flex-col"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-1">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all ${tab===m.id?"bg-[#6c63ff] text-white shadow-md shadow-[#6c63ff]/25":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{setTab("changepw");setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm text-slate-400 mt-2 hover:bg-slate-50 transition-colors"><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm text-red-400 mt-1 hover:bg-red-50 transition-colors"><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" >
+      <button onClick={()=>setMm(!mm)} className="p-1 rounded-xl transition-colors" ><Icon type={mm?"close":"menu"} size={22}/></button>
+      <div className="flex items-center gap-2.5">
+        <span className="text-[10px] font-semibold" >🔥 {myTokens}</span>
+        <span className="text-xs font-semibold" >{user.name}</span>
+        <button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1 rounded-xl transition-colors" >
+          <Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}
+        </button>
+        <div className="rounded-xl px-2 py-1" ><img src="/logo.png" alt="" className="h-4 object-contain opacity-70"/></div>
+      </div>
+    </div>
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" ><Icon type="logout" size={16}/>로그아웃</button></div></>}
     {/* 알림 패널 */}
-    {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-100/50"><div className="flex items-center justify-between px-4 py-3 border-b border-slate-100/50 bg-gradient-to-r from-[#6c63ff]/5 to-transparent"><h3 className="font-semibold text-sm">🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className={`px-4 py-3 border-b border-slate-50 ${!n.is_read?"bg-[#6c63ff]/5":""}`}><div className="flex items-start gap-2"><div className="flex-1"><p className="text-sm text-slate-700">{n.message}</p><p className="text-[10px] text-slate-400 mt-0.5">{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0"/>}</div></div>)):<div className="p-8 text-center text-slate-400 text-sm">알림이 없습니다</div>}</div></div></>}
+    {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" >알림이 없습니다</div>}</div></div></>}
     <main className="flex-1 lg:ml-64 pt-14 lg:pt-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
-      {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
+      {tab==="grades"&&<div>{test?<><div className="flex items-center justify-between mb-2"><button onClick={()=>nav(1)} className="p-2 rounded-xl transition-all hover:bg-white/80"><Icon type="left" size={20}/></button><div className="text-center"><p className="text-xl font-bold">{fmtDate(test.date)}</p></div><div className="flex items-center gap-1"><button onClick={()=>nav(-1)} className={`p-2 rounded-xl ${idx===0?"text-slate-200":"hover:bg-slate-100"}`} disabled={idx===0}><Icon type="right" size={20}/></button></div></div>
         {/* 학생 정보 + 공유 */}
-        <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#6c63ff] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
+        <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all lux-card"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
-          {info&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-slate-100/50 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="text-center"><p className="text-xs text-slate-400">출석</p><p className={`text-base font-bold ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">클리닉</p><p className="text-base font-semibold text-slate-600">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">과제 성취도</p><p className="text-base font-semibold text-slate-600">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">오답 성취도</p><p className="text-base font-semibold text-slate-600">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
+          {info&&<div className="rounded-2xl p-4 lux-card mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="text-center"><p className="text-xs text-slate-400">출석</p><p className={`text-base font-bold ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">클리닉</p><p className="text-base font-semibold text-slate-600">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">과제 성취도</p><p className="text-base font-semibold text-slate-600">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="text-xs text-slate-400">오답 성취도</p><p className="text-base font-semibold text-slate-600">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
           {/* 2. 개인 코멘트 */}
-          {info?.comment&&<div className="bg-gradient-to-r from-[#6c63ff]/5 to-[#6c63ff]/10 rounded-2xl p-5 mb-4 border border-[#6c63ff]/10"><p className="text-sm font-semibold text-[#6c63ff] mb-1">개인 코멘트</p><p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{info.comment}</p></div>}
+          {info?.comment&&<div className="rounded-2xl p-5 mb-4 lux-card"><p className="text-sm font-semibold text-[#6c63ff] mb-1">개인 코멘트</p><p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 text-center">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
+            <div className="rounded-2xl p-5 lux-card"><h3 className="font-semibold text-base mb-3">문항별 결과</h3><div className="space-y-1.5">{questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1"><span className="text-sm text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-sm text-slate-500 flex-1 text-center">{q.topic||"—"}</span><span className={`text-sm font-bold w-7 text-center ${rm[q.question_number]?"text-blue-600":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs text-slate-400 w-12 text-right">{q.correct_rate}%</span></div>))}</div></div>
             <div className="space-y-4">
-              {info&&<div className="bg-gradient-to-br from-white to-[#6c63ff]/5 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-[#6c63ff]/10"><div className="grid grid-cols-2 gap-3 text-center"><div><p className="text-xs text-slate-400">내 점수</p><p className="text-2xl font-bold text-[#6c63ff]">{info.total_score}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">반 평균</p><p className="text-2xl font-bold text-slate-600">{info.class_average}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">표준편차</p><p className="text-2xl font-bold text-slate-600">{info.std_dev||"—"}<span className="text-sm font-semibold">{info.std_dev?"점":""}</span></p></div><div><p className="text-xs text-slate-400">최고</p><p className="text-2xl font-bold text-slate-600">{info.class_best}<span className="text-sm font-semibold">점</span></p></div></div></div>}
+              {info&&<div className="rounded-2xl p-5 lux-card"><div className="grid grid-cols-2 gap-3 text-center"><div><p className="text-xs text-slate-400">내 점수</p><p className="text-2xl font-bold text-[#6c63ff]">{info.total_score}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">반 평균</p><p className="text-2xl font-bold text-slate-600">{info.class_average}<span className="text-sm font-semibold">점</span></p></div><div><p className="text-xs text-slate-400">표준편차</p><p className="text-2xl font-bold text-slate-600">{info.std_dev||"—"}<span className="text-sm font-semibold">{info.std_dev?"점":""}</span></p></div><div><p className="text-xs text-slate-400">최고</p><p className="text-2xl font-bold text-slate-600">{info.class_best}<span className="text-sm font-semibold">점</span></p></div></div></div>}
               {rankHistory.length>=1&&(()=>{
                 const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
                 const maxVal=Math.max(...data.map(d=>d.total),1);
@@ -202,14 +289,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                 const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
                 const prev=points.length>=2?points[points.length-2]:null;
                 const diff=prev?prev.rank-points[points.length-1].rank:0;
-                return(<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50">
+                return(<div className="rounded-2xl p-5 lux-card">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-base">등수 변화</h3>
                     {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
                     {prev&&diff===0&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷</span>}
                     {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                   </div>
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"180px"}}>
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" >
                     {[0,0.5,1].map(r=>(<line key={r} x1={px} y1={py+gh*(1-r)} x2={w-px} y2={py+gh*(1-r)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>))}
                     <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6c63ff" stopOpacity="0.15"/><stop offset="100%" stopColor="#6c63ff" stopOpacity="0"/></linearGradient></defs>
                     {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
@@ -225,13 +312,13 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>
           {/* 4. 하단 풀폭: 정답률 → 최다오답 */}
           <div className="space-y-4">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#6c63ff":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
-            {wrong.length>0&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
+            <div className="rounded-2xl p-5 lux-card"><h3 className="font-semibold text-base mb-3">정답률</h3><div className="flex items-end gap-1 h-36">{questions.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm[q.question_number];return(<div key={q.question_number} className="flex-1 flex flex-col items-center gap-1"><div className="w-full flex flex-col justify-end h-24 relative"><div className="w-full rounded-t transition-all" style={{height:`${Math.max(rate,4)}%`,background:isCorrect?"#6c63ff":"#ff6b6b"}}/></div><span className="text-[9px] text-slate-500 leading-none font-semibold">{q.question_number}</span><span className="text-[8px] text-slate-400 leading-none">{rate}%</span></div>);})}</div></div>
+            {wrong.length>0&&<div className="rounded-2xl p-5 lux-card"><h3 className="font-semibold text-base mb-4">최다 오답 TOP 3</h3><div className="flex justify-center gap-6">{wrong.slice(0,3).map((q:any)=>{const rate=q.correct_rate||0;const circumference=2*Math.PI*36;const filled=circumference*(rate/100);const empty=circumference-filled;return(<div key={q.question_number} className="flex flex-col items-center gap-2"><div className="relative w-22 h-22"><svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90"><circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="6"/><circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b6b" strokeWidth="6" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-xl font-bold text-slate-700">{q.question_number}</span><span className="text-[10px] text-slate-400">번</span></div></div><div className="text-center"><p className="text-sm font-semibold text-red-400">{rate}%</p><p className="text-xs text-slate-400 max-w-[80px] truncate">{q.topic||"—"}</p></div></div>);})}</div></div>}
           </div>
-        </>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400 text-sm">결과 미입력</div>}
-      </>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">시험 없음</div>}</div>}
+        </>:<div className="lux-card rounded-2xl p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
+      </>:<div className="lux-card rounded-2xl p-12 text-center text-slate-400">시험 없음</div>}</div>}
       {tab==="myexam"&&<div>
-        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 시험 결과</h2><button onClick={()=>setShowExamAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>성적 입력</button></div>
+        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 시험 결과</h2><button onClick={()=>setShowExamAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>성적 입력</button></div>
         {showExamAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-4">
           {/* 시험 유형 선택 */}
           <div><label className="text-xs font-semibold text-slate-500">시험 유형</label><div className="flex gap-2 mt-1">{["모의고사","내신"].map(t=>(<button key={t} onClick={()=>setExamForm(p=>({...p,exam_type:t,exam_name:"",score:"",grade:""}))} className={`px-4 py-2 rounded-xl text-sm font-semibold ${examForm.exam_type===t?"bg-[#6c63ff] text-white":"bg-white text-slate-500 border border-slate-200"}`}>{t}</button>))}</div></div>
@@ -265,7 +352,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div><label className="text-xs font-semibold text-slate-500">하고 싶은 말</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={examForm.q3} onChange={e=>setExamForm(p=>({...p,q3:e.target.value}))} placeholder="자유롭게 적어주세요"/></div>
           <div className="flex gap-2"><button onClick={addExam} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setShowExamAdd(false)} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-slate-100/50">
+        {myExams.length>0?<div className="space-y-3">{myExams.map((ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any=null;try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}return(<div key={ex.id} className="rounded-2xl p-4 lux-card">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1"><span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${ex.exam_type==="모의고사"?"bg-amber-50 text-amber-600":"bg-blue-50 text-blue-600"}`}>{ex.exam_type}</span>{ex.exam_name&&<span className="text-xs text-slate-500">{ex.exam_name}</span>}</div>
@@ -274,18 +361,18 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
             </div>
             <button onClick={()=>delExam(ex.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button>
           </div>
-        </div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">시험 성적을 입력해보세요</div>}
+        </div>);})}</div>:<div className="lux-card rounded-2xl p-12 text-center text-slate-400">시험 성적을 입력해보세요</div>}
       </div>}
-      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}</div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
+      {tab==="notice"&&<div><h2 className="text-xl font-bold mb-4">📢 공지사항</h2>{notices.length>0?<div className="space-y-3">{notices.map((n:any)=>{const isNew=n.created_at&&(Date.now()-new Date(n.created_at).getTime())<24*60*60*1000;const nImg=n.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const nClean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={n.id} className="rounded-2xl p-5 lux-card"><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><h3 className="font-semibold text-base">{n.title||"공지"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}</div><div className="flex items-center gap-2"><span className="text-xs text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{n.class_groups?.name||""}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div><p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{nClean}</p>{nImg&&<img src={nImg[1]} alt="" className="mt-3 rounded-xl max-h-64 object-contain"/>}</div>);})}</div>:<div className="lux-card rounded-2xl p-12 text-center text-slate-400">공지사항이 없습니다</div>}</div>}
       {tab==="inquiry"&&<div>
-        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">💬 문의사항</h2><button onClick={()=>setShowInqAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>문의하기</button></div>
+        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">💬 문의사항</h2><button onClick={()=>setShowInqAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>문의하기</button></div>
         {showInqAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-3">
           <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={inqForm.title} onChange={e=>setInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
           <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={inqForm.content} onChange={e=>setInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용을 적어주세요"/></div>
           <div><label className="text-xs font-semibold text-slate-500">이미지 첨부</label><div className="flex items-center gap-2 mt-1"><button onClick={()=>inqImgRef.current?.click()} className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-500">{inqImg?inqImg.name:"이미지 선택"}</button><input ref={inqImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setInqImg(e.target.files[0]);}}/>{inqImg&&<button onClick={()=>setInqImg(null)} className="text-xs text-red-400">삭제</button>}</div></div>
           <div className="flex gap-2"><button onClick={addInquiry} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>{setShowInqAdd(false);setInqImg(null);}} className="text-xs text-slate-400">취소</button></div>
         </div>}
-        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50">
+        {inquiries.length>0?<div className="space-y-3">{inquiries.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImg=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="rounded-2xl p-5 lux-card">
           {editInqId===q.id?<div className="space-y-3">
             <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-white rounded-xl px-4 py-2.5 text-sm mt-1 border border-slate-200" value={editInqForm.title} onChange={e=>setEditInqForm(p=>({...p,title:e.target.value}))} placeholder="문의 제목"/></div>
             <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm mt-1 border border-slate-200 resize-none h-28" value={editInqForm.content} onChange={e=>setEditInqForm(p=>({...p,content:e.target.value}))} placeholder="문의 내용"/></div>
@@ -294,11 +381,11 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
             <div className="flex justify-between mb-2"><div className="flex items-center gap-2"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{user.login_id||user.name}</span><h3 className="font-semibold text-sm">{q.title||"문의"}</h3>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}<span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasReply?"bg-green-50 text-green-600":"bg-amber-50 text-amber-600"}`}>{hasReply?"답변 완료":"답변 대기중"}</span></div><div className="flex items-center gap-2"><span className="text-xs text-slate-400">{q.created_at?.slice(0,10)}</span>{!hasReply&&<button onClick={()=>startEditInq(q)} className="text-xs text-slate-300 hover:text-[#6c63ff]">수정</button>}<button onClick={()=>deleteInquiry(q.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div></div>
             <p className="text-sm text-slate-600 whitespace-pre-line">{cleanContent}</p>{imgMatch&&<img src={imgMatch[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}{hasReply&&<div className="mt-3 bg-[#6c63ff]/5 rounded-xl p-3"><p className="text-xs font-semibold text-[#6c63ff] mb-1">답변</p><p className="text-sm text-slate-700 whitespace-pre-line">{cleanReply}</p>{replyImg&&<img src={replyImg[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}</div>}
           </>}
-        </div>);})}</div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400">문의사항이 없습니다</div>}
+        </div>);})}</div>:<div className="lux-card rounded-2xl p-12 text-center text-slate-400">문의사항이 없습니다</div>}
       </div>}
       {tab==="shop"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">🏪 상점</h2><div className="bg-amber-50 px-4 py-2 rounded-xl"><span className="text-sm font-bold text-amber-600">🔥 {myTokens} 서서갈비</span></div></div>
-        {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100/50"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-amber-600">🔥 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
+        {shopItems.length>0?<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">{shopItems.map((item:any)=>(<div key={item.id} className="rounded-2xl p-5 lux-card"><h3 className="font-semibold text-base mb-1">{item.name}</h3>{item.description&&<p className="text-xs text-slate-400 mb-3">{item.description}</p>}<div className="flex items-center justify-between"><span className="text-sm font-bold text-amber-600">🔥 {item.price}</span><button onClick={()=>buyItem(item)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">구매</button></div></div>))}</div>:<div className="bg-slate-50 rounded-2xl p-8 text-center text-slate-400 text-sm mb-6">상점 준비 중</div>}
         {purchases.length>0&&<div><h3 className="font-semibold text-sm mb-3">구매 내역</h3><div className="space-y-2">{purchases.map((p:any)=>(<div key={p.id} className="bg-slate-50 rounded-xl px-4 py-3 flex justify-between items-center"><span className="text-sm">{p.shop_items?.name||"아이템"}</span><div className="text-right"><span className="text-xs font-bold text-amber-600">-{p.price} 🔥</span><p className="text-[10px] text-slate-400">{p.created_at?.slice(0,10)}</p></div></div>))}</div></div>}
       </div>}
       {tab==="shorts"&&<div>
@@ -307,24 +394,24 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="mt-5 text-center"><a href="https://www.youtube.com/@agreesuh/shorts" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-2xl text-sm font-semibold shadow-md shadow-red-500/20 hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M23.498 6.186a2.832 2.832 0 00-1.991-2.006C19.691 3.592 12 3.592 12 3.592s-7.691 0-9.507.588A2.832 2.832 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a2.832 2.832 0 001.991 2.006C4.309 20.408 12 20.408 12 20.408s7.691 0 9.507-.588a2.832 2.832 0 001.991-2.006C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path d="M9.545 15.568V8.432L15.818 12z" fill="#282828"/></svg>더 많은 영상 보기</a></div>
       </div>}
       {tab==="review"&&<div>
-        <div className="flex justify-between items-center mb-5"><h2 className="text-xl font-bold">✍️ 수강 후기</h2>{!showReviewForm&&<button onClick={()=>setShowReviewForm(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-2xl text-xs font-semibold shadow-md shadow-[#6c63ff]/20">{myReview?"수정하기":"후기 작성"}</button>}</div>
+        <div className="flex justify-between items-center mb-5"><h2 className="text-xl font-bold">✍️ 수강 후기</h2>{!showReviewForm&&<button onClick={()=>setShowReviewForm(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-2xl text-xs font-semibold">{myReview?"수정하기":"후기 작성"}</button>}</div>
         {showReviewForm?<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 space-y-5">
-          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">📈 성적이 제일 많이 올랐을 때는?</label><input className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20 transition-all" value={reviewForm.best_grade} onChange={e=>setReviewForm(p=>({...p,best_grade:e.target.value}))} placeholder="예: 1학년 1학기 기말고사, 500등 → 100등"/><p className="text-[10px] text-slate-400 mt-1">예: 60점 → 100점, 혹은 500등 → 100등</p></div>
+          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">📈 성적이 제일 많이 올랐을 때는?</label><input className="w-full rounded-xl px-4 py-3 text-sm outline-none  transition-all" value={reviewForm.best_grade} onChange={e=>setReviewForm(p=>({...p,best_grade:e.target.value}))} placeholder="예: 1학년 1학기 기말고사, 500등 → 100등"/><p className="text-[10px] text-slate-400 mt-1">예: 60점 → 100점, 혹은 500등 → 100등</p></div>
           <div><label className="text-sm font-semibold text-slate-700 mb-2 block">⭐ 서정인 쌤의 장점 (순위별 선택)</label>
             <div className="space-y-2">
-              {[{label:"1순위",key:"kw1"},{label:"2순위",key:"kw2"},{label:"3순위",key:"kw3"}].map(r=>(<div key={r.key} className="flex items-center gap-3"><span className={`text-xs font-bold w-12 text-center py-1 rounded-lg ${r.key==="kw1"?"bg-amber-100 text-amber-600":r.key==="kw2"?"bg-slate-100 text-slate-500":"bg-orange-50 text-orange-400"}`}>{r.label}</span><select className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={(reviewForm as any)[r.key]} onChange={e=>setReviewForm(p=>({...p,[r.key]:e.target.value}))}><option value="">선택해주세요</option>{kwOptions.filter(kw=>kw===(reviewForm as any)[r.key]||![reviewForm.kw1,reviewForm.kw2,reviewForm.kw3].includes(kw)).map(kw=>(<option key={kw} value={kw}>#{kw}</option>))}</select></div>))}
+              {[{label:"1순위",key:"kw1"},{label:"2순위",key:"kw2"},{label:"3순위",key:"kw3"}].map(r=>(<div key={r.key} className="flex items-center gap-3"><span className={`text-xs font-bold w-12 text-center py-1 rounded-lg ${r.key==="kw1"?"bg-amber-100 text-amber-600":r.key==="kw2"?"bg-slate-100 text-slate-500":"bg-orange-50 text-orange-400"}`}>{r.label}</span><select className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0 " value={(reviewForm as any)[r.key]} onChange={e=>setReviewForm(p=>({...p,[r.key]:e.target.value}))}><option value="">선택해주세요</option>{kwOptions.filter(kw=>kw===(reviewForm as any)[r.key]||![reviewForm.kw1,reviewForm.kw2,reviewForm.kw3].includes(kw)).map(kw=>(<option key={kw} value={kw}>#{kw}</option>))}</select></div>))}
             </div>
           </div>
-          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">💬 수강 후기</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 resize-none h-32 focus:ring-2 focus:ring-[#6c63ff]/20 transition-all" value={reviewForm.content} onChange={e=>setReviewForm(p=>({...p,content:e.target.value}))} placeholder="서정인 수학을 수강하면서 느낀 점을 자유롭게 적어주세요"/></div>
-          <div className="flex gap-2"><button onClick={saveReview} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">저장</button><button onClick={()=>setShowReviewForm(false)} className="text-xs text-slate-400 px-4 py-2.5">취소</button></div>
+          <div><label className="text-sm font-semibold text-slate-700 mb-2 block">💬 수강 후기</label><textarea className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none h-32  transition-all" value={reviewForm.content} onChange={e=>setReviewForm(p=>({...p,content:e.target.value}))} placeholder="서정인 수학을 수강하면서 느낀 점을 자유롭게 적어주세요"/></div>
+          <div className="flex gap-2"><button onClick={saveReview} className="shimmer-action-btn text-white px-6 py-2.5 rounded-xl text-sm font-semibold">저장</button><button onClick={()=>setShowReviewForm(false)} className="text-xs text-slate-400 px-4 py-2.5">취소</button></div>
         </div>:myReview?<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50">
           {myReview.best_grade&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-1">📈 성적 향상</p><p className="text-sm font-bold text-slate-700">{myReview.best_grade}</p></div>}
           {myReview.keywords&&<div className="mb-4"><p className="text-xs font-semibold text-slate-400 mb-2">⭐ 장점 순위</p><div className="flex flex-wrap gap-2">{myReview.keywords.split(",").map((kw:string,i:number)=>(<span key={kw} className={`px-3 py-1 rounded-full text-xs font-semibold ${i===0?"bg-amber-100 text-amber-600":i===1?"bg-slate-100 text-slate-500":"bg-orange-50 text-orange-400"}`}>{i+1}순위 #{kw}</span>))}</div></div>}
           <div><p className="text-xs font-semibold text-slate-400 mb-1">💬 수강 후기</p><p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{myReview.content}</p></div>
           <div className="flex items-center justify-between mt-4"><p className="text-[10px] text-slate-300">{myReview.created_at?.slice(0,10)} 작성</p><button onClick={deleteReview} className="text-xs text-slate-300 hover:text-red-500 transition-colors">삭제</button></div>
-        </div>:<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">후기 작성하기</button></div>}
+        </div>:<div className="lux-card rounded-2xl p-12 text-center"><p className="text-slate-400 text-sm mb-3">아직 후기를 작성하지 않았습니다</p><button onClick={()=>setShowReviewForm(true)} className="shimmer-action-btn text-white px-5 py-2 rounded-xl text-sm font-semibold">후기 작성하기</button></div>}
       </div>}
-      {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-100/50 max-w-md"><div className="space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-[#6c63ff]/20" value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-[#6c63ff]/20">변경</button></div></div>}
+      {tab==="changepw"&&<div><h2 className="text-xl font-bold mb-4">🔒 비밀번호 변경</h2><div className="lux-card rounded-2xl p-6 max-w-md"><div className="space-y-3"><input type="password" className="w-full rounded-xl px-4 py-3 text-sm outline-none " value={pw.n1} onChange={e=>setPw(p=>({...p,n1:e.target.value}))} placeholder="새 비밀번호"/><input type="password" className="w-full rounded-xl px-4 py-3 text-sm outline-none " value={pw.n2} onChange={e=>setPw(p=>({...p,n2:e.target.value}))} placeholder="새 비밀번호 확인"/></div>{pwMsg&&<p className={`text-xs mt-2 ${pwMsg.includes("완료")?"text-green-500":"text-red-400"}`}>{pwMsg}</p>}<button onClick={chPw} className="mt-4 shimmer-action-btn text-white px-6 py-2.5 rounded-xl text-sm font-semibold">변경</button></div></div>}
     </div></main>
   </div>);
 }
@@ -374,7 +461,7 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
   const toggleClass=(cid:number)=>{setForm(p=>({...p,class_ids:p.class_ids.includes(cid)?p.class_ids.filter(x=>x!==cid):[...p.class_ids,cid]}));};
 
   return(<div>
-    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">👨‍🎓 학생 관리</h2><div className="flex gap-2">{checked.size>0&&<button onClick={bulkDelete} disabled={bulkDeleting} className="bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-red-500/20 hover:bg-red-600 transition-all disabled:opacity-50">{bulkDeleting?`삭제 중... (${checked.size})`:`🗑️ ${checked.size}명 삭제`}</button>}<button onClick={()=>setShowImport(true)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-xs font-semibold">📋 엑셀 붙여넣기</button><button onClick={()=>setShowAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>학생 추가</button></div></div>
+    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">👨‍🎓 학생 관리</h2><div className="flex gap-2">{checked.size>0&&<button onClick={bulkDelete} disabled={bulkDeleting} className="bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-red-500/20 hover:bg-red-600 transition-all disabled:opacity-50">{bulkDeleting?`삭제 중... (${checked.size})`:`🗑️ ${checked.size}명 삭제`}</button>}<button onClick={()=>setShowImport(true)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-xs font-semibold">📋 엑셀 붙여넣기</button><button onClick={()=>setShowAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>학생 추가</button></div></div>
 
     {showImport&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 border border-amber-200">
       <h3 className="font-semibold text-sm mb-2">📋 엑셀에서 붙여넣기</h3>
@@ -582,7 +669,7 @@ function AdminClassManager({users}:{users:any[]}){
     return(<div>
       <button onClick={()=>setSelT(null)} className="flex items-center gap-1 text-sm text-slate-400 mb-3"><Icon type="back" size={16}/>돌아가기</button>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2"><div><h2 className="text-lg font-bold">{selT.title}</h2><p className="text-xs text-slate-400">{fmtDate(selT.date)} · 과제: {selT.assignment||"없음"}</p></div><div className="flex items-center gap-3"><button onClick={saveAll} disabled={saving} className="bg-[#6c63ff] text-white px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">{saving?"저장 중...":"💾 전체 저장"}</button>{saveMsg&&<span className={`text-sm font-semibold ${saveMsg.includes("완료")?"text-green-500":"text-red-500"}`}>{saveMsg}</span>}</div></div>
-      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{qs.map(q=><th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center">{q.question_number}</th>)}</tr></thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#6c63ff]">{ans?sc:"미응시"}</td>{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);return(<td key={q.question_number} className="px-0.5 py-1 text-center" onMouseDown={()=>onCellMouseDown(ri,ci)} onMouseEnter={()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#6c63ff] ${isSel?"ring-2 ring-[#6c63ff] border-[#6c63ff]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#6c63ff]/5 border-t border-[#6c63ff]/10"><span className="text-xs text-[#6c63ff] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
+      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} ><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{qs.map(q=><th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center">{q.question_number}</th>)}</tr></thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#6c63ff]">{ans?sc:"미응시"}</td>{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);return(<td key={q.question_number} className="px-0.5 py-1 text-center" onMouseDown={()=>onCellMouseDown(ri,ci)} onMouseEnter={()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#6c63ff] ${isSel?"ring-2 ring-[#6c63ff] border-[#6c63ff]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#6c63ff]/5 border-t border-[#6c63ff]/10"><span className="text-xs text-[#6c63ff] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
       <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4"><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500">출석</th><th className="px-2 py-2 font-semibold text-slate-500">클리닉</th><th className="px-2 py-2 font-semibold text-slate-500">과제 성취도</th><th className="px-2 py-2 font-semibold text-slate-500">오답 성취도</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[280px]">개인 코멘트</th></tr></thead><tbody>{members.map((m:any)=>{const uid=m.user_id;const usr=m.users;const inf=ig[uid]||{};return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold"><div className="flex items-center gap-1">{usr?.login_id||usr?.name||"?"}{(inf.attendance==="출석"||inf.attendance==="영상")&&<button onClick={()=>captureReport(uid)} className="text-[9px] text-slate-300 hover:text-[#6c63ff] bg-slate-50 px-1.5 py-0.5 rounded">📷</button>}</div></td><td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.attendance||""} onChange={e=>setIC(uid,"attendance",e.target.value)}><option value="">—</option><option>출석</option><option>결석</option><option>영상</option></select></td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.clinic_time||""} onChange={e=>setIC(uid,"clinic_time",e.target.value)}/></td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.assignment_score||""} onChange={e=>setIC(uid,"assignment_score",e.target.value)}/></td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.wrong_answer_score||""} onChange={e=>setIC(uid,"wrong_answer_score",e.target.value)}/></td><td className="px-1 py-1"><textarea className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full resize-none h-16" value={inf.comment||""} onChange={e=>setIC(uid,"comment",e.target.value)} placeholder="개인 코멘트"/></td></tr>);})}</tbody></table></div>
       <div className="bg-white rounded-2xl shadow-sm p-5"><h3 className="font-semibold text-sm mb-3">자동 계산 통계 (실시간)</h3><div className="grid grid-cols-3 gap-4 max-w-md"><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">반 평균</p><p className="text-xl font-bold text-[#6c63ff]">{(Math.round(avg*10)/10).toFixed(1)}</p></div><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">표준편차</p><p className="text-xl font-bold text-slate-600">{(Math.round(stdDev*10)/10).toFixed(1)}</p></div><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">최고점</p><p className="text-xl font-bold text-slate-600">{best}</p></div></div></div>
       <div className="bg-white rounded-2xl shadow-sm p-5 mt-4"><div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-sm">문항 설정</h3><div className="flex items-center gap-2"><label className="text-xs text-slate-400">문항수</label><input type="number" className="w-16 bg-slate-50 rounded-lg px-2 py-1.5 text-sm border-0 text-center font-semibold" value={qs.length} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=50)changeQCount(v);}}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div></div>
@@ -590,76 +677,76 @@ function AdminClassManager({users}:{users:any[]}){
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(a.correct_rate||0)-(b.correct_rate||0));
       const rankData=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>({uid:m2.user_id,score:getS(m2.user_id)})).sort((a,b)=>b.score-a.score);
       const myRank=rankData.findIndex(r=>r.uid===uid)+1;
-      return(<div style={{position:"fixed",left:0,top:0,zIndex:-1,opacity:0.01,pointerEvents:"none"}}><div ref={capRef} style={{width:"520px",padding:"28px",background:"white",fontFamily:"sans-serif"}}>
+      return(<div >
         {/* 날짜 */}
-        <div style={{textAlign:"center",marginBottom:"8px"}}><p style={{fontSize:"20px",fontWeight:"bold"}}>{fmtDate(selT.date)}</p></div>
+        <div >{fmtDate(selT.date)}</p></div>
         {/* 학생 정보 */}
-        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px"}}><span style={{fontSize:"11px",background:"#f0edff",color:"#6c63ff",padding:"3px 10px",borderRadius:"8px",fontWeight:"bold"}}>{selT.class_name||""}</span><span style={{fontSize:"14px",fontWeight:"bold"}}>{usr?.school||""} {usr?.name}</span></div>
+        <div >{usr?.school||""} {usr?.name}</span></div>
         {/* 출석/클리닉/과제/오답 */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>출석</p><p style={{fontSize:"15px",fontWeight:"bold",color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444"}}>{inf.attendance||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>클리닉</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.clinic_time||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>오답 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+        <div >
+          <div >{inf.attendance||"—"}</p></div>
+          <div >{inf.clinic_time||"—"}</p></div>
+          <div >{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+          <div >{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
         </div>
         {/* 개인 코멘트 */}
-        {inf.comment&&<div style={{background:"#f5f3ff",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}><p style={{fontSize:"12px",fontWeight:"bold",color:"#6c63ff",marginBottom:"4px"}}>개인 코멘트</p><p style={{fontSize:"14px",color:"#334155",whiteSpace:"pre-line",lineHeight:"1.6"}}>{inf.comment}</p></div>}
+        {inf.comment&&<div >{inf.comment}</p></div>}
         {/* 2단 레이아웃: 왼쪽 문항별 결과 / 오른쪽 점수+등수 */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div >
           {/* 왼쪽: 문항별 결과 */}
-          <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
-            <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"10px"}}>문항별 결과</p>
-            {qs.map(q=>(<div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"6px",padding:"3px 0"}}>
-              <span style={{fontSize:"12px",color:"#94a3b8",width:"18px",textAlign:"right"}}>{q.question_number}</span>
-              <span style={{fontSize:"11px",color:"#64748b",flex:1}}>{q.topic||"—"}</span>
-              <span style={{fontSize:"13px",fontWeight:"bold",color:rm2[q.question_number]?"#2563eb":"#f87171",width:"20px",textAlign:"center"}}>{rm2[q.question_number]?"O":"X"}</span>
-              <span style={{fontSize:"10px",color:"#94a3b8",width:"34px",textAlign:"right"}}>{q.correct_rate}%</span>
+          <div >
+            <p >문항별 결과</p>
+            {qs.map(q=>(<div key={q.question_number} >
+              <span >{q.question_number}</span>
+              <span >{q.topic||"—"}</span>
+              <span >{rm2[q.question_number]?"O":"X"}</span>
+              <span >{q.correct_rate}%</span>
             </div>))}
           </div>
           {/* 오른쪽: 점수 */}
-          <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
-            <div style={{background:"linear-gradient(135deg, #ffffff, #f0edff)",borderRadius:"16px",padding:"14px",border:"1px solid #e8e5ff"}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",textAlign:"center"}}>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>내 점수</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#6c63ff"}}>{sc}<span style={{fontSize:"13px"}}>점</span></p></div>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>반 평균</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(avg*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>표준편차</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(stdDev*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
-                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>최고</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{best}<span style={{fontSize:"13px"}}>점</span></p></div>
+          <div >
+            <div >
+              <div >
+                <div><p >점</span></p></div>
+                <div><p >점</span></p></div>
+                <div><p >점</span></p></div>
+                <div><p >점</span></p></div>
               </div>
             </div>
-            <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}><p style={{fontSize:"14px",fontWeight:"bold"}}>등수 변화</p><span style={{fontSize:"10px",color:"#94a3b8"}}>시험 2회 이상부터 추이 표시</span></div>
-              <div style={{height:"60px",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:"11px",color:"#cbd5e1"}}>앱에서 확인하세요</p></div>
+            <div >
+              <div >시험 2회 이상부터 추이 표시</span></div>
+              <div >앱에서 확인하세요</p></div>
             </div>
           </div>
         </div>
         {/* 정답률 차트 */}
-        <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
-          <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"12px"}}>정답률</p>
-          <div style={{display:"flex",alignItems:"flex-end",gap:"4px",height:"100px"}}>
+        <div >
+          <p >정답률</p>
+          <div >
             {qs.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm2[q.question_number];return(
-              <div key={q.question_number} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:"2px"}}>
-                <div style={{width:"100%",height:"70px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+              <div key={q.question_number} >
+                <div >
                   <div style={{width:"100%",borderRadius:"3px 3px 0 0",background:isCorrect?"#6c63ff":"#ff6b6b",height:`${Math.max(rate,4)}%`}}/>
                 </div>
-                <span style={{fontSize:"9px",color:"#64748b",fontWeight:"600"}}>{q.question_number}</span>
-                <span style={{fontSize:"8px",color:"#94a3b8"}}>{rate}%</span>
+                <span >{q.question_number}</span>
+                <span >{rate}%</span>
               </div>
             );})}
           </div>
         </div>
         {/* 최다 오답 TOP 3 */}
-        {wrong2.length>0&&<div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
-          <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"12px"}}>최다 오답 TOP 3</p>
-          <div style={{display:"flex",justifyContent:"center",gap:"24px"}}>
+        {wrong2.length>0&&<div >
+          <p >최다 오답 TOP 3</p>
+          <div >
             {wrong2.slice(0,3).map(q=>{const rate=q.correct_rate||0;const circ=2*Math.PI*30;const filled=circ*(rate/100);const empty=circ-filled;return(
-              <div key={q.question_number} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"6px"}}>
-                <svg viewBox="0 0 68 68" width="68" height="68" style={{transform:"rotate(-90deg)"}}>
+              <div key={q.question_number} >
+                <svg viewBox="0 0 68 68" width="68" height="68" >
                   <circle cx="34" cy="34" r="30" fill="none" stroke="#f1f5f9" strokeWidth="5"/>
                   <circle cx="34" cy="34" r="30" fill="none" stroke="#ff6b6b" strokeWidth="5" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/>
                 </svg>
-                <div style={{marginTop:"-52px",marginBottom:"16px",textAlign:"center"}}><p style={{fontSize:"20px",fontWeight:"bold",color:"#334155"}}>{q.question_number}</p><p style={{fontSize:"9px",color:"#94a3b8"}}>번</p></div>
-                <p style={{fontSize:"12px",fontWeight:"600",color:"#f87171"}}>{rate}%</p>
-                <p style={{fontSize:"10px",color:"#94a3b8"}}>{q.topic||"—"}</p>
+                <div >번</p></div>
+                <p >{rate}%</p>
+                <p >{q.topic||"—"}</p>
               </div>
             );})}
           </div>
@@ -688,13 +775,13 @@ function AdminClassManager({users}:{users:any[]}){
           <button onClick={()=>loadGrid(t)} className="flex-1 text-left"><p className="font-semibold text-sm">{t.title}</p><p className="text-xs text-slate-400">{fmtDate(t.date)}{t.assignment?` · 과제: ${t.assignment}`:""}</p></button>
           <div className="flex items-center gap-2 ml-2"><button onClick={(e)=>{e.stopPropagation();setEditTest(t);setEditTF({date:t.date,title:t.title,assignment:t.assignment||""});}} className="text-xs text-slate-300 hover:text-[#6c63ff]">수정</button><button onClick={(e)=>{e.stopPropagation();deleteTest(t.id);}} className="text-xs text-slate-300 hover:text-red-500">삭제</button><Icon type="right" size={16}/></div>
         </div>}
-      </div>))}{tests.length===0&&<div className="bg-white rounded-2xl p-8 shadow-sm text-center text-slate-400 text-sm">시험 추가 필요</div>}</div>
+      </div>))}{tests.length===0&&<div className="rounded-2xl p-8 lux-card text-center text-slate-400 text-sm">시험 추가 필요</div>}</div>
     </div>);
   }
 
   // Group list
   return(<div>
-    <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">📁 반 관리</h2><button onClick={()=>setShowNG(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>새 반</button></div>
+    <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">📁 반 관리</h2><button onClick={()=>setShowNG(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>새 반</button></div>
     {showNG&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 flex gap-3 items-end"><div className="flex-1"><label className="text-xs font-semibold text-slate-500">반 이름</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={newGN} onChange={e=>setNewGN(e.target.value)} placeholder="수학 정규반"/></div><button onClick={cG} className="bg-[#6c63ff] text-white px-4 py-2.5 rounded-xl text-xs font-semibold">만들기</button></div>}
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{groups.map(g=>(<div key={g.id} className="bg-white rounded-xl p-5 shadow-sm hover:ring-2 hover:ring-[#6c63ff]/20 cursor-pointer" onClick={()=>selectGroup(g)}><div className="flex justify-between items-start"><div className="flex items-center gap-2"><Icon type="folder" size={20}/>{editingGId===g.id?<div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}><input className="bg-slate-50 rounded-lg px-2 py-1 text-sm border border-slate-200 focus:outline-none focus:border-[#6c63ff] w-36" value={editGN} onChange={e=>setEditGN(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")renameG(g.id);if(e.key==="Escape"){setEditingGId(null);setEditGN("");}}} autoFocus/><button onClick={()=>renameG(g.id)} className="text-xs text-[#6c63ff] font-semibold">확인</button><button onClick={()=>{setEditingGId(null);setEditGN("");}} className="text-xs text-slate-400">취소</button></div>:<span className="font-semibold">{g.name}</span>}</div><div className="flex gap-2" onClick={e=>e.stopPropagation()}><button onClick={()=>{setEditingGId(g.id);setEditGN(g.name);}} className="text-slate-300 hover:text-[#6c63ff] text-xs">수정</button><button onClick={()=>dG(g.id)} className="text-slate-300 hover:text-red-400 text-xs">삭제</button></div></div></div>))}{groups.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm col-span-2">반을 만들어 보세요!</div>}</div>
   </div>);
@@ -712,7 +799,7 @@ function AdminNoticeManager({groups}:{groups:any[]}){
   const startEditNotice=(n:any)=>{const clean=n.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim()||"";setEditNoticeId(n.id);setEditNoticeForm({title:n.title||"",content:clean});};
   const saveEditNotice=async()=>{if(!editNoticeId)return;const orig=notices.find(n=>n.id===editNoticeId);const imgMatch=orig?.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const imgPart=imgMatch?`\n[IMG]${imgMatch[1]}[/IMG]`:"";await supabase.from("class_notices").update({title:editNoticeForm.title,content:editNoticeForm.content+imgPart}).eq("id",editNoticeId);setEditNoticeId(null);fN();};
   return(<div>
-    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">📢 공지사항 관리</h2><button onClick={()=>setShowAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>새 공지</button></div>
+    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">📢 공지사항 관리</h2><button onClick={()=>setShowAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>새 공지</button></div>
     {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div><label className="text-xs font-semibold text-slate-500">반 선택</label><select className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.class_group_id} onChange={e=>setForm(p=>({...p,class_group_id:Number(e.target.value)}))}><option value={0}>반을 선택하세요</option>{groups.map(g=>(<option key={g.id} value={g.id}>{g.name}</option>))}</select></div>
@@ -766,7 +853,7 @@ function AdminInquiryManager({onReply}:{onReply?:()=>void}){
   return(<div><h2 className="text-lg font-bold mb-4">💬 문의사항 관리</h2>{inqs.length>0?<div className="space-y-3">{inqs.map((q:any)=>{const isNew=q.created_at&&(Date.now()-new Date(q.created_at).getTime())<24*60*60*1000;const hasReply=!!q.reply;const imgMatch=q.content?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanContent=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();const replyImgMatch=q.reply?.match(/\[IMG\](.*?)\[\/IMG\]/);const cleanReply=q.reply?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim();return(<div key={q.id} className="bg-white rounded-2xl p-5 shadow-sm">
     <div className="flex justify-between mb-2"><div className="flex items-center gap-2"><span className="text-xs font-bold text-[#6c63ff] bg-[#6c63ff]/10 px-2 py-0.5 rounded-lg">{q.users?.name||"?"}</span><span className="text-xs text-slate-400">{q.created_at?.slice(0,10)}</span>{isNew&&<span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">N</span>}<span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasReply?"bg-green-50 text-green-600":"bg-amber-50 text-amber-600"}`}>{hasReply?"답변 완료":"답변 대기중"}</span></div><button onClick={()=>delInq(q.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button></div>
     <h3 className="font-semibold text-sm mb-1">{q.title||"문의"}</h3><p className="text-sm text-slate-600 whitespace-pre-line mb-2">{cleanContent}</p>{imgMatch&&<img src={imgMatch[1]} alt="" className="rounded-xl max-h-48 object-contain mb-3"/>}
-    {hasReply?<div className="bg-[#6c63ff]/5 rounded-xl p-3"><p className="text-xs font-semibold text-[#6c63ff] mb-1">내 답변</p>{replyId===q.id?<div className="space-y-2 mt-2"><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 resize-none h-20" value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 수정하세요"/><div className="flex items-center gap-2"><button onClick={()=>replyImgRef.current?.click()} className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500">{replyImg?replyImg.name:"이미지 첨부"}</button><input ref={replyImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setReplyImg(e.target.files[0]);}}/>{replyImg&&<button onClick={()=>setReplyImg(null)} className="text-xs text-red-400">삭제</button>}</div><div className="flex gap-2"><button onClick={()=>saveReply(q.id)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>{setReplyId(null);setReplyImg(null);}} className="text-xs text-slate-400">취소</button></div></div>:<><p className="text-sm text-slate-700 whitespace-pre-line">{cleanReply}</p>{replyImgMatch&&<img src={replyImgMatch[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}<button onClick={()=>{setReplyId(q.id);setReplyText(cleanReply||"");setReplyImg(null);}} className="text-xs text-[#6c63ff] mt-2 font-semibold">수정</button></>}</div>:replyId===q.id?<div className="space-y-2"><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 resize-none h-20" value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 작성하세요"/><div className="flex items-center gap-2"><button onClick={()=>replyImgRef.current?.click()} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500">{replyImg?replyImg.name:"이미지 첨부"}</button><input ref={replyImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setReplyImg(e.target.files[0]);}}/>{replyImg&&<button onClick={()=>setReplyImg(null)} className="text-xs text-red-400">삭제</button>}</div><div className="flex gap-2"><button onClick={()=>saveReply(q.id)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">답변</button><button onClick={()=>{setReplyId(null);setReplyImg(null);}} className="text-xs text-slate-400">취소</button></div></div>:<button onClick={()=>{setReplyId(q.id);setReplyText("");}} className="text-xs text-[#6c63ff] font-semibold">답변하기</button>}
+    {hasReply?<div className="bg-[#6c63ff]/5 rounded-xl p-3"><p className="text-xs font-semibold text-[#6c63ff] mb-1">내 답변</p>{replyId===q.id?<div className="space-y-2 mt-2"><textarea className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-slate-200 resize-none h-20" value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 수정하세요"/><div className="flex items-center gap-2"><button onClick={()=>replyImgRef.current?.click()} className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500">{replyImg?replyImg.name:"이미지 첨부"}</button><input ref={replyImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setReplyImg(e.target.files[0]);}}/>{replyImg&&<button onClick={()=>setReplyImg(null)} className="text-xs text-red-400">삭제</button>}</div><div className="flex gap-2"><button onClick={()=>saveReply(q.id)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>{setReplyId(null);setReplyImg(null);}} className="text-xs text-slate-400">취소</button></div></div>:<><p className="text-sm text-slate-700 whitespace-pre-line">{cleanReply}</p>{replyImgMatch&&<img src={replyImgMatch[1]} alt="" className="mt-2 rounded-xl max-h-48 object-contain"/>}<button onClick={()=>{setReplyId(q.id);setReplyText(cleanReply||"");setReplyImg(null);}} className="text-xs text-[#6c63ff] mt-2 font-semibold">수정</button></>}</div>:replyId===q.id?<div className="space-y-2"><textarea className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none h-20" value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 작성하세요"/><div className="flex items-center gap-2"><button onClick={()=>replyImgRef.current?.click()} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500">{replyImg?replyImg.name:"이미지 첨부"}</button><input ref={replyImgRef} type="file" accept="image/*" className="hidden" onChange={e=>{if(e.target.files?.[0])setReplyImg(e.target.files[0]);}}/>{replyImg&&<button onClick={()=>setReplyImg(null)} className="text-xs text-red-400">삭제</button>}</div><div className="flex gap-2"><button onClick={()=>saveReply(q.id)} className="bg-[#6c63ff] text-white px-4 py-1.5 rounded-xl text-xs font-semibold">답변</button><button onClick={()=>{setReplyId(null);setReplyImg(null);}} className="text-xs text-slate-400">취소</button></div></div>:<button onClick={()=>{setReplyId(q.id);setReplyText("");}} className="text-xs text-[#6c63ff] font-semibold">답변하기</button>}
   </div>);})}</div>:<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">문의가 없습니다</div>}</div>);
 }
 
@@ -803,7 +890,7 @@ function AdminTokenManager({users,fetchUsers}:{users:any[];fetchUsers:()=>void})
         <div><label className="text-[10px] font-semibold text-slate-400">반 선택</label><select className="w-full bg-slate-50 rounded-xl px-3 py-2 text-sm mt-1 border-0" value={batchGroup} onChange={e=>setBatchGroup(Number(e.target.value))}><option value={0}>반을 선택하세요</option>{groups.map(g=>(<option key={g.id} value={g.id}>{g.name}</option>))}</select></div>
         <div><label className="text-[10px] font-semibold text-slate-400">수량</label><input type="number" className="w-20 bg-slate-50 rounded-xl px-3 py-2 text-sm mt-1 border-0 text-center" value={batchAmt} onChange={e=>setBatchAmt(e.target.value)} placeholder="0"/></div>
         <div className="flex-1"><label className="text-[10px] font-semibold text-slate-400">사유</label><input className="w-full bg-slate-50 rounded-xl px-3 py-2 text-sm mt-1 border-0" value={batchReason} onChange={e=>setBatchReason(e.target.value)} placeholder="예: 출석 보상"/></div>
-        <button onClick={batchGive} disabled={batchLoading||!batchGroup||!batchAmt} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-md shadow-[#6c63ff]/20 disabled:opacity-50">{batchLoading?"지급 중...":"일괄 지급"}</button>
+        <button onClick={batchGive} disabled={batchLoading||!batchGroup||!batchAmt} className="shimmer-action-btn text-white px-5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50">{batchLoading?"지급 중...":"일괄 지급"}</button>
       </div>
     </div>
     {/* 개별 지급 */}
@@ -826,7 +913,7 @@ function AdminShopManager({onProcess}:{onProcess?:()=>void}){
   const processOrder=async(id:number,status:string)=>{await supabase.from("purchases").update({status}).eq("id",id);fP();if(onProcess)onProcess();};
   const pending=purchases.filter(p=>p.status==="pending"||!p.status);
   const done=purchases.filter(p=>p.status==="done");
-  return(<div><div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">🏪 상점 관리</h2><button onClick={()=>setShowAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-md shadow-[#6c63ff]/20 hover:shadow-lg transition-all"><Icon type="plus" size={14}/>상품 추가</button></div>
+  return(<div><div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">🏪 상점 관리</h2><button onClick={()=>setShowAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>상품 추가</button></div>
     {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3"><div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-semibold text-slate-500">상품명</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))}/></div><div><label className="text-xs font-semibold text-slate-500">가격 (서서갈비)</label><input type="number" className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.price} onChange={e=>setForm(p=>({...p,price:Number(e.target.value)}))}/></div></div><div><label className="text-xs font-semibold text-slate-500">설명</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))}/></div><div className="flex gap-2"><button onClick={addItem} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">추가</button><button onClick={()=>setShowAdd(false)} className="text-xs text-slate-400">취소</button></div></div>}
 
     {/* 미처리 주문 */}
@@ -845,9 +932,9 @@ function AdminShopManager({onProcess}:{onProcess?:()=>void}){
 function ShortsGrid(){
   const[shorts,setShorts]=useState<any[]>([]);const[playing,setPlaying]=useState<string|null>(null);
   useEffect(()=>{(async()=>{const{data}=await supabase.from("shorts").select("*").order("created_at",{ascending:false});if(data)setShorts(data);})();},[]);
-  if(shorts.length===0)return(<div className="bg-white/60 rounded-2xl p-12 border border-slate-100/50 text-center text-slate-400 text-sm">영상 준비 중입니다</div>);
+  if(shorts.length===0)return(<div className="lux-card rounded-2xl p-12 text-center text-slate-400 text-sm">영상 준비 중입니다</div>);
   return(<>{playing&&<div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setPlaying(null)}><div className="relative w-full max-w-sm" style={{aspectRatio:"9/16"}} onClick={e=>e.stopPropagation()}><iframe src={`https://www.youtube.com/embed/${playing}?autoplay=1&loop=1`} className="w-full h-full rounded-2xl" allow="autoplay; encrypted-media" allowFullScreen/><button onClick={()=>setPlaying(null)} className="absolute -top-3 -right-3 bg-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-red-500 transition-colors"><Icon type="close" size={16}/></button></div></div>}
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{shorts.map((s:any)=>(<button key={s.id} onClick={()=>setPlaying(s.video_id)} className="group relative bg-black rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:scale-[1.02]" style={{aspectRatio:"9/16"}}><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt={s.title} className="absolute inset-0 w-full h-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"/><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="#6c63ff"><polygon points="8 5 20 12 8 19"/></svg></div></div>{s.title&&<p className="absolute bottom-2 left-2 right-2 text-[10px] text-white font-semibold leading-tight line-clamp-2">{s.title}</p>}</button>))}</div></>);
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{shorts.map((s:any)=>(<button key={s.id} onClick={()=>setPlaying(s.video_id)} className="group relative bg-black rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:scale-[1.02]" ><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt={s.title} className="absolute inset-0 w-full h-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"/><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="#6c63ff"><polygon points="8 5 20 12 8 19"/></svg></div></div>{s.title&&<p className="absolute bottom-2 left-2 right-2 text-[10px] text-white font-semibold leading-tight line-clamp-2">{s.title}</p>}</button>))}</div></>);
 }
 
 /* ═══ ADMIN: REVIEW MANAGER ═══ */
@@ -863,7 +950,7 @@ function AdminReviewViewer(){
   const saveEdit=async()=>{if(!editId||!editForm.content||!editForm.display_name)return;await supabase.from("reviews").update({display_name:editForm.display_name,display_school:editForm.display_school,best_grade:editForm.best_grade,keywords:editForm.keywords,content:editForm.content}).eq("id",editId);setEditId(null);fR();};
   const kwOptions=["흥미유발","관리","발문해석","좋은자료","기발한풀이","이해가잘되는해설","친근함","열정","소통","꼼꼼함"];
   const kwToggle=(kws:string,kw:string)=>{const cur=kws.split(",").map(k=>k.trim()).filter(Boolean);if(cur.includes(kw))return cur.filter(k=>k!==kw).join(",");return[...cur,kw].join(",");};
-  return(<div><div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">✍️ 후기 관리 (로그인 화면 노출용)</h2><button onClick={()=>setShowAdd(true)} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md shadow-[#6c63ff]/20 flex items-center gap-1"><Icon type="plus" size={14}/>후기 추가</button></div>
+  return(<div><div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">✍️ 후기 관리 (로그인 화면 노출용)</h2><button onClick={()=>setShowAdd(true)} className="shimmer-action-btn text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1"><Icon type="plus" size={14}/>후기 추가</button></div>
     {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3">
       <div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-semibold text-slate-500">학생 이름 *</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.display_name} onChange={e=>setForm(p=>({...p,display_name:e.target.value}))} placeholder="예: 김OO"/></div><div><label className="text-xs font-semibold text-slate-500">학교</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.display_school} onChange={e=>setForm(p=>({...p,display_school:e.target.value}))} placeholder="예: 서서고"/></div></div>
       <div><label className="text-xs font-semibold text-slate-500">성적 향상</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.best_grade} onChange={e=>setForm(p=>({...p,best_grade:e.target.value}))} placeholder="예: 500등 → 100등"/></div>
@@ -914,7 +1001,7 @@ function AdminShortsManager(){
   const delShort=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("shorts").delete().eq("id",id);fS();};
   return(<div><h2 className="text-lg font-bold mb-4">▶ 쇼츠 관리</h2>
     <div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3"><p className="text-xs text-slate-400">유튜브 쇼츠 URL을 붙여넣기</p><div className="flex gap-2"><input className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0" value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://youtube.com/shorts/xxxxx"/></div><div className="flex gap-2"><input className="flex-1 bg-slate-50 rounded-xl px-4 py-2.5 text-sm border-0" value={title} onChange={e=>setTitle(e.target.value)} placeholder="제목 (선택)"/><button onClick={addShort} className="bg-[#6c63ff] text-white px-5 py-2.5 rounded-xl text-xs font-semibold">추가</button></div></div>
-    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">{shorts.map((s:any)=>(<div key={s.id} className="relative group"><div className="bg-black rounded-xl overflow-hidden shadow-sm" style={{aspectRatio:"9/16"}}><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt="" className="w-full h-full object-cover"/></div><button onClick={()=>delShort(s.id)} className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">×</button>{s.title&&<p className="text-[10px] text-slate-500 mt-1 truncate">{s.title}</p>}</div>))}</div>
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">{shorts.map((s:any)=>(<div key={s.id} className="relative group"><div className="bg-black rounded-xl overflow-hidden shadow-sm" ><img src={`https://img.youtube.com/vi/${s.video_id}/0.jpg`} alt="" className="w-full h-full object-cover"/></div><button onClick={()=>delShort(s.id)} className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">×</button>{s.title&&<p className="text-[10px] text-slate-500 mt-1 truncate">{s.title}</p>}</div>))}</div>
   </div>);
 }
 
@@ -953,7 +1040,7 @@ export default function Home(){
 
   if(initializing)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
   if(!user)return<LoginScreen onLogin={handleLogin} settings={settings}/>;
-  if(loading)return<div className="min-h-screen bg-[#f0f2f8] flex items-center justify-center"><img src="/logo.png" alt="" className="h-10 opacity-50 animate-pulse"/></div>;
+  if(loading)return<div className="min-h-screen flex items-center justify-center" ><div className="text-center"><img src="/logo.png" alt="" className="h-10 opacity-40 animate-pulse mx-auto mb-3"/><div className="w-24 h-0.5 mx-auto rounded-full" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)",animation:"pulse 2s ease-in-out infinite"}}/></div></div>;
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
   const ADMIN_SECRET="Tjwjddls1!";
@@ -964,20 +1051,42 @@ export default function Home(){
   const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"}];
   const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
 
-  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-1`}>
-    {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}</button>))}
-    <div className="pt-2 mt-2 border-t border-slate-100">
-      <button onClick={()=>{if(adminUnlocked){setAdminUnlocked(false);setAdminPwInput("");setTab("classes");if(mob)setMm(false);}else{setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 text-[10px] font-semibold text-slate-400 mb-1">{adminUnlocked?"🔓 관리 메뉴 (잠그기)":"🔒 관리 메뉴 (잠김)"}</button>
-      {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${tab===m.id?"bg-[#6c63ff] text-white":"text-slate-500 hover:bg-slate-50"}`}><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
+  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
+    {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
+    <div className="pt-2 mt-2" >
+      <button onClick={()=>{if(adminUnlocked){setAdminUnlocked(false);setAdminPwInput("");setTab("classes");if(mob)setMm(false);}else{setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 mb-1 text-[10px] font-semibold" >{adminUnlocked?"🔓 관리 메뉴 (잠그기)":"🔒 관리 메뉴 (잠김)"}</button>
+      {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
     </div>
   </nav>);
 
-  return(<div className="min-h-screen bg-[#f0f2f8] flex">
-    <aside className="hidden lg:flex flex-col w-56 bg-white shadow-sm min-h-screen p-5 fixed left-0 top-0 bottom-0 z-40"><div className="flex items-center gap-3 mb-8"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-bold text-slate-800 text-sm">서정인 수학</span></div>{navEl()}<div className="pt-4 border-t border-slate-100 mt-4"><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 bg-[#6c63ff]/10 rounded-full flex items-center justify-center text-[#6c63ff]"><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold">{user.name}</p><p className="text-[10px] text-slate-400">관리자</p></div></div><button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-50"><Icon type="logout" size={16}/>로그아웃</button></div></aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-40 px-4 py-3 flex justify-between items-center"><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm">서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 bg-black/30 z-40"/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 bg-white z-50 p-5 shadow-xl"><div className="flex justify-between items-center mb-6"><span className="font-bold">메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{logout();setMm(false);}} className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 mt-3"><Icon type="logout" size={16}/>로그아웃</button></div></>}
+  return(<div className="min-h-screen flex" >
+    <style>{`
+      .luxury-nav-btn{transition:all 0.2s ease;position:relative;overflow:hidden;}
+      .luxury-nav-btn.admin-active{background:linear-gradient(135deg,#1a1040,#2d2060)!important;color:white!important;box-shadow:0 4px 16px rgba(108,99,255,0.25);}
+      .luxury-nav-btn.admin-active .shimmer-nav{background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.15) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;}
+      @keyframes shimmerSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      .shimmer-nav,.shimmer-action-btn-inner{position:absolute;inset:0;pointer-events:none;}
+      .shimmer-action-btn{position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1040,#2d2060);box-shadow:0 4px 16px rgba(108,99,255,0.25);}
+      .shimmer-action-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.2) 50%,transparent 65%);background-size:300% 100%;animation:shimmerSlide 2.4s ease-in-out infinite;pointer-events:none;}
+      .shimmer-action-btn:hover{transform:translateY(-1px);}
+    `}</style>
+    <aside className="hidden lg:flex flex-col w-56 min-h-screen fixed left-0 top-0 bottom-0 z-40 p-2">
+      <div className="flex flex-col flex-1 rounded-3xl p-5 border" >
+        <div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" >서정인 수학</span></div>
+        {navEl()}
+        <div className="pt-4 mt-4" >
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" ><Icon type="user" size={14}/></div>
+            <div><p className="text-xs font-semibold" >관리자</p></div>
+          </div>
+          <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" ><Icon type="logout" size={16}/>로그아웃</button>
+        </div>
+      </div>
+    </aside>
+    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" >서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" ><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
-      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="bg-white rounded-2xl p-8 shadow-sm text-center"><div className="w-16 h-16 bg-[#6c63ff]/10 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div><h2 className="text-lg font-bold mb-1">관리 메뉴</h2><p className="text-xs text-slate-400 mb-6">접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0 text-center mb-3" value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs text-red-400 mb-3">{adminPwErr}</p>}<button onClick={tryUnlock} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm shadow-md shadow-[#6c63ff]/20">확인</button></div></div>}
+      {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" >확인</button></div></div>}
       {tab==="classes"&&<AdminClassManager users={users}/>}
       {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups}/>}
       {tab==="exams"&&adminUnlocked&&<AdminExamViewer users={users}/>}
@@ -989,7 +1098,7 @@ export default function Home(){
       {tab==="shorts"&&adminUnlocked&&<AdminShortsManager/>}
       {tab==="inquiries"&&adminUnlocked&&<AdminInquiryManager onReply={fInqCount}/>}
       {tab==="site"&&adminUnlocked&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
-      {tab==="changepw"&&adminUnlocked&&<div className="max-w-sm"><h2 className="text-lg font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white rounded-2xl p-6 shadow-sm space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw1" placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw2" placeholder="새 비밀번호 확인"/><button onClick={async()=>{const p1=(document.getElementById("admin-pw1") as HTMLInputElement).value;const p2=(document.getElementById("admin-pw2") as HTMLInputElement).value;if(!p1){alert("비밀번호를 입력하세요");return;}if(p1!==p2){alert("비밀번호가 일치하지 않습니다");return;}await supabase.from("users").update({password:p1}).eq("id",user.id);alert("비밀번호가 변경되었습니다!");(document.getElementById("admin-pw1") as HTMLInputElement).value="";(document.getElementById("admin-pw2") as HTMLInputElement).value="";}} className="w-full bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white py-3 rounded-xl font-semibold text-sm shadow-md shadow-[#6c63ff]/20">변경</button></div></div>}
+      {tab==="changepw"&&adminUnlocked&&<div className="max-w-sm"><h2 className="text-lg font-bold mb-4">🔒 비밀번호 변경</h2><div className="lux-card rounded-2xl p-6 space-y-3"><input type="password" className="w-full rounded-xl px-4 py-3 text-sm outline-none" id="admin-pw1" placeholder="새 비밀번호"/><input type="password" className="w-full rounded-xl px-4 py-3 text-sm outline-none" id="admin-pw2" placeholder="새 비밀번호 확인"/><button onClick={async()=>{const p1=(document.getElementById("admin-pw1") as HTMLInputElement).value;const p2=(document.getElementById("admin-pw2") as HTMLInputElement).value;if(!p1){alert("비밀번호를 입력하세요");return;}if(p1!==p2){alert("비밀번호가 일치하지 않습니다");return;}await supabase.from("users").update({password:p1}).eq("id",user.id);alert("비밀번호가 변경되었습니다!");(document.getElementById("admin-pw1") as HTMLInputElement).value="";(document.getElementById("admin-pw2") as HTMLInputElement).value="";}} className="w-full shimmer-action-btn text-white py-3 rounded-xl font-semibold text-sm">변경</button></div></div>}
     </div></main>
   </div>);
 }
