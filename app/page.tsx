@@ -518,7 +518,40 @@ function AdminClassManager({users}:{users:any[]}){
     const ranked=members.filter((m:any)=>hasA(m.user_id)).map((m:any)=>({uid:m.user_id,score:getS(m.user_id)})).sort((a,b)=>b.score-a.score);
     for(let i=0;i<ranked.length;i++){const rank=i+1;const{error:rkErr}=await supabase.from("test_student_info").update({rank}).eq("test_id",testId).eq("student_id",ranked[i].uid);if(rkErr)errors.push("등수저장:"+rkErr.message);}
     if(errors.length>0)setSaveMsg("❌ "+errors.slice(0,3).join(" | "));
-    else{setSaveMsg("✅ 저장 완료!");for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}}
+    else{setSaveMsg("✅ 저장 완료!");for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}
+      // 자동 서서갈비 지급 (오답/과제 성취도 기준)
+      try{
+        const{data:stData}=await supabase.from("site_settings").select("*");const st:any={};if(stData)stData.forEach((r:any)=>{st[r.key]=r.value;});
+        const autoEnabled=st.auto_token_enabled!=="false";
+        if(autoEnabled){
+          const wrongPct=Number(st.auto_wrong_pct||70);const wrongReward=Number(st.auto_wrong_reward||1);
+          const assignPct=Number(st.auto_assign_pct||70);const assignReward=Number(st.auto_assign_reward||1);
+          for(const m of members){
+            const uid=m.user_id;if(!hasA(uid))continue;const inf=ig[uid]||{};
+            const wrongVal=parseFloat(String(inf.wrong_answer_score||"0").replace(/%/g,""));
+            const assignVal=parseFloat(String(inf.assignment_score||"0").replace(/%/g,""));
+            let totalReward=0;const reasons:string[]=[];
+            // 오답 성취도 체크
+            if(wrongVal>=wrongPct&&wrongReward>0){
+              const{data:dupW}=await supabase.from("token_logs").select("id").eq("user_id",uid).eq("reason",`오답 성취도 ${wrongVal}% 달성 (${selT.title})`).single();
+              if(!dupW){totalReward+=wrongReward;reasons.push(`오답 ${wrongVal}%`);}
+            }
+            // 과제 성취도 체크
+            if(assignVal>=assignPct&&assignReward>0){
+              const{data:dupA}=await supabase.from("token_logs").select("id").eq("user_id",uid).eq("reason",`과제 성취도 ${assignVal}% 달성 (${selT.title})`).single();
+              if(!dupA){totalReward+=assignReward;reasons.push(`과제 ${assignVal}%`);}
+            }
+            if(totalReward>0){
+              const{data:uData}=await supabase.from("users").select("tokens").eq("id",uid).single();const curTokens=uData?.tokens||0;
+              await supabase.from("users").update({tokens:curTokens+totalReward}).eq("id",uid);
+              if(wrongVal>=wrongPct&&wrongReward>0&&reasons.includes(`오답 ${wrongVal}%`))await supabase.from("token_logs").insert({user_id:uid,amount:wrongReward,reason:`오답 성취도 ${wrongVal}% 달성 (${selT.title})`});
+              if(assignVal>=assignPct&&assignReward>0&&reasons.includes(`과제 ${assignVal}%`))await supabase.from("token_logs").insert({user_id:uid,amount:assignReward,reason:`과제 성취도 ${assignVal}% 달성 (${selT.title})`});
+              await sendNotif(uid,"token",`🥩 서서갈비 ${totalReward}개 자동 지급! (${reasons.join(", ")})`);
+            }
+          }
+        }
+      }catch(e){console.error("자동지급 오류:",e);}
+    }
     setSaving(false);
   };
 
@@ -728,12 +761,39 @@ function AdminTokenManager({users,fetchUsers}:{users:any[];fetchUsers:()=>void})
   const students=users.filter((u:any)=>u.role==="student"&&u.status==="approved");
   const[amount,setAmount]=useState<{[k:number]:string}>({});const[reason,setReason]=useState<{[k:number]:string}>({});
   const[logs,setLogs]=useState<any[]>([]);
+  const[groups,setGroups]=useState<any[]>([]);const[batchGroup,setBatchGroup]=useState(0);const[batchAmt,setBatchAmt]=useState("");const[batchReason,setBatchReason]=useState("");const[batchLoading,setBatchLoading]=useState(false);
+  // 자동지급 설정
+  const[autoSettings,setAutoSettings]=useState({wrong_pct:"70",wrong_reward:"1",assign_pct:"70",assign_reward:"1",enabled:true});const[autoMsg,setAutoMsg]=useState("");
   const userMap:any={};users.forEach(u=>{userMap[u.id]=u.name;});
   const fLogs=async()=>{const{data}=await supabase.from("token_logs").select("*").order("created_at",{ascending:false}).limit(50);if(data)setLogs(data);};
-  useEffect(()=>{fLogs();},[]);
+  const fGroups=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
+  const loadAutoSettings=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setAutoSettings({wrong_pct:s.auto_wrong_pct||"70",wrong_reward:s.auto_wrong_reward||"1",assign_pct:s.auto_assign_pct||"70",assign_reward:s.auto_assign_reward||"1",enabled:s.auto_token_enabled!=="false"});}};
+  useEffect(()=>{fLogs();fGroups();loadAutoSettings();},[]);
+  const saveAutoSettings=async()=>{const pairs=[["auto_wrong_pct",autoSettings.wrong_pct],["auto_wrong_reward",autoSettings.wrong_reward],["auto_assign_pct",autoSettings.assign_pct],["auto_assign_reward",autoSettings.assign_reward],["auto_token_enabled",autoSettings.enabled?"true":"false"]];for(const[k,v] of pairs){const{data:ex}=await supabase.from("site_settings").select("id").eq("key",k).single();if(ex)await supabase.from("site_settings").update({value:v}).eq("key",k);else await supabase.from("site_settings").insert({key:k,value:v});}setAutoMsg("저장 완료!");setTimeout(()=>setAutoMsg(""),2000);};
   const giveToken=async(uid:number,subtract?:boolean)=>{const amt=Number(amount[uid]||0);if(!amt||amt<=0)return;const u=students.find(s=>s.id===uid);const cur=u?.tokens||0;const newVal=subtract?Math.max(0,cur-amt):cur+amt;await supabase.from("users").update({tokens:newVal}).eq("id",uid);const rsn=reason[uid]||(subtract?"관리자 차감":"관리자 지급");await supabase.from("token_logs").insert({user_id:uid,amount:subtract?-amt:amt,reason:rsn});await sendNotif(uid,"token",subtract?`🥩 서서갈비 ${amt}개 차감 (${rsn})`:`🥩 서서갈비 ${amt}개 지급! (${rsn})`);setAmount(p=>({...p,[uid]:""}));setReason(p=>({...p,[uid]:""}));fetchUsers();fLogs();};
+  const batchGive=async()=>{if(!batchGroup||!batchAmt)return;const amt=Number(batchAmt);if(!amt||amt<=0)return;setBatchLoading(true);const{data:cms}=await supabase.from("class_members").select("user_id").eq("class_group_id",batchGroup);if(cms){const rsn=batchReason||"반 일괄 지급";for(const cm of cms){const u=users.find((u:any)=>u.id===cm.user_id);const cur=u?.tokens||0;await supabase.from("users").update({tokens:cur+amt}).eq("id",cm.user_id);await supabase.from("token_logs").insert({user_id:cm.user_id,amount:amt,reason:rsn});await sendNotif(cm.user_id,"token",`🥩 서서갈비 ${amt}개 지급! (${rsn})`);}alert(`${cms.length}명에게 ${amt}개씩 지급 완료!`);}setBatchGroup(0);setBatchAmt("");setBatchReason("");setBatchLoading(false);fetchUsers();fLogs();};
   return(<div><h2 className="text-lg font-bold mb-4">🥩 서서갈비 관리</h2>
-    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-6"><table className="w-full text-sm"><thead><tr className="bg-slate-50"><th className="px-4 py-3 text-left text-xs font-semibold text-slate-400">이름</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">보유</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">수량</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">사유</th><th className="px-4 py-3"></th></tr></thead><tbody>{students.map((s:any)=>(<tr key={s.id} className="border-t border-slate-50"><td className="px-4 py-2.5 font-semibold">{s.name}</td><td className="px-4 py-2.5 text-center font-bold text-[#6c63ff]">{s.tokens||0} 🥩</td><td className="px-4 py-2.5"><input type="number" className="w-20 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 text-center" value={amount[s.id]||""} onChange={e=>setAmount(p=>({...p,[s.id]:e.target.value}))} placeholder="0"/></td><td className="px-4 py-2.5"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={reason[s.id]||""} onChange={e=>setReason(p=>({...p,[s.id]:e.target.value}))} placeholder="사유"/></td><td className="px-4 py-2.5"><div className="flex gap-1"><button onClick={()=>giveToken(s.id)} className="bg-[#6c63ff] text-white px-3 py-1 rounded-lg text-xs font-semibold">지급</button><button onClick={()=>giveToken(s.id,true)} className="bg-red-50 text-red-500 px-3 py-1 rounded-lg text-xs font-semibold">차감</button></div></td></tr>))}</tbody></table></div>
+    {/* 자동지급 설정 */}
+    <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
+      <div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-sm">⚙️ 자동 지급 설정</h3><label className="flex items-center gap-2 cursor-pointer"><span className="text-xs text-slate-400">{autoSettings.enabled?"켜짐":"꺼짐"}</span><div onClick={()=>setAutoSettings(p=>({...p,enabled:!p.enabled}))} className={`w-10 h-5 rounded-full relative transition-colors ${autoSettings.enabled?"bg-[#6c63ff]":"bg-slate-300"}`}><div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${autoSettings.enabled?"left-5.5":"left-0.5"}`} style={{left:autoSettings.enabled?22:2}}/></div></label></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-slate-50 rounded-xl p-4"><p className="text-xs font-semibold text-slate-600 mb-2">📝 오답 성취도 기준</p><div className="flex items-center gap-2"><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.wrong_pct} onChange={e=>setAutoSettings(p=>({...p,wrong_pct:e.target.value}))}/><span className="text-xs text-slate-400">% 이상이면</span><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.wrong_reward} onChange={e=>setAutoSettings(p=>({...p,wrong_reward:e.target.value}))}/><span className="text-xs text-slate-400">개 지급</span></div></div>
+        <div className="bg-slate-50 rounded-xl p-4"><p className="text-xs font-semibold text-slate-600 mb-2">📋 과제 성취도 기준</p><div className="flex items-center gap-2"><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.assign_pct} onChange={e=>setAutoSettings(p=>({...p,assign_pct:e.target.value}))}/><span className="text-xs text-slate-400">% 이상이면</span><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.assign_reward} onChange={e=>setAutoSettings(p=>({...p,assign_reward:e.target.value}))}/><span className="text-xs text-slate-400">개 지급</span></div></div>
+      </div>
+      <div className="flex items-center gap-2 mt-3"><button onClick={saveAutoSettings} className="bg-[#6c63ff] text-white px-4 py-2 rounded-xl text-xs font-semibold">설정 저장</button>{autoMsg&&<span className="text-xs text-green-500 font-semibold">{autoMsg}</span>}<p className="text-[10px] text-slate-400 ml-auto">시험 저장 시 자동 적용 · 중복 지급 없음</p></div>
+    </div>
+    {/* 반 일괄 지급 */}
+    <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
+      <h3 className="font-semibold text-sm mb-3">🏫 반 일괄 지급</h3>
+      <div className="flex flex-wrap items-end gap-3">
+        <div><label className="text-[10px] font-semibold text-slate-400">반 선택</label><select className="w-full bg-slate-50 rounded-xl px-3 py-2 text-sm mt-1 border-0" value={batchGroup} onChange={e=>setBatchGroup(Number(e.target.value))}><option value={0}>반을 선택하세요</option>{groups.map(g=>(<option key={g.id} value={g.id}>{g.name}</option>))}</select></div>
+        <div><label className="text-[10px] font-semibold text-slate-400">수량</label><input type="number" className="w-20 bg-slate-50 rounded-xl px-3 py-2 text-sm mt-1 border-0 text-center" value={batchAmt} onChange={e=>setBatchAmt(e.target.value)} placeholder="0"/></div>
+        <div className="flex-1"><label className="text-[10px] font-semibold text-slate-400">사유</label><input className="w-full bg-slate-50 rounded-xl px-3 py-2 text-sm mt-1 border-0" value={batchReason} onChange={e=>setBatchReason(e.target.value)} placeholder="예: 출석 보상"/></div>
+        <button onClick={batchGive} disabled={batchLoading||!batchGroup||!batchAmt} className="bg-gradient-to-r from-[#6c63ff] to-[#5a52e0] text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-md shadow-[#6c63ff]/20 disabled:opacity-50">{batchLoading?"지급 중...":"일괄 지급"}</button>
+      </div>
+    </div>
+    {/* 개별 지급 */}
+    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-6"><table className="w-full text-sm"><thead><tr className="bg-slate-50"><th className="px-4 py-3 text-left text-xs font-semibold text-slate-400">이름</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">보유</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">수량</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">사유</th><th className="px-4 py-3"></th></tr></thead><tbody>{students.map((s:any)=>(<tr key={s.id} className="border-t border-slate-50"><td className="px-4 py-2.5 font-semibold">{s.login_id||s.name}</td><td className="px-4 py-2.5 text-center font-bold text-[#6c63ff]">{s.tokens||0} 🥩</td><td className="px-4 py-2.5"><input type="number" className="w-20 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 text-center" value={amount[s.id]||""} onChange={e=>setAmount(p=>({...p,[s.id]:e.target.value}))} placeholder="0"/></td><td className="px-4 py-2.5"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={reason[s.id]||""} onChange={e=>setReason(p=>({...p,[s.id]:e.target.value}))} placeholder="사유"/></td><td className="px-4 py-2.5"><div className="flex gap-1"><button onClick={()=>giveToken(s.id)} className="bg-[#6c63ff] text-white px-3 py-1 rounded-lg text-xs font-semibold">지급</button><button onClick={()=>giveToken(s.id,true)} className="bg-red-50 text-red-500 px-3 py-1 rounded-lg text-xs font-semibold">차감</button></div></td></tr>))}</tbody></table></div>
     <h3 className="font-semibold text-sm mb-3">지급/차감 내역</h3>
     <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50"><th className="px-4 py-3 text-left text-xs font-semibold text-slate-400">날짜</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">이름</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">수량</th><th className="px-4 py-3 text-xs font-semibold text-slate-400">사유</th></tr></thead><tbody>{logs.map((l:any)=>(<tr key={l.id} className="border-t border-slate-50"><td className="px-4 py-2 text-xs text-slate-400">{l.created_at?.slice(0,10)}</td><td className="px-4 py-2 text-sm font-semibold">{userMap[l.user_id]||"?"}</td><td className={`px-4 py-2 text-sm font-bold text-center ${l.amount>0?"text-[#6c63ff]":"text-red-500"}`}>{l.amount>0?"+":""}{l.amount} 🥩</td><td className="px-4 py-2 text-xs text-slate-500">{l.reason||"—"}</td></tr>))}{logs.length===0&&<tr><td colSpan={4} className="text-center py-8 text-slate-400 text-sm">내역 없음</td></tr>}</tbody></table></div>
   </div>);
