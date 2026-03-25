@@ -14,238 +14,149 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
   const go=async()=>{setLd(true);setErr(await onLogin(id,pw));setLd(false);};
   const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
-  return(<div className="min-h-screen relative flex flex-col overflow-hidden">
+  return(<div className="min-h-screen relative flex flex-col overflow-hidden bg-[#faf9f7]">
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+KR:wght@300;400;500;600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+KR:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
 
-      /* ── CSS 변수 토큰 ── */
       :root {
-        --c-indigo: #6c63ff;
-        --c-indigo-deep: #5a52e0;
-        --c-indigo-soft: rgba(108,99,255,0.08);
-        --c-bg: #f4f3ff;
-        --c-surface: rgba(255,255,255,0.92);
-        --c-border: rgba(108,99,255,0.1);
-        --c-border-strong: rgba(108,99,255,0.18);
-        --c-text-primary: #1a1535;
-        --c-text-secondary: #5b5880;
-        --c-text-muted: #9896b8;
-        --c-shadow-soft: 0 2px 20px rgba(108,99,255,0.07), 0 1px 4px rgba(108,99,255,0.04);
-        --c-shadow-card: 0 8px 40px rgba(108,99,255,0.10), 0 2px 8px rgba(108,99,255,0.05), inset 0 1px 0 rgba(255,255,255,0.95);
-        --c-shadow-hover: 0 16px 48px rgba(108,99,255,0.16), 0 4px 12px rgba(108,99,255,0.08);
-        --radius: 20px;
-        --font-sans: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-        --font-serif: 'Playfair Display', Georgia, serif;
+        --c-gold: #D4AF37;
+        --c-gold-light: #F3E5AB;
+        --c-gold-deep: #AA8C2C;
+        --c-bg: #faf9f7;
+        --font-sans: 'Noto Sans KR', 'Montserrat', sans-serif;
+        --font-serif: 'Playfair Display', serif;
       }
 
-      /* ── 기본 폰트 ── */
-      body, * { letter-spacing: -0.01em; }
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        background: var(--c-bg);
+      }
 
-      /* ── 쉬머 애니메이션 ── */
       @keyframes shimmerSlide { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-      @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 
-      /* ── 쉬머 버튼 (로그인) ── */
       .shimmer-btn {
-        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%);
+        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.7) 50%, transparent 70%);
         background-size: 300% 100%;
-        animation: shimmerSlide 2.2s ease-in-out infinite;
+        animation: shimmerSlide 5s ease-in-out infinite;
       }
 
-      /* ── 액션 버튼 (shimmer-action-btn) ── */
-      .shimmer-action-btn {
-        position: relative; overflow: hidden;
-        background: linear-gradient(135deg, #3d35c8 0%, #6c63ff 50%, #3d35c8 100%);
-        box-shadow: 0 4px 18px rgba(108,99,255,0.3), inset 0 1px 0 rgba(255,255,255,0.18);
-        transition: all 0.22s cubic-bezier(.4,0,.2,1);
-        letter-spacing: 0.03em;
+      .btn-gold {
+        background: linear-gradient(135deg, #DFBE52 0%, #D4AF37 50%, #B5952F 100%);
+        color: #fff;
+        box-shadow: 0 4px 18px rgba(212,175,55,0.3);
+        transition: all 0.3s ease;
       }
-      .shimmer-action-btn::after {
-        content: ''; position: absolute; inset: 0; pointer-events: none;
-        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
-        background-size: 300% 100%;
-        animation: shimmerSlide 2.2s ease-in-out infinite;
-      }
-      .shimmer-action-btn:hover {
+      .btn-gold:hover {
+        box-shadow: 0 8px 24px rgba(212,175,55,0.45);
         transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(108,99,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2) !important;
       }
-      .shimmer-action-btn:active { transform: scale(0.97); }
 
-      /* ── 럭셔리 사이드바 nav ── */
-      .luxury-nav-btn {
-        transition: all 0.18s cubic-bezier(.4,0,.2,1);
-        position: relative; overflow: hidden;
-        border-radius: 14px;
-        color: var(--c-text-secondary);
-        font-weight: 500;
-      }
-      .luxury-nav-btn:hover:not(.active):not(.admin-active) {
-        background: rgba(108,99,255,0.06);
-        color: var(--c-indigo);
-      }
-      .luxury-nav-btn.active, .luxury-nav-btn.admin-active {
-        background: linear-gradient(135deg, #3d35c8 0%, #6c63ff 100%) !important;
-        color: white !important;
-        box-shadow: 0 4px 18px rgba(108,99,255,0.28), inset 0 1px 0 rgba(255,255,255,0.2);
-        font-weight: 600;
-      }
-      .luxury-nav-btn.active .shimmer-nav,
-      .luxury-nav-btn.admin-active .shimmer-nav {
-        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
-        background-size: 300% 100%;
-        animation: shimmerSlide 2.2s ease-in-out infinite;
-      }
-      .shimmer-nav { position: absolute; inset: 0; pointer-events: none; }
-
-      /* ── 럭셔리 카드 (컨텐츠 카드) ── */
-      .lux-card {
-        background: rgba(255,255,255,0.88);
+      .glass-card {
+        background: rgba(255, 255, 255, 0.65);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(108,99,255,0.09);
-        box-shadow: var(--c-shadow-card);
-        border-radius: var(--radius);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
       }
-      .lux-card:hover { box-shadow: var(--c-shadow-hover); }
-
-      /* ── 인풋 포커스 링 ── */
-      .lux-input:focus {
-        outline: none;
-        border-color: rgba(108,99,255,0.45) !important;
-        box-shadow: 0 0 0 3px rgba(108,99,255,0.1) !important;
-      }
-
-      /* ── 사이드바 패널 ── */
-      .lux-sidebar {
-        background: rgba(255,255,255,0.9);
+      .glass-card-strong {
+        background: rgba(255, 255, 255, 0.82);
         backdrop-filter: blur(32px);
         -webkit-backdrop-filter: blur(32px);
-        border-right: 1px solid rgba(108,99,255,0.08);
-        box-shadow: 4px 0 32px rgba(108,99,255,0.06);
+        border: 1px solid rgba(212, 175, 55, 0.8);
+        box-shadow: 0 12px 60px rgba(212,175,55,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
       }
 
-      /* ── 배경 (로그인 이후 화면) ── */
-      .lux-bg {
-        background:
-          radial-gradient(ellipse 80% 60% at 10% 0%, rgba(108,99,255,0.07) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 50% at 90% 100%, rgba(108,99,255,0.05) 0%, transparent 60%),
-          linear-gradient(160deg, #f0eeff 0%, #f7f6ff 40%, #faf9ff 70%, #f3f2ff 100%);
+      .lux-input {
+        background: rgba(255,255,255,0.85);
+        border: 1px solid rgba(212,175,55,0.25);
+        transition: all 0.3s;
       }
-
-      /* ── 헤더/탑바 ── */
-      .lux-topbar {
-        background: rgba(248,247,255,0.92);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        border-bottom: 1px solid rgba(108,99,255,0.08);
-        box-shadow: 0 1px 16px rgba(108,99,255,0.05);
+      .lux-input:focus {
+        border-color: #D4AF37 !important;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.15) !important;
       }
-
-      /* ── 리뷰 스크롤 ── */
-      .review-scroll { animation: reviewScroll 60s linear infinite; }
-      .review-scroll:hover { animation-play-state: paused; }
-      @keyframes reviewScroll {
-        0% { transform: translateX(0) }
-        100% { transform: translateX(calc(-272px * var(--review-count, 10))) }
-      }
-      .review-clamp {
-        display: -webkit-box; -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical; overflow: hidden;
-      }
-
-      /* ── 타이포그래피 유틸 ── */
-      .text-label {
-        font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
-        text-transform: uppercase; color: var(--c-text-muted);
-      }
-      .text-heading {
-        font-family: var(--font-serif);
-        color: var(--c-text-primary);
-        letter-spacing: -0.02em;
-      }
-
-      /* ── 스크롤바 커스텀 ── */
-      ::-webkit-scrollbar { width: 4px; height: 4px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(108,99,255,0.2); border-radius: 99px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(108,99,255,0.35); }
-
-      /* ── 페이드업 애니메이션 ── */
-      .fade-up { animation: fadeUp 0.6s cubic-bezier(.4,0,.2,1) both; }
-      .fade-up-d1 { animation-delay: 0.1s; }
-      .fade-up-d2 { animation-delay: 0.2s; }
     `}</style>
-    {/* 배경 */}
-    <div className="absolute inset-0 z-0 scale-110" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(5px)"}}/>
-    <div className="absolute inset-0 z-0" style={{background:"linear-gradient(160deg,rgba(10,8,20,0.72) 0%,rgba(20,16,45,0.62) 40%,rgba(10,8,20,0.78) 100%)"}}/>
-    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"600px",height:"600px",top:"10%",right:"5%",background:"radial-gradient(circle,rgba(108,99,255,0.12) 0%,rgba(108,99,255,0.04) 55%,transparent 75%)",filter:"blur(80px)"}}/>
-    <div className="absolute z-0 rounded-full pointer-events-none" style={{width:"420px",height:"420px",bottom:"15%",left:"3%",background:"radial-gradient(circle,rgba(139,83,255,0.1) 0%,transparent 70%)",filter:"blur(90px)"}}/>
+    {/* 배경 데코레이션 */}
+    <div className="absolute inset-0 z-0 bg-[#faf9f7]" style={{backgroundImage: "radial-gradient(#AA8C2C 0.5px, transparent 0.5px)", backgroundSize: "32px 32px", opacity: 0.1}} />
+    <div className="absolute z-0 rounded-full pointer-events-none opacity-50" style={{width:"800px",height:"800px",top:"-10%",right:"-10%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none opacity-50" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.08) 0%,transparent 70%)",filter:"blur(80px)"}}/>
 
-    {/* 메인 영역 — 위쪽으로 */}
-    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-12 px-4 relative z-10">
+    {/* 메인 영역 */}
+    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-16 px-4 relative z-10">
       {/* PC */}
-      <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="w-[300px] flex-shrink-0 rounded-3xl p-6 flex flex-col border" style={{background:"rgba(255,255,255,0.06)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",borderColor:"rgba(255,255,255,0.15)",boxShadow:"0 8px 48px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.14)"}}>
-          <div className="text-center mb-3">
-            <div className="relative inline-block mb-3"><img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover border-4 border-white/30"/><div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow-lg"/></div>
-            <h2 className="text-xl font-semibold text-white mb-2" style={{fontFamily:"'Playfair Display',serif",letterSpacing:"0.02em"}}>{nm}</h2>
-            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)"}}/><div className="w-1.5 h-1.5 rounded-full" style={{background:"rgba(255,255,255,0.4)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)"}}/></div>
+      <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
+        <div className="w-[320px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
+          <div className="text-center mb-6">
+            <div className="relative inline-block mb-5">
+              <img src={pi} alt="" className="w-28 h-28 rounded-full shadow-xl object-cover" style={{border:"3px solid rgba(212,175,55,0.6)", padding:"4px", background:"#fff"}}/>
+            </div>
+            <h2 className="text-2xl font-bold mb-2" style={{fontFamily:"var(--font-serif)",color:"#222"}}>{nm}</h2>
+            <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
           </div>
-          {bio&&<div className="text-[11px] leading-relaxed whitespace-pre-line text-center px-2" style={{color:"rgba(255,255,255,0.55)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{bio}</div>}
-          <div className="mt-auto pt-4 border-t text-center" style={{borderColor:"rgba(212,175,55,0.15)"}}><p className="text-[10px] tracking-widest uppercase" style={{color:"rgba(255,255,255,0.35)",letterSpacing:"0.12em"}}>수학의 자신감을 키우는 곳</p></div>
+          {bio&&<div className="text-[13px] leading-relaxed whitespace-pre-line text-center px-4" style={{color:"#555"}}>{bio}</div>}
+          <div className="mt-auto pt-6 border-t text-center" style={{borderColor:"rgba(212,175,55,0.2)"}}><p className="text-[11px] font-semibold tracking-widest uppercase text-[#AA8C2C]">Premium Education</p></div>
         </div>
-        <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" style={{background:"rgba(255,255,255,0.94)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.12)",boxShadow:"0 12px 60px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.98)"}}>
-          <div className="mb-7"><p className="text-[10px] tracking-[0.25em] uppercase mb-2" style={{color:"var(--c-indigo)",letterSpacing:"0.15em",fontWeight:600}}>Welcome</p><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.6rem",lineHeight:1.3,color:"#1a1628"}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1><div className="mt-3 h-px max-w-[120px]" style={{background:"linear-gradient(90deg,rgba(108,99,255,0.3),transparent)"}}/></div>
-          <div className="space-y-3 max-w-sm">
-            <div><label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>아이디</label><input className="lux-input w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            <div><label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            {err&&<p className="text-xs px-3 py-2 rounded-xl" style={{color:"#e05555",background:"rgba(224,85,85,0.07)",fontFamily:"'Montserrat',sans-serif"}}>{err}</p>}
-            <button onClick={go} disabled={ld} className="w-full py-3.5 rounded-2xl font-semibold text-sm relative overflow-hidden transition-all duration-300 disabled:opacity-60" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.12em",background:"linear-gradient(135deg,#1a1040 0%,#2d2060 40%,#1a1040 100%)",color:"white",boxShadow:"0 4px 24px rgba(108,99,255,0.35)"}}><span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+        <div className="flex-1 rounded-[32px] p-10 flex flex-col justify-center glass-card-strong">
+          <div className="mb-8 pl-4 border-l-[3px] border-[#D4AF37]">
+            <p className="text-[11px] font-bold tracking-[0.2em] uppercase mb-2 text-[#AA8C2C]">Members Only</p>
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.2rem",lineHeight:1.3,color:"#111"}}>흐릿한 시작을,<br/>뚜렷한 선택으로.</h1>
+          </div>
+          <div className="space-y-4 max-w-[360px] pl-4">
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#666]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#666]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50">{err}</p>}
+            <button onClick={go} disabled={ld} className="btn-gold w-full mt-3 py-4 rounded-2xl font-bold text-sm relative overflow-hidden disabled:opacity-70"><span className="relative z-10 drop-shadow-md tracking-[0.15em]">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
           </div>
         </div>
       </div>
-      {/* 모바일 — 컴팩트: 간격 줄이고 프로필 가운데 정렬 */}
-      <div className={`md:hidden w-full max-w-xs transition-all duration-700 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-2xl p-4 px-5 mb-4 border" style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderColor:"rgba(255,255,255,0.14)",boxShadow:"0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.12)"}}>
-          <div className="flex items-center gap-4 justify-center">
-            <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.35)",boxShadow:"0 0 0 3px rgba(212,175,55,0.08),0 6px 20px rgba(0,0,0,0.5)"}}/>
-            <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-white" style={{fontFamily:"'Playfair Display',serif"}}>{nm}</h2>
-              {bio&&<div className="text-[9px] mt-0.5 line-clamp-2" style={{color:"rgba(255,255,255,0.5)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{bio}</div>}
-            </div>
+      
+      {/* 모바일 */}
+      <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+        <div className="rounded-[28px] p-5 mb-5 glass-card flex items-center gap-4 justify-center">
+          <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.6)", padding:"3px", background:"#fff", boxShadow:"0 4px 12px rgba(212,175,55,0.15)"}}/>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-[#111]" style={{fontFamily:"var(--font-serif)"}}>{nm}</h2>
+            {bio&&<div className="text-[11px] mt-0.5 line-clamp-2 text-[#666]">{bio}</div>}
           </div>
         </div>
-        <div className="rounded-2xl p-5 border" style={{background:"rgba(255,255,255,0.94)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(108,99,255,0.1)",boxShadow:"0 10px 50px rgba(0,0,0,0.24),inset 0 1px 0 rgba(255,255,255,0.98)"}}>
-          <h1 className="mb-4" style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:"#1a1628",lineHeight:1.35}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1>
-          <div className="rounded-xl px-3 py-2 mb-3" style={{background:"rgba(108,99,255,0.04)",border:"1px solid rgba(108,99,255,0.1)"}}><p className="text-[10px]" style={{color:"rgba(100,100,130,0.7)",fontFamily:"'Montserrat',sans-serif"}}>아이디: <span style={{fontWeight:500,color:"rgba(80,80,110,0.8)"}}>이름+학부모번호뒷4자리</span></p><p className="text-[10px]" style={{color:"rgba(100,100,130,0.7)",fontFamily:"'Montserrat',sans-serif"}}>비밀번호: <span style={{fontWeight:500,color:"rgba(80,80,110,0.8)"}}>학부모번호뒷4자리</span></p></div>
-          <div className="space-y-2.5">
-            <input className="lux-input w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+        <div className="rounded-[28px] p-6 glass-card-strong">
+          <div className="mb-6 pl-3 border-l-[2px] border-[#D4AF37]">
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.6rem",color:"#111",lineHeight:1.3}}>흐릿한 시작을,<br/>뚜렷한 선택으로.</h1>
           </div>
-          {err&&<p className="text-xs px-3 py-1.5 rounded-lg mt-2" style={{color:"#e05555",background:"rgba(224,85,85,0.07)",fontFamily:"'Montserrat',sans-serif"}}>{err}</p>}
-          <button onClick={go} disabled={ld} className="w-full py-3 rounded-xl text-sm mt-3 relative overflow-hidden transition-all duration-300 disabled:opacity-60" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.12em",fontWeight:600,background:"linear-gradient(135deg,#1a1040,#2d2060)",color:"white",boxShadow:"0 4px 20px rgba(108,99,255,0.3)"}}><span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          <div className="rounded-2xl px-4 py-3 mb-5 bg-white/60 border border-[#D4AF37]/20">
+            <p className="text-[11px] text-[#555] mb-1">아이디: <span className="font-semibold text-[#222]">이름+학부모번호뒷4자리</span></p>
+            <p className="text-[11px] text-[#555]">비밀번호: <span className="font-semibold text-[#222]">학부모번호뒷4자리</span></p>
+          </div>
+          <div className="space-y-3">
+            <input className="lux-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          </div>
+          {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50">{err}</p>}
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-3.5 rounded-2xl font-bold text-sm relative overflow-hidden disabled:opacity-70 tracking-[0.1em]"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
 
     {/* 후기 슬라이더 */}
-    {reviews.length>0&&<div className={`relative z-10 pb-6 pt-2 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-[10px] tracking-[0.3em] uppercase mb-3" style={{color:"rgba(255,255,255,0.35)",letterSpacing:"0.2em"}}>Student Reviews</p>
+    {reviews.length>0&&<div className={`relative z-10 pb-8 pt-6 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <p className="text-center text-[11px] font-bold tracking-[0.3em] uppercase mb-5 text-[#AA8C2C] opacity-90">Student Reviews</p>
       <div className="overflow-hidden">
-        <div className="flex gap-4 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-64 flex-shrink-0 rounded-2xl p-4 border cursor-default transition-all duration-300" style={{background:hasBestGrade?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderColor:hasBestGrade?"rgba(108,99,255,0.3)":"rgba(255,255,255,0.1)",boxShadow:hasBestGrade?"0 4px 24px rgba(0,0,0,0.2),inset 0 1px 0 rgba(108,99,255,0.2)":"0 4px 16px rgba(0,0,0,0.15)"}}>
-            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{background:"rgba(255,255,255,0.12)"}}>{animalIcon}</div><div><span className="text-[11px] font-semibold text-white block leading-none pb-0.5" style={{fontFamily:"'Montserrat',sans-serif"}}>{r.display_name||"학생"}</span><span className="text-[9px]" style={{color:"rgba(255,255,255,0.35)",fontFamily:"'Montserrat',sans-serif"}}>{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-0.5 rounded-lg" style={{color:"rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",fontFamily:"'Montserrat',sans-serif"}}>수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{color:"#fff",background:"linear-gradient(135deg,rgba(108,99,255,0.85),rgba(90,82,224,0.8))"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-medium px-1.5 py-0.5 rounded-full" style={{color:"rgba(180,176,255,0.9)",background:"rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif"}}>#{kw}</span>))}</div>}
-            <p className="text-[10px] leading-relaxed review-clamp" style={{color:"rgba(255,255,255,0.6)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{r.content}</p>
+        <div className="flex gap-5 review-scroll pl-4">
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-72 flex-shrink-0 rounded-[28px] p-6 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.25)",boxShadow:hasBestGrade?"0 8px 30px rgba(212,175,55,0.12),inset 0 1px 0 rgba(255,255,255,0.9)":"0 4px 20px rgba(0,0,0,0.03)"}}>
+            <div className="flex items-center gap-3 mb-3"><div className="w-9 h-9 rounded-full flex items-center justify-center text-sm bg-white border border-[#D4AF37]/40 shadow-sm">{animalIcon}</div><div><span className="text-[13px] font-bold text-[#111] block leading-none pb-1" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[10px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-1 rounded-lg font-bold bg-white text-[#888] border border-[#eee]">수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-3"><span className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white shadow-sm" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1 mb-3">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-bold px-2 py-1 rounded-full text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/20">#{kw}</span>))}</div>}
+            <p className="text-[12px] leading-relaxed review-clamp text-[#444]">{r.content}</p>
           </div>)})}
         </div>
       </div>
       <style>{`
-        .review-scroll{animation:reviewScroll ${Math.max(reviews.length*8,25)}s linear infinite;}
+        .review-scroll{animation:reviewScroll ${Math.max(reviews.length*8,30)}s linear infinite;}
         .review-scroll:hover{animation-play-state:paused;}
-        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-272px * ${reviews.length}))}}
+        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-308px * ${reviews.length}))}}
         .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
       `}</style>
     </div>}
