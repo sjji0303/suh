@@ -236,9 +236,18 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   };
   const[notifs,setNotifs]=useState<any[]>([]);const[showNotif,setShowNotif]=useState(false);
   const unreadCount=notifs.filter(n=>!n.is_read).length;
-  const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data)setNotifs(data);};
+  const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data){const prev=notifs;setNotifs(data);// 새 성적 알림이 있으면 현재 시험 재로드
+    const hasNewGrade=data.some((n:any)=>!n.is_read&&n.type==="grade");const hadNewGrade=prev.some((n:any)=>!n.is_read&&n.type==="grade");if(hasNewGrade&&!hadNewGrade&&tests.length>0){ld(tests[idx]);}}};
+
   const markAllRead=async()=>{await supabase.from("notifications").update({is_read:true}).eq("user_id",user.id).eq("is_read",false);fNotifs();};
   useEffect(()=>{fNotifs();},[]);
+  // 30초마다 현재 시험 정답률 재조회 → 최다오답 항상 최신 유지
+  useEffect(()=>{
+    if(!tests.length)return;
+    const timer=setInterval(()=>{if(tab==="grades")ld(tests[idx]);},30000);
+    return()=>clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[tab,tests,idx]);
   // 등수 향상 시 confetti (퍼센타일 기준, 5% 초과 상승)
   useEffect(()=>{
     if(rankHistory.length>=2){
@@ -406,27 +415,36 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         .grade-label { font-size: 11px; letter-spacing: 0.12em; margin-bottom: 6px; }
       }
       .grade-value-sm {
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 700;
         letter-spacing: -0.01em;
-        color: #334155;
+        color: #1e293b;
         line-height: 1.3;
         word-break: keep-all;
       }
       .grade-value {
-        font-size: 16px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        color: #334155;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #1e293b;
         line-height: 1.2;
         word-break: keep-all;
         overflow-wrap: break-word;
       }
       @media (min-width: 640px) {
         .grade-value { font-size: 15px; }
+        .grade-value-sm { font-size: 15px; }
       }
       @media (min-width: 1024px) {
         .grade-value { font-size: 15px; }
+        .grade-value-sm { font-size: 15px; }
+      }
+      .grade-stat {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #1e293b;
+        line-height: 1.2;
       }
       .shimmer-action-btn {
         background: linear-gradient(135deg, #DFBE52 0%, #D4AF37 50%, #B5952F 100%);
@@ -463,7 +481,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group text-center"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 점수 + 등수변화 */}
           <div className="space-y-5 mb-5">
-                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-3 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl font-bold leading-none tracking-tight" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-xl font-semibold leading-none tracking-tight mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-4 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl font-bold leading-none tracking-tight" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">반 평균</p><p className="grade-stat mt-1">{info.class_average}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">표준편차</p><p className="grade-stat mt-1">{info.std_dev||"—"}<span className="text-xs font-bold ml-1 text-slate-400">{info.std_dev?"점":""}</span></p></div><div><p className="grade-label">최고 점수</p><p className="grade-stat mt-1">{info.class_best}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   const data=rankHistory.map(h=>{const pct=h.total<=1?50:Math.round(((h.total-h.rank)/(h.total-1))*100);return{date:h.date,pct,rank:h.rank,total:h.total};});
                   const w=320;const h=140;const px=20;const py=20;const gw=w-px*2;const gh=h-py*2;
@@ -473,15 +491,16 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   const last=points[points.length-1];
                   const diff=prev?last.pct-prev.pct:0;
                   const status=Math.abs(diff)<=5?"maintain":diff>0?"up":"down";
-                  return(<div className="ios-glass-card p-4 sm:p-6 relative z-10">
-                    <div className="flex items-center justify-between mb-4">
+                  return(<div className="ios-glass-card p-4 sm:p-6 relative z-10 flex flex-col justify-between" style={{minHeight:"160px"}}>
+                    <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-base">등수 변화</h3>
                       {prev&&status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
                       {prev&&status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
                       {prev&&status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
                       {!prev&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                     </div>
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"160px"}}>
+                    <div className="flex-1 flex items-center">
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{maxHeight:"130px"}}>
                     <defs><linearGradient id="rankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D4AF37" stopOpacity="0.18"/><stop offset="100%" stopColor="#D4AF37" stopOpacity="0"/></linearGradient></defs>
                     {line&&<><path d={`${line} L${points[points.length-1].x},${py+gh} L${points[0].x},${py+gh} Z`} fill="url(#rankGrad)"/>
                     <path d={line} fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></>}
@@ -490,6 +509,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                       <text x={p.x} y={h-2} textAnchor="middle" fontSize="8" fill="#94a3b8">{p.date.slice(5)}</text>
                     </g>))}
                   </svg>
+                    </div>
                 </div>);
               })()}
           </div>
