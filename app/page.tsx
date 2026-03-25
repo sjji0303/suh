@@ -433,7 +433,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#D4AF37] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
-          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{(()=>{const r=info.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const hasB=r.includes("추가과제👍");const num=r.replace("+추가과제👍","").replace(/%/g,"").trim();return num?(num+"%"+(hasB?"+추가과제👍":"")):"—";})()}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{(()=>{const r=info.wrong_answer_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";return r.replace(/%/g,"").trim()+"%";})()}</p></div></div>}
+          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{(()=>{const r=info.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const hasB=r.includes("추가과제👍");const num=r.replace("+ 추가과제 👍","").replace("+추가과제👍","").replace(/%/g,"").trim();return num?(num+"% "+(hasB?"+ 추가과제 👍":"")):"—";})()}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{(()=>{const r=info.wrong_answer_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";return r.replace(/%/g,"").trim()+"%";})()}</p></div></div>}
           {/* 2. 개인 코멘트 */}
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group text-center"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 점수 + 등수변화 */}
@@ -829,7 +829,11 @@ function AdminClassManager({users}:{users:any[]}){
     const ranked=members.filter((m:any)=>hasA(m.user_id)).map((m:any)=>({uid:m.user_id,score:getS(m.user_id)})).sort((a,b)=>b.score-a.score);
     for(let i=0;i<ranked.length;i++){const rank=i+1;const{error:rkErr}=await supabase.from("test_student_info").update({rank}).eq("test_id",testId).eq("student_id",ranked[i].uid);if(rkErr)errors.push("등수저장:"+rkErr.message);}
     if(errors.length>0)setSaveMsg("❌ "+errors.slice(0,3).join(" | "));
-    else{setSaveMsg("✅ 저장 완료!");for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}
+    else{setSaveMsg("✅ 저장 완료!");
+      // 저장 후 문항별 정답률 재조회 → 최다 오답 TOP3 즉시 반영
+      const{data:freshQs}=await supabase.from("test_questions").select("*").eq("test_id",testId).order("question_number");
+      if(freshQs)setQs(freshQs);
+      for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}
       // 자동 서서갈비 지급 (오답/과제 성취도 기준)
       try{
         const{data:stData}=await supabase.from("site_settings").select("*");const st:any={};if(stData)stData.forEach((r:any)=>{st[r.key]=r.value;});
@@ -906,15 +910,15 @@ function AdminClassManager({users}:{users:any[]}){
 <td className="px-1 py-1" style={{minWidth:"110px"}}><div className="flex flex-col gap-1">
   <input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" placeholder="(예)90"
     disabled={(inf.assignment_score||"").startsWith("미제출")}
-    value={(inf.assignment_score||"").startsWith("미제출")?"":((inf.assignment_score||"").replace("+추가과제👍","").trim())}
-    onChange={e=>{const hasB=(inf.assignment_score||"").includes("추가과제👍");setIC(uid,"assignment_score",e.target.value.trim()+(hasB?"+추가과제👍":""));}}
+    value={(inf.assignment_score||"").startsWith("미제출")?"":((inf.assignment_score||"").replace("+ 추가과제 👍","").trim())}
+    onChange={e=>{const hasB=(inf.assignment_score||"").includes("추가과제👍");setIC(uid,"assignment_score",e.target.value.trim()+(hasB?"+ 추가과제 👍":""));}}
     style={{opacity:(inf.assignment_score||"").startsWith("미제출")?0.35:1}}/>
   <div className="flex gap-2 px-0.5">
     <label className="flex items-center gap-1 cursor-pointer">
       <input type="checkbox" className="w-3 h-3 accent-[#D4AF37]"
         checked={(inf.assignment_score||"").includes("추가과제👍")}
         disabled={(inf.assignment_score||"").startsWith("미제출")}
-        onChange={e=>{const s=(inf.assignment_score||"").replace("+추가과제👍","").trim();setIC(uid,"assignment_score",s+(e.target.checked?"+추가과제👍":""));}}/>
+        onChange={e=>{const s=(inf.assignment_score||"").replace("+ 추가과제 👍","").trim();setIC(uid,"assignment_score",s+(e.target.checked?"+ 추가과제 👍":""));}}/>
       <span className="text-[10px] text-slate-400">추가👍</span>
     </label>
     <label className="flex items-center gap-1 cursor-pointer">
@@ -960,7 +964,7 @@ function AdminClassManager({users}:{users:any[]}){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
           <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>출석</p><p style={{fontSize:"15px",fontWeight:"bold",color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444",margin:"2px 0 0 0"}}>{inf.attendance||"—"}</p></div>
           <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>클리닉</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{inf.clinic_time||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{(()=>{const r=inf.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const hasB=r.includes("추가과제👍");const num=r.replace("+추가과제👍","").replace(/%/g,"").trim();return num?(num+"%"+(hasB?"+추가과제👍":"")):"—";})()}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{(()=>{const r=inf.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const hasB=r.includes("추가과제👍");const num=r.replace("+ 추가과제 👍","").replace("+추가과제👍","").replace(/%/g,"").trim();return num?(num+"% "+(hasB?"+ 추가과제 👍":"")):"—";})()}</p></div>
           <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>오답 성취도</p><p style={{fontSize:"15px",fontWeight:"600",margin:"2px 0 0 0"}}>{(()=>{const r=inf.wrong_answer_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";return r.replace(/%/g,"").trim()+"%";})()}</p></div>
         </div>
         {/* 개인 코멘트 */}
