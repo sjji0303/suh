@@ -277,98 +277,32 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
-      /* ── Liquid Glass Card ── */
-      @keyframes lgShimmer {
-        0%   { transform: translateX(-180%) skewX(-20deg); opacity: 0; }
-        8%   { opacity: 1; }
-        42%  { transform: translateX(220%) skewX(-20deg); opacity: 0; }
-        100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
-      }
-      @keyframes lgIridescent {
-        0%   { background-position: 0% 50%; }
-        50%  { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-
       .ios-glass-card {
-        position: relative;
         border-radius: 20px;
-        /* 핵심: 투명한 유리 배경 */
-        background: linear-gradient(
-          135deg,
-          rgba(255,255,255,0.55) 0%,
-          rgba(255,255,255,0.25) 40%,
-          rgba(255,255,255,0.40) 100%
-        );
-        backdrop-filter: blur(32px) saturate(180%) brightness(1.02);
-        -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(1.02);
-        /* 골드 테두리 — 위아래 두께 다르게 해서 유리 엣지 굴절 표현 */
-        border-top: 1.5px solid rgba(255,255,255,0.85);
+        background: linear-gradient(145deg,
+          rgba(255,255,255,0.58) 0%,
+          rgba(255,255,255,0.28) 50%,
+          rgba(255,255,255,0.48) 100%);
+        backdrop-filter: blur(28px) saturate(160%);
+        -webkit-backdrop-filter: blur(28px) saturate(160%);
+        border-top: 1.5px solid rgba(255,255,255,0.88);
         border-left: 1.5px solid rgba(255,255,255,0.6);
-        border-right: 1px solid rgba(212,175,55,0.45);
-        border-bottom: 1px solid rgba(212,175,55,0.5);
-        /* 그림자: 외부 골드 glow + 내부 하이라이트 */
+        border-right: 1px solid rgba(212,175,55,0.4);
+        border-bottom: 1px solid rgba(212,175,55,0.45);
         box-shadow:
-          0 2px 0 rgba(255,255,255,0.9) inset,
-          0 -1px 0 rgba(212,175,55,0.2) inset,
-          1px 0 0 rgba(255,255,255,0.5) inset,
-          0 8px 32px rgba(212,175,55,0.10),
-          0 2px 8px rgba(0,0,0,0.06);
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+          inset 0 2px 0 rgba(255,255,255,0.82),
+          inset 0 -1px 0 rgba(212,175,55,0.14),
+          0 8px 32px rgba(212,175,55,0.08),
+          0 2px 8px rgba(0,0,0,0.05);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
       }
-
-      /* 상단 유리 하이라이트 — pointer-events:none 으로 클릭 방해 안 함 */
-      .ios-glass-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 38%;
-        background: linear-gradient(180deg,
-          rgba(255,255,255,0.52) 0%,
-          rgba(255,255,255,0.08) 70%,
-          transparent 100%);
-        border-radius: 20px 20px 0 0;
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      /* 무지개 굴절 쉬머 — 엣지에서만 빛나는 느낌 */
-      .ios-glass-card::after {
-        content: "";
-        position: absolute;
-        top: 0; left: 0;
-        width: 55%; height: 100%;
-        background: linear-gradient(
-          105deg,
-          transparent 20%,
-          rgba(255,220,180,0.06) 30%,
-          rgba(255,255,255,0.22) 42%,
-          rgba(200,220,255,0.06) 54%,
-          transparent 65%
-        );
-        transform: translateX(-180%) skewX(-20deg);
-        animation: lgShimmer 6s cubic-bezier(0.4,0,0.2,1) infinite;
-        pointer-events: none;
-        z-index: 0;
-      }
-
       .ios-glass-card:hover {
         transform: translateY(-2px);
-        border-right-color: rgba(212,175,55,0.7);
-        border-bottom-color: rgba(212,175,55,0.7);
         box-shadow:
-          0 2px 0 rgba(255,255,255,0.95) inset,
-          0 -1px 0 rgba(212,175,55,0.25) inset,
-          1px 0 0 rgba(255,255,255,0.6) inset,
-          0 16px 48px rgba(212,175,55,0.14),
-          0 4px 16px rgba(0,0,0,0.07);
-      }
-
-      /* 카드 안 콘텐츠가 ::before/::after 위로 오게 */
-      .ios-glass-card > * {
-        position: relative;
-        z-index: 1;
+          inset 0 2px 0 rgba(255,255,255,0.95),
+          inset 0 -1px 0 rgba(212,175,55,0.22),
+          0 16px 48px rgba(212,175,55,0.12),
+          0 4px 12px rgba(0,0,0,0.06);
       }
       .grade-label {
         font-size: 10px;
