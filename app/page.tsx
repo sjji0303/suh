@@ -278,23 +278,70 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
       .ios-glass-card {
-        background: rgba(255,255,255,0.72);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
-        border-radius: 20px;
-        border: 1.5px solid rgba(212,175,55,0.5);
+        /* 투명한 리퀴드 글라스 배경 */
+        background: linear-gradient(
+          145deg,
+          rgba(255,255,255,0.62) 0%,
+          rgba(255,255,255,0.35) 50%,
+          rgba(255,255,255,0.55) 100%
+        );
+        backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
+        -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
+        border-radius: 22px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* 골드 테두리 + 내부 하이라이트 */
+        border: 1px solid rgba(212,175,55,0.55);
         box-shadow:
-          0 4px 24px rgba(212,175,55,0.08),
-          0 1px 4px rgba(0,0,0,0.04),
-          inset 0 1px 0 rgba(255,255,255,0.9);
-        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          0 0 0 1px rgba(255,255,255,0.55),
+          0 8px 32px rgba(212,175,55,0.10),
+          0 2px 8px rgba(0,0,0,0.04),
+          inset 0 1px 0 rgba(255,255,255,0.88),
+          inset 0 -1px 0 rgba(212,175,55,0.12);
       }
       .ios-glass-card:hover {
+        transform: translateY(-2px);
         border-color: rgba(212,175,55,0.8);
         box-shadow:
-          0 8px 32px rgba(212,175,55,0.14),
-          0 2px 8px rgba(0,0,0,0.05),
-          inset 0 1px 0 rgba(255,255,255,0.95);
+          0 0 0 1px rgba(255,255,255,0.7),
+          0 16px 48px rgba(212,175,55,0.16),
+          0 4px 12px rgba(0,0,0,0.06),
+          inset 0 1px 0 rgba(255,255,255,0.95),
+          inset 0 -1px 0 rgba(212,175,55,0.18);
+      }
+      /* 상단 유리 하이라이트 */
+      .ios-glass-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 45%;
+        background: linear-gradient(180deg,
+          rgba(255,255,255,0.5) 0%,
+          rgba(255,255,255,0) 100%);
+        border-radius: 22px 22px 0 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+      /* 빛 쉬머 */
+      .ios-glass-card::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -150%; width: 45%; height: 100%;
+        background: linear-gradient(to right,
+          transparent,
+          rgba(255,255,255,0.65),
+          transparent);
+        transform: skewX(-20deg);
+        animation: iosShimmerAnim 7s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 2;
+      }
+      @keyframes iosShimmerAnim {
+        0%   { left: -150%; opacity: 0; }
+        10%  { opacity: 1; }
+        45%  { left: 200%; opacity: 0; }
+        100% { left: 200%; opacity: 0; }
       }
       .grade-label {
         font-size: 10px;
@@ -340,14 +387,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="ios-glass-card p-4 sm:p-6 flex flex-col min-h-[280px]">
+              <div className="ios-glass-card p-4 sm:p-6 flex flex-col">
                 <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
                 <div className="space-y-1.5 flex-1 relative z-10">
                   {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
                 </div>
               </div>
               <div className="space-y-5">
-                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-5 sm:gap-y-6 gap-x-3 sm:gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-3xl sm:text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-2xl sm:text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-3 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl sm:text-3xl leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-xl sm:text-2xl leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
                   const maxVal=Math.max(...data.map(d=>d.total),1);
