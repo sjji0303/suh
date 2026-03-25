@@ -64,27 +64,39 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       }
       
       .glass-card {
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(24px) saturate(160%);
-        -webkit-backdrop-filter: blur(24px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.45);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(12px) contrast(105%) saturate(120%);
+        -webkit-backdrop-filter: blur(12px) contrast(105%) saturate(120%);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-right-color: rgba(255, 255, 255, 0.2);
+        border-bottom-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 
+          0 10px 30px rgba(0, 0, 0, 0.05),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+          inset -1px -1px 2px rgba(0, 0, 0, 0.02);
       }
       
       .glass-card-strong {
-        background: rgba(255, 255, 255, 0.45);
-        backdrop-filter: blur(28px) saturate(160%);
-        -webkit-backdrop-filter: blur(28px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 100%);
+        backdrop-filter: blur(16px) contrast(105%) saturate(120%);
+        -webkit-backdrop-filter: blur(16px) contrast(105%) saturate(120%);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-right-color: rgba(255, 255, 255, 0.25);
+        border-bottom-color: rgba(255, 255, 255, 0.25);
+        box-shadow: 
+          0 15px 40px rgba(0, 0, 0, 0.08),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.95),
+          inset -1px -1px 2px rgba(0, 0, 0, 0.02);
       }
 
       .lux-input {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(8px) saturate(150%);
-        -webkit-backdrop-filter: blur(8px) saturate(150%);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: none;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px) contrast(105%) saturate(120%);
+        -webkit-backdrop-filter: blur(8px) contrast(105%) saturate(120%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-right-color: rgba(255, 255, 255, 0.1);
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+        box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.03);
         color: #222;
         transition: all 0.3s;
       }
@@ -106,17 +118,19 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     <div className="flex flex-col items-center justify-start md:justify-center pt-12 md:pt-16 px-4 relative z-10 w-full flex-shrink-0">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
-        <div className="w-[320px] flex-shrink-0 rounded-[36px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
-          <div className="text-center mb-6 relative z-10">
-            <div className="relative inline-block mb-5">
-              <img src={pi} alt="" className="w-[168px] h-[168px] rounded-full shadow-2xl object-cover transition-transform duration-500 hover:scale-105" style={{border:"4px solid rgba(212,175,55,0.8)", padding:"5px", background:"#fff", margin:"0 auto"}}/>
+        <div className="w-[440px] flex-shrink-0 rounded-[36px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
+          <div className="flex flex-row items-center gap-6 relative z-10 mt-2 mb-6">
+            <div className="flex-shrink-0">
+              <img src={pi} alt="" className="w-[130px] h-[130px] rounded-full shadow-2xl object-cover transition-transform duration-500 hover:scale-105" style={{border:"4px solid rgba(212,175,55,0.8)", padding:"4px", background:"#fff"}}/>
             </div>
-            <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
-            <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
+            <div className="flex flex-col text-left flex-1">
+              <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
+              <div className="flex items-center justify-start gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/></div>
+              {bioLines.length>0&&<div className="text-[12px] leading-relaxed text-[#444]">
+                {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
+              </div>}
+            </div>
           </div>
-          {bioLines.length>0&&<div className="text-[13px] leading-relaxed text-center px-4 text-[#444] relative z-10">
-            {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
-          </div>}
           <div className="mt-auto pt-6 border-t text-center relative z-10" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">AGREESUH</p></div>
         </div>
         <div className="flex-1 rounded-[36px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
