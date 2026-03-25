@@ -60,18 +60,22 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       }
 
       .glass-card {
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        border: 1px solid rgba(212, 175, 55, 0.4);
-        box-shadow: 0 12px 48px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1);
+        background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-right-color: rgba(255,255,255,0.2);
+        border-bottom-color: rgba(255,255,255,0.2);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.8), inset 0 0 20px rgba(255,255,255,0.5);
       }
       .glass-card-strong {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
-        border: 1px solid rgba(212, 175, 55, 0.7);
-        box-shadow: 0 16px 64px rgba(212,175,55,0.15), inset 0 1px 0 rgba(255,255,255,1);
+        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.5) 100%);
+        backdrop-filter: blur(48px) saturate(200%);
+        -webkit-backdrop-filter: blur(48px) saturate(200%);
+        border: 1px solid rgba(255,255,255,0.8);
+        border-right-color: rgba(255,255,255,0.3);
+        border-bottom-color: rgba(255,255,255,0.3);
+        box-shadow: 0 30px 80px rgba(212,175,55,0.15), inset 0 2px 6px rgba(255,255,255,1), inset 0 0 30px rgba(255,255,255,0.6);
       }
 
       .lux-input {
@@ -284,18 +288,24 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         100% { left: 200%; opacity: 0; }
       }
       .grade-label {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
         color: #94a3b8;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+      }
+      @media (min-width: 640px) {
+        .grade-label { font-size: 11px; letter-spacing: 0.1em; margin-bottom: 6px; }
       }
       .grade-value {
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 800;
         letter-spacing: -0.02em;
         color: #334155;
+      }
+      @media (min-width: 640px) {
+        .grade-value { font-size: 22px; }
       }
     `}</style>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
@@ -316,19 +326,19 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#D4AF37] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
-          {info&&<div className="ios-glass-card p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
+          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
           {/* 2. 개인 코멘트 */}
-          {info?.comment&&<div className="ios-glass-card p-6 mb-5 relative group" style={{borderLeft:"4px solid #D4AF37"}}><p className="text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[15px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
+          {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group" style={{borderLeft:"4px solid #D4AF37"}}><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="ios-glass-card p-6 flex flex-col min-h-[280px]">
+              <div className="ios-glass-card p-4 sm:p-6 flex flex-col min-h-[280px]">
                 <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
                 <div className="space-y-1.5 flex-1 relative z-10">
                   {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
                 </div>
               </div>
               <div className="space-y-5">
-                {info&&<div className="ios-glass-card p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-6 gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-5 sm:gap-y-6 gap-x-3 sm:gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-3xl sm:text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-2xl sm:text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
                   const maxVal=Math.max(...data.map(d=>d.total),1);
@@ -337,7 +347,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   const line=points.length>1?points.map((p,i)=>(i===0?"M":"L")+`${p.x},${p.y}`).join(" "):"";
                   const prev=points.length>=2?points[points.length-2]:null;
                   const diff=prev?prev.rank-points[points.length-1].rank:0;
-                  return(<div className="ios-glass-card p-6 relative z-10">
+                  return(<div className="ios-glass-card p-4 sm:p-6 relative z-10">
                     <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-base">등수 변화</h3>
                     {prev&&diff!==0&&<span className={`text-sm font-bold px-3 py-1 rounded-lg ${diff>0?"bg-green-50 text-green-600":"bg-red-50 text-red-500"}`}>{diff>0?"📈 저번보다 잘봄":"📉 저번보다 못봄"}</span>}
