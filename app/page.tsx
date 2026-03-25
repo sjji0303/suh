@@ -90,7 +90,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     <div className="absolute z-0 rounded-full pointer-events-none opacity-50 mix-blend-multiply" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
 
     {/* 메인 영역 */}
-    <div className="flex flex-col items-center justify-center pt-8 md:pt-16 px-4 relative z-10 w-full flex-shrink-0">
+    <div className="flex flex-col items-center justify-start md:justify-center pt-6 md:pt-16 px-4 relative z-10 w-full flex-shrink-0">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
         <div className="w-[320px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
@@ -123,45 +123,45 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         </div>
       </div>
       
-      {/* 모바일 (특히 온라인에서 가장 중요한 부분) - 85% 크기 축소 축소로 리뷰를 더 위로 끌어올림 */}
-      <div className={`md:hidden w-full max-w-sm origin-top transform scale-[0.85] -mb-16 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-[30px] p-7 glass-card-strong relative overflow-hidden">
-          <div className="mb-6 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
-            <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-2 text-[#AA8C2C]">AGREESUH</p>
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.75rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
+      {/* 모바일 (특히 온라인에서 가장 중요한 부분) */}
+      <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
+        <div className="rounded-[28px] p-6 glass-card-strong relative overflow-hidden">
+          <div className="mb-5 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
+            <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-1.5 text-[#AA8C2C]">AGREESUH</p>
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.6rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
               <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
               <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
             </h1>
           </div>
-          <div className="rounded-[28px] p-5 mb-5 bg-white/50 border border-[#D4AF37]/30 flex items-center gap-4 justify-center shadow-md relative z-10 backdrop-blur-md">
-            <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.8)", padding:"2px", background:"#fff", boxShadow:"0 6px 16px rgba(212,175,55,0.25)"}}/>
+          <div className="rounded-[24px] p-4 mb-5 bg-white/60 border border-[#D4AF37]/30 flex items-center gap-4 justify-center shadow-sm relative z-10 backdrop-blur-md">
+            <img src={pi} alt="" className="w-14 h-14 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.8)", padding:"2px", background:"#fff", boxShadow:"0 4px 12px rgba(212,175,55,0.15)"}}/>
             <div className="min-w-0 flex-1">
-              <h2 className="text-[18px] text-[#111]" style={{fontFamily:"var(--font-serif)", fontWeight:800}}>{nm}</h2>
+              <h2 className="text-[17px] text-[#111]" style={{fontFamily:"var(--font-serif)", fontWeight:800}}>{nm}</h2>
               {bioLines.length>0&&<div className="text-[11px] mt-1 text-[#555] leading-relaxed font-medium">
                 {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
               </div>}
             </div>
           </div>
-          <div className="space-y-3.5 relative z-10">
-            <input className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-[20px] px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          <div className="space-y-3 relative z-10">
+            <input className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
           {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50/80 border border-red-100">{err}</p>}
-          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-4 rounded-[20px] font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-3.5 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
 
     {/* 후기 슬라이더 */}
-    {reviews.length>0&&<div className={`relative z-10 pb-8 pt-8 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-[10px] font-bold tracking-[0.3em] uppercase mb-6 text-[#AA8C2C] opacity-90 drop-shadow-sm">Student Reviews</p>
+    {reviews.length>0&&<div className={`relative z-10 mt-auto pb-8 pt-4 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <p className="text-center text-[10px] font-bold tracking-[0.3em] uppercase mb-4 text-[#AA8C2C] opacity-90 drop-shadow-sm">Student Reviews</p>
       <div className="overflow-hidden">
-        <div className="flex gap-5 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[280px] flex-shrink-0 rounded-[28px] p-6 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.3)",boxShadow:hasBestGrade?"0 12px 40px rgba(212,175,55,0.15),inset 0 1px 0 rgba(255,255,255,1)":"0 8px 30px rgba(0,0,0,0.05)"}}>
-            <div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 rounded-full flex items-center justify-center text-[15px] bg-white border border-[#D4AF37]/50 shadow-md">{animalIcon}</div><div><span className="text-[14px] font-bold text-[#111] block leading-none pb-1.5" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[10px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-1 rounded-lg font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-3.5"><span className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-md inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-3.5">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-bold px-2 py-1 rounded-lg text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/25 mix-blend-multiply">#{kw}</span>))}</div>}
-            <p className="text-[12.5px] leading-[1.6] review-clamp text-[#333] font-medium">{r.content}</p>
+        <div className="flex gap-4 review-scroll pl-4">
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[260px] flex-shrink-0 rounded-[28px] p-5 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.3)",boxShadow:hasBestGrade?"0 12px 40px rgba(212,175,55,0.15),inset 0 1px 0 rgba(255,255,255,1)":"0 8px 30px rgba(0,0,0,0.05)"}}>
+            <div className="flex items-center gap-3 mb-3"><div className="w-9 h-9 rounded-full flex items-center justify-center text-[15px] bg-white border border-[#D4AF37]/50 shadow-md">{animalIcon}</div><div><span className="text-[13px] font-bold text-[#111] block leading-none pb-1" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[10px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-1 rounded-lg font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-3"><span className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-md inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-3">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-bold px-2 py-1 rounded-lg text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/25 mix-blend-multiply">#{kw}</span>))}</div>}
+            <p className="text-[12px] leading-[1.6] review-clamp text-[#333] font-medium">{r.content}</p>
           </div>)})}
         </div>
       </div>
