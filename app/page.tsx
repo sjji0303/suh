@@ -15,8 +15,14 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
   const bg=(settings.background_image&&settings.background_image.length>5)?settings.background_image:"/lecture-bg.jpg";
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
   return(<div className="min-h-screen relative flex flex-col overflow-hidden bg-[#faf9f7]">
+    {/* 원본 배경 이미지 재적용 및 고급스러운 오버레이 (글래스를 돋보이게) */}
+    <div className="absolute inset-0 z-0 scale-105" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(8px)"}}/>
+    <div className="absolute inset-0 z-0" style={{background:"linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(250,249,247,0.85) 100%)"}}/>
+    <div className="absolute inset-0 z-0 opacity-40" style={{backgroundImage: "radial-gradient(#AA8C2C 0.5px, transparent 0.5px)", backgroundSize: "32px 32px"}} />
+
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+KR:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
+      /* 최고급 명조체(Nanum Myeongjo) 추가 임포트 */
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
 
       :root {
         --c-gold: #D4AF37;
@@ -24,7 +30,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         --c-gold-deep: #AA8C2C;
         --c-bg: #faf9f7;
         --font-sans: 'Noto Sans KR', 'Montserrat', sans-serif;
-        --font-serif: 'Playfair Display', serif;
+        --font-serif: 'Playfair Display', 'Nanum Myeongjo', serif;
       }
 
       body {
@@ -49,114 +55,120 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         transition: all 0.3s ease;
       }
       .btn-gold:hover {
-        box-shadow: 0 8px 24px rgba(212,175,55,0.45);
+        box-shadow: 0 8px 24px rgba(212,175,55,0.5);
         transform: translateY(-2px);
       }
 
       .glass-card {
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        box-shadow: 0 8px 40px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        box-shadow: 0 12px 48px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1);
       }
       .glass-card-strong {
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(32px);
-        -webkit-backdrop-filter: blur(32px);
-        border: 1px solid rgba(212, 175, 55, 0.8);
-        box-shadow: 0 12px 60px rgba(212,175,55,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        border: 1px solid rgba(212, 175, 55, 0.7);
+        box-shadow: 0 16px 64px rgba(212,175,55,0.15), inset 0 1px 0 rgba(255,255,255,1);
       }
 
       .lux-input {
-        background: rgba(255,255,255,0.85);
-        border: 1px solid rgba(212,175,55,0.25);
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(212,175,55,0.3);
         transition: all 0.3s;
       }
       .lux-input:focus {
         border-color: #D4AF37 !important;
         background: #fff;
-        box-shadow: 0 0 0 3px rgba(212,175,55,0.15) !important;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.2) !important;
       }
     `}</style>
-    {/* 배경 데코레이션 */}
-    <div className="absolute inset-0 z-0 bg-[#faf9f7]" style={{backgroundImage: "radial-gradient(#AA8C2C 0.5px, transparent 0.5px)", backgroundSize: "32px 32px", opacity: 0.1}} />
-    <div className="absolute z-0 rounded-full pointer-events-none opacity-50" style={{width:"800px",height:"800px",top:"-10%",right:"-10%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
-    <div className="absolute z-0 rounded-full pointer-events-none opacity-50" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.08) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    {/* 골드 빛망울 포인트 */}
+    <div className="absolute z-0 rounded-full pointer-events-none opacity-60 mix-blend-multiply" style={{width:"800px",height:"800px",top:"-10%",right:"-10%",background:"radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)",filter:"blur(80px)"}}/>
+    <div className="absolute z-0 rounded-full pointer-events-none opacity-60 mix-blend-multiply" style={{width:"600px",height:"600px",bottom:"-15%",left:"-5%",background:"radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)",filter:"blur(80px)"}}/>
 
     {/* 메인 영역 */}
-    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-16 px-4 relative z-10">
+    <div className="md:flex-1 flex items-start justify-center pt-30 md:pt-16 px-4 relative z-10 w-full">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
         <div className="w-[320px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
           <div className="text-center mb-6">
             <div className="relative inline-block mb-5">
-              <img src={pi} alt="" className="w-28 h-28 rounded-full shadow-xl object-cover" style={{border:"3px solid rgba(212,175,55,0.6)", padding:"4px", background:"#fff"}}/>
+              <img src={pi} alt="" className="w-28 h-28 rounded-full shadow-2xl object-cover" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"4px", background:"#fff"}}/>
             </div>
-            <h2 className="text-2xl font-bold mb-2" style={{fontFamily:"var(--font-serif)",color:"#222"}}>{nm}</h2>
-            <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
+            <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
+            <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
           </div>
-          {bio&&<div className="text-[13px] leading-relaxed whitespace-pre-line text-center px-4" style={{color:"#555"}}>{bio}</div>}
-          <div className="mt-auto pt-6 border-t text-center" style={{borderColor:"rgba(212,175,55,0.2)"}}><p className="text-[11px] font-semibold tracking-widest uppercase text-[#AA8C2C]">Premium Education</p></div>
+          {bio&&<div className="text-[13px] leading-relaxed whitespace-pre-line text-center px-4" style={{color:"#444"}}>{bio}</div>}
+          <div className="mt-auto pt-6 border-t text-center" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">Premium Education</p></div>
         </div>
-        <div className="flex-1 rounded-[32px] p-10 flex flex-col justify-center glass-card-strong">
-          <div className="mb-8 pl-4 border-l-[3px] border-[#D4AF37]">
-            <p className="text-[11px] font-bold tracking-[0.2em] uppercase mb-2 text-[#AA8C2C]">Members Only</p>
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.2rem",lineHeight:1.3,color:"#111"}}>흐릿한 시작을,<br/>뚜렷한 선택으로.</h1>
+        <div className="flex-1 rounded-[32px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
+          <div className="mb-8 pl-5 border-l-[3px] border-[#D4AF37]" style={{position: "relative", zIndex: 2}}>
+            <p className="text-[11px] font-bold tracking-[0.25em] uppercase mb-3 text-[#AA8C2C]">Members Only</p>
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.4rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
+              <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
+              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800}}>뚜렷한 선택으로.</strong>
+            </h1>
           </div>
-          <div className="space-y-4 max-w-[360px] pl-4">
-            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#666]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#666]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+          <div className="space-y-4 max-w-[360px] pl-5 relative z-10">
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+            <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50">{err}</p>}
-            <button onClick={go} disabled={ld} className="btn-gold w-full mt-3 py-4 rounded-2xl font-bold text-sm relative overflow-hidden disabled:opacity-70"><span className="relative z-10 drop-shadow-md tracking-[0.15em]">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+            <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em]"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
           </div>
         </div>
       </div>
       
-      {/* 모바일 */}
+      {/* 모바일 (특히 온라인에서 가장 중요한 부분) */}
       <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-[28px] p-5 mb-5 glass-card flex items-center gap-4 justify-center">
-          <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.6)", padding:"3px", background:"#fff", boxShadow:"0 4px 12px rgba(212,175,55,0.15)"}}/>
-          <div className="min-w-0">
-            <h2 className="text-lg font-bold text-[#111]" style={{fontFamily:"var(--font-serif)"}}>{nm}</h2>
-            {bio&&<div className="text-[11px] mt-0.5 line-clamp-2 text-[#666]">{bio}</div>}
+        <div className="rounded-[30px] p-7 glass-card-strong relative overflow-hidden">
+          <div className="mb-7 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
+            <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-2 text-[#AA8C2C]">Members Only</p>
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.75rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
+              <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
+              <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
+            </h1>
           </div>
-        </div>
-        <div className="rounded-[28px] p-6 glass-card-strong">
-          <div className="mb-6 pl-3 border-l-[2px] border-[#D4AF37]">
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.6rem",color:"#111",lineHeight:1.3}}>흐릿한 시작을,<br/>뚜렷한 선택으로.</h1>
+          <div className="rounded-[28px] p-5 mb-6 bg-white/40 border border-[#D4AF37]/20 flex items-center gap-4 justify-center shadow-sm relative z-10 backdrop-blur-md">
+            <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover flex-shrink-0" style={{border:"2px solid rgba(212,175,55,0.8)", padding:"2px", background:"#fff", boxShadow:"0 6px 16px rgba(212,175,55,0.25)"}}/>
+            <div className="min-w-0">
+              <h2 className="text-[18px] text-[#111]" style={{fontFamily:"var(--font-serif)", fontWeight:800}}>{nm}</h2>
+              {bio&&<div className="text-[11px] mt-1 line-clamp-2 text-[#555] leading-relaxed font-medium">{bio}</div>}
+            </div>
           </div>
-          <div className="rounded-2xl px-4 py-3 mb-5 bg-white/60 border border-[#D4AF37]/20">
-            <p className="text-[11px] text-[#555] mb-1">아이디: <span className="font-semibold text-[#222]">이름+학부모번호뒷4자리</span></p>
-            <p className="text-[11px] text-[#555]">비밀번호: <span className="font-semibold text-[#222]">학부모번호뒷4자리</span></p>
+          <div className="rounded-2xl px-4 py-3.5 mb-6 bg-white/70 border border-[#D4AF37]/30 shadow-sm relative z-10">
+            <p className="text-[11px] text-[#555] mb-1.5 flex items-center justify-between"><span>아이디</span> <strong className="text-[#222]">이름+학부모번호뒷4자리</strong></p>
+            <p className="text-[11px] text-[#555] flex items-center justify-between"><span>비밀번호</span> <strong className="text-[#222]">학부모번호뒷4자리</strong></p>
           </div>
-          <div className="space-y-3">
-            <input className="lux-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
-            <input type="password" className="lux-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
+          <div className="space-y-3.5 relative z-10">
+            <input className="lux-input w-full rounded-[20px] px-5 py-4 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="lux-input w-full rounded-[20px] px-5 py-4 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
-          {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50">{err}</p>}
-          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-3.5 rounded-2xl font-bold text-sm relative overflow-hidden disabled:opacity-70 tracking-[0.1em]"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50/80 border border-red-100">{err}</p>}
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-6 py-4 rounded-[20px] font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
 
     {/* 후기 슬라이더 */}
-    {reviews.length>0&&<div className={`relative z-10 pb-8 pt-6 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-[11px] font-bold tracking-[0.3em] uppercase mb-5 text-[#AA8C2C] opacity-90">Student Reviews</p>
+    {reviews.length>0&&<div className={`relative z-10 pb-8 pt-8 w-full transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
+      <p className="text-center text-[10px] font-bold tracking-[0.3em] uppercase mb-6 text-[#AA8C2C] opacity-90 drop-shadow-sm">Student Reviews</p>
       <div className="overflow-hidden">
         <div className="flex gap-5 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-72 flex-shrink-0 rounded-[28px] p-6 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.25)",boxShadow:hasBestGrade?"0 8px 30px rgba(212,175,55,0.12),inset 0 1px 0 rgba(255,255,255,0.9)":"0 4px 20px rgba(0,0,0,0.03)"}}>
-            <div className="flex items-center gap-3 mb-3"><div className="w-9 h-9 rounded-full flex items-center justify-center text-sm bg-white border border-[#D4AF37]/40 shadow-sm">{animalIcon}</div><div><span className="text-[13px] font-bold text-[#111] block leading-none pb-1" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[10px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-1 rounded-lg font-bold bg-white text-[#888] border border-[#eee]">수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-3"><span className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white shadow-sm" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1 mb-3">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-bold px-2 py-1 rounded-full text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/20">#{kw}</span>))}</div>}
-            <p className="text-[12px] leading-relaxed review-clamp text-[#444]">{r.content}</p>
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-[280px] flex-shrink-0 rounded-[28px] p-6 cursor-default transition-all duration-300 glass-card" style={{borderColor:hasBestGrade?"rgba(212,175,55,0.7)":"rgba(212,175,55,0.3)",boxShadow:hasBestGrade?"0 12px 40px rgba(212,175,55,0.15),inset 0 1px 0 rgba(255,255,255,1)":"0 8px 30px rgba(0,0,0,0.05)"}}>
+            <div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 rounded-full flex items-center justify-center text-[15px] bg-white border border-[#D4AF37]/50 shadow-md">{animalIcon}</div><div><span className="text-[14px] font-bold text-[#111] block leading-none pb-1.5" style={{fontFamily:"var(--font-sans)"}}>{r.display_name||"학생"}</span><span className="text-[10px] text-[#888]">{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-1 rounded-lg font-bold bg-[#faf9f7] text-[#666] border border-[#ddd]">수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-3.5"><span className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-md inline-block tracking-wide" style={{background:"linear-gradient(135deg,#DFBE52,#AA8C2C)"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1.5 mb-3.5">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[9px] font-bold px-2 py-1 rounded-lg text-[#AA8C2C] bg-[#D4AF37]/10 border border-[#D4AF37]/25 mix-blend-multiply">#{kw}</span>))}</div>}
+            <p className="text-[12.5px] leading-[1.6] review-clamp text-[#333] font-medium">{r.content}</p>
           </div>)})}
         </div>
       </div>
       <style>{`
         .review-scroll{animation:reviewScroll ${Math.max(reviews.length*8,30)}s linear infinite;}
         .review-scroll:hover{animation-play-state:paused;}
-        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-308px * ${reviews.length}))}}
+        @keyframes reviewScroll{0%{transform:translateX(0)}100%{transform:translateX(calc(-300px * ${reviews.length}))}}
         .review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
       `}</style>
     </div>}
