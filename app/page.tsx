@@ -61,66 +61,41 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
       .glass-card, .glass-card-strong {
         position: relative;
-        overflow: hidden;
       }
-      .glass-card::after, .glass-card-strong::after {
-        content: "";
-        position: absolute;
-        top: 0; left: -150%; width: 50%; height: 100%;
-        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
-        transform: skewX(-25deg);
-        animation: loginShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-        z-index: 1;
-      }
-      @keyframes loginShimmerAnim {
-        0% { left: -150%; opacity: 0; }
-        15% { opacity: 1; }
-        50% { left: 200%; opacity: 0; }
-        100% { left: 200%; opacity: 0; }
-      }
+      
       .glass-card {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.05) 100%);
-        backdrop-filter: blur(20px) saturate(160%);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        box-shadow: 
-          0 10px 30px rgba(0, 0, 0, 0.1),
-          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
-          inset -2px -2px 5px rgba(0, 0, 0, 0.05);
-      }
-      .glass-card-strong {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.1) 100%);
+        background: rgba(255, 255, 255, 0.3);
         backdrop-filter: blur(24px) saturate(160%);
         -webkit-backdrop-filter: blur(24px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 
-          0 15px 40px rgba(0, 0, 0, 0.15),
-          inset 2px 2px 6px rgba(255, 255, 255, 0.9),
-          inset -2px -2px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      }
+      
+      .glass-card-strong {
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(28px) saturate(160%);
+        -webkit-backdrop-filter: blur(28px) saturate(160%);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
       }
 
       .lux-input {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(12px) saturate(160%);
-        -webkit-backdrop-filter: blur(12px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        box-shadow: 
-          inset 2px 2px 5px rgba(0, 0, 0, 0.05),
-          inset -2px -2px 5px rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px) saturate(150%);
+        -webkit-backdrop-filter: blur(8px) saturate(150%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: none;
         color: #222;
         transition: all 0.3s;
       }
       .lux-input::placeholder {
-        color: #666;
+        color: rgba(0,0,0,0.4);
       }
       .lux-input:focus {
-        border-color: rgba(255, 255, 255, 0.8) !important;
-        background: rgba(255, 255, 255, 0.4) !important;
-        box-shadow: 
-          0 0 0 3px rgba(212,175,55,0.2), 
-          inset 2px 2px 5px rgba(0, 0, 0, 0.02),
-          inset -2px -2px 5px rgba(255, 255, 255, 0.6) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+        outline: none;
       }
     `}</style>
     {/* 골드 빛망울 포인트 */}
@@ -178,6 +153,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
           <div className="text-center mb-6 relative z-10 w-full">
             <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.4rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
+              <span style={{color:"#444", fontWeight:400, fontSize:"1.2rem"}}>흐릿한 시작을,</span><br/>
               <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
             </h1>
             <p className="text-[8px] font-bold tracking-[0.25em] uppercase mt-2 text-[#AA8C2C]">AGREESUH</p>
