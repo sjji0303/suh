@@ -275,35 +275,74 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
-  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#ede8dc 0%,#f5f0e6 40%,#e8e2d5 100%)",fontFamily:"var(--font-sans)"}}>
+  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
-            .ios-glass-card {
-        border-radius: 20px;
-        background: rgba(255,255,255,0.22);
-        backdrop-filter: blur(40px) saturate(200%);
-        -webkit-backdrop-filter: blur(40px) saturate(200%);
-        border-top: 1.5px solid rgba(255,255,255,0.9);
-        border-left: 1.5px solid rgba(255,255,255,0.65);
-        border-right: 1px solid rgba(212,175,55,0.5);
-        border-bottom: 1px solid rgba(212,175,55,0.55);
+      .ios-glass-card {
+        /* 투명한 리퀴드 글라스 배경 */
+        background: linear-gradient(
+          145deg,
+          rgba(255,255,255,0.62) 0%,
+          rgba(255,255,255,0.35) 50%,
+          rgba(255,255,255,0.55) 100%
+        );
+        backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
+        -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.04);
+        border-radius: 22px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* 골드 테두리 + 내부 하이라이트 */
+        border: 1px solid rgba(212,175,55,0.55);
         box-shadow:
-          inset 0 1.5px 0 rgba(255,255,255,0.85),
-          inset 0 -1px 0 rgba(212,175,55,0.18),
-          0 8px 32px rgba(0,0,0,0.08),
-          0 2px 8px rgba(0,0,0,0.04);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
+          0 0 0 1px rgba(255,255,255,0.55),
+          0 8px 32px rgba(212,175,55,0.10),
+          0 2px 8px rgba(0,0,0,0.04),
+          inset 0 1px 0 rgba(255,255,255,0.88),
+          inset 0 -1px 0 rgba(212,175,55,0.12);
       }
       .ios-glass-card:hover {
         transform: translateY(-2px);
-        border-right-color: rgba(212,175,55,0.78);
-        border-bottom-color: rgba(212,175,55,0.78);
+        border-color: rgba(212,175,55,0.8);
         box-shadow:
-          inset 0 1.5px 0 rgba(255,255,255,0.95),
-          inset 0 -1px 0 rgba(212,175,55,0.28),
-          0 16px 40px rgba(0,0,0,0.10),
-          0 4px 12px rgba(0,0,0,0.06);
+          0 0 0 1px rgba(255,255,255,0.7),
+          0 16px 48px rgba(212,175,55,0.16),
+          0 4px 12px rgba(0,0,0,0.06),
+          inset 0 1px 0 rgba(255,255,255,0.95),
+          inset 0 -1px 0 rgba(212,175,55,0.18);
       }
-      
+      /* 상단 유리 하이라이트 */
+      .ios-glass-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 45%;
+        background: linear-gradient(180deg,
+          rgba(255,255,255,0.5) 0%,
+          rgba(255,255,255,0) 100%);
+        border-radius: 22px 22px 0 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+      /* 빛 쉬머 */
+      .ios-glass-card::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -150%; width: 45%; height: 100%;
+        background: linear-gradient(to right,
+          transparent,
+          rgba(255,255,255,0.65),
+          transparent);
+        transform: skewX(-20deg);
+        animation: iosShimmerAnim 7s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 2;
+      }
+      @keyframes iosShimmerAnim {
+        0%   { left: -150%; opacity: 0; }
+        10%  { opacity: 1; }
+        45%  { left: 200%; opacity: 0; }
+        100% { left: 200%; opacity: 0; }
+      }
       .grade-label {
         font-size: 10px;
         font-weight: 700;
@@ -343,19 +382,19 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#D4AF37] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
-          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{info.assignment_score?(String(info.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
+          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value">{(()=>{const raw=info.assignment_score||"";const hasBonus=raw.includes("👍");const score=raw.replace("+👍","").replace("👍","").trim();return score?(score+(score.endsWith("%")?"":"%")+(hasBonus?"+추가과제👍":"")):"—";})()}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{info.wrong_answer_score?(String(info.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div></div>}
           {/* 2. 개인 코멘트 */}
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 2단: 왼쪽 문항별 결과 / 오른쪽 점수+등수변화 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="ios-glass-card p-4 sm:p-6 flex flex-col">
+              <div className="ios-glass-card p-4 sm:p-6 flex flex-col min-h-[280px]">
                 <h3 className="font-extrabold text-lg mb-4 tracking-tight text-slate-800 flex items-center justify-between">문항별 결과 <span className="text-[10px] bg-slate-100 px-2 py-1 tracking-widest text-slate-400 rounded-lg uppercase">Questions</span></h3>
                 <div className="space-y-1.5 flex-1 relative z-10">
                   {questions.map(q=>(<div key={q.question_number} className="flex items-center gap-3 py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded-lg px-2 transition-colors last:border-0"><span className="text-[13px] font-bold text-slate-400 w-6 text-right">{q.question_number}</span><span className="text-[13.5px] font-semibold text-slate-600 flex-1 text-center">{q.topic||"—"}</span><span className={`text-[15px] pb-0.5 font-extrabold w-8 text-center drop-shadow-sm ${rm[q.question_number]?"text-[#D4AF37]":"text-red-400"}`}>{rm[q.question_number]?"O":"X"}</span><span className="text-xs font-bold text-slate-400 w-12 text-right opacity-80">{q.correct_rate}%</span></div>))}
                 </div>
               </div>
               <div className="space-y-5">
-                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-5 sm:gap-y-6 gap-x-3 sm:gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-3xl sm:text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-2xl sm:text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10 flex flex-col justify-center h-full sm:h-auto"><div className="grid grid-cols-2 gap-y-5 sm:gap-y-6 gap-x-3 sm:gap-x-4 text-center"><div><p className="grade-label">내 점수</p><p className="text-3xl sm:text-[40px] leading-none font-extrabold tracking-tighter" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm sm:text-lg font-bold ml-1 text-slate-500">점</span></p></div><div><p className="grade-label">반 평균</p><p className="text-2xl sm:text-[32px] leading-none font-extrabold tracking-tighter text-slate-700 mt-1">{info.class_average}<span className="text-sm sm:text-base font-bold ml-1 text-slate-500">점</span></p></div><div className="mt-2"><p className="grade-label opacity-70">표준편차</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.std_dev||"—"}<span className="text-[10px] sm:text-xs font-bold ml-1">{info.std_dev?"점":""}</span></p></div><div className="mt-2"><p className="grade-label opacity-70">최고 점수</p><p className="text-xl sm:text-2xl font-bold tracking-tight text-slate-500 mt-1">{info.class_best}<span className="text-[10px] sm:text-xs font-bold ml-1">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   const data=rankHistory.map(h=>({date:h.date,value:h.total-h.rank+1,rank:h.rank,total:h.total}));
                   const maxVal=Math.max(...data.map(d=>d.total),1);
@@ -724,6 +763,24 @@ function AdminClassManager({users}:{users:any[]}){
           }
         }
       }catch(e){console.error("자동지급 오류:",e);}
+      // 클리닉 참석 자동 서서갈비 1개 지급
+      try{
+        for(const m of members){
+          const uid=m.user_id;if(!hasA(uid))continue;
+          const inf=ig[uid]||{};
+          if((inf.clinic_time||"").startsWith("참석")){
+            const clinicKey=`자동:클리닉참석(test_${testId})`;
+            const{data:dupC}=await supabase.from("token_logs").select("id").eq("user_id",uid).eq("reason",clinicKey).single();
+            if(!dupC){
+              const{data:uData}=await supabase.from("users").select("tokens").eq("id",uid).single();
+              const cur=uData?.tokens||0;
+              await supabase.from("users").update({tokens:cur+1}).eq("id",uid);
+              await supabase.from("token_logs").insert({user_id:uid,amount:1,reason:clinicKey});
+              await sendNotif(uid,"token","🥩 클리닉 참석으로 서서갈비 1개 지급!");
+            }
+          }
+        }
+      }catch(e){console.error("클리닉 자동지급 오류:",e);}
     }
     setSaving(false);
   };
@@ -753,7 +810,50 @@ function AdminClassManager({users}:{users:any[]}){
       <button onClick={()=>setSelT(null)} className="flex items-center gap-1 text-sm text-slate-400 mb-3"><Icon type="back" size={16}/>돌아가기</button>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2"><div><h2 className="text-lg font-bold">{selT.title}</h2><p className="text-xs text-slate-400">{fmtDate(selT.date)} · 과제: {selT.assignment||"없음"}</p></div><div className="flex items-center gap-3"><button onClick={saveAll} disabled={saving} className="bg-[#D4AF37] text-white px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">{saving?"저장 중...":"💾 전체 저장"}</button>{saveMsg&&<span className={`text-sm font-semibold ${saveMsg.includes("완료")?"text-green-500":"text-red-500"}`}>{saveMsg}</span>}</div></div>
       <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{qs.map(q=><th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center">{q.question_number}</th>)}</tr></thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#D4AF37]">{ans?sc:"미응시"}</td>{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);return(<td key={q.question_number} className="px-0.5 py-1 text-center" onMouseDown={()=>onCellMouseDown(ri,ci)} onMouseEnter={()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D4AF37] ${isSel?"ring-2 ring-[#D4AF37] border-[#D4AF37]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/5 border-t border-[#D4AF37]/10"><span className="text-xs text-[#D4AF37] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
-      <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4"><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500">출석</th><th className="px-2 py-2 font-semibold text-slate-500">클리닉</th><th className="px-2 py-2 font-semibold text-slate-500">과제 성취도</th><th className="px-2 py-2 font-semibold text-slate-500">오답 성취도</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[280px]">개인 코멘트</th></tr></thead><tbody>{members.map((m:any)=>{const uid=m.user_id;const usr=m.users;const inf=ig[uid]||{};return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold"><div className="flex items-center gap-1">{usr?.login_id||usr?.name||"?"}{(inf.attendance==="출석"||inf.attendance==="영상")&&<button onClick={()=>captureReport(uid)} className="text-[9px] text-slate-300 hover:text-[#D4AF37] bg-slate-50 px-1.5 py-0.5 rounded">📷</button>}</div></td><td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.attendance||""} onChange={e=>setIC(uid,"attendance",e.target.value)}><option value="">—</option><option>출석</option><option>결석</option><option>영상</option></select></td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.clinic_time||""} onChange={e=>setIC(uid,"clinic_time",e.target.value)}/></td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.assignment_score||""} onChange={e=>setIC(uid,"assignment_score",e.target.value)}/></td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.wrong_answer_score||""} onChange={e=>setIC(uid,"wrong_answer_score",e.target.value)}/></td><td className="px-1 py-1"><textarea className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full resize-none h-16" value={inf.comment||""} onChange={e=>setIC(uid,"comment",e.target.value)} placeholder="개인 코멘트"/></td></tr>);})}</tbody></table></div>
+      <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4"><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500">출석</th><th className="px-2 py-2 font-semibold text-slate-500">클리닉</th><th className="px-2 py-2 font-semibold text-slate-500">과제 성취도</th><th className="px-2 py-2 font-semibold text-slate-500">오답 성취도</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[280px]">개인 코멘트</th></tr></thead><tbody>{members.map((m:any)=>{const uid=m.user_id;const usr=m.users;const inf=ig[uid]||{};return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold"><div className="flex items-center gap-1">{usr?.login_id||usr?.name||"?"}{(inf.attendance==="출석"||inf.attendance==="영상")&&<button onClick={()=>captureReport(uid)} className="text-[9px] text-slate-300 hover:text-[#D4AF37] bg-slate-50 px-1.5 py-0.5 rounded">📷</button>}</div></td><td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.attendance||""} onChange={e=>setIC(uid,"attendance",e.target.value)}><option value="">—</option><option>출석</option><option>결석</option><option>영상</option></select></td><td className="px-1 py-1 min-w-[130px]">
+  <div className="flex flex-col gap-1">
+    <div className="flex items-center gap-1.5">
+      <label className="flex items-center gap-1 cursor-pointer">
+        <input type="checkbox" className="w-3 h-3 accent-[#D4AF37]"
+          checked={(inf.clinic_time||"").startsWith("참석")}
+          onChange={e=>{
+            const timeVal=(inf.clinic_time||"").replace(/^참석\s*/,"").replace(/^불참\s*/,"").trim();
+            setIC(uid,"clinic_time",e.target.checked?"참석"+(timeVal?" ("+timeVal+")":""):"불참"+(timeVal?" ("+timeVal+")":""));
+          }}/>
+        <span className="text-[10px] font-semibold text-slate-500">참석</span>
+      </label>
+    </div>
+    <input
+      className="bg-slate-50 rounded-lg px-2 py-1 text-[10px] border-0 w-full"
+      placeholder="금2:30-5:30"
+      value={(inf.clinic_time||"").replace(/^참석\s*/,"").replace(/^불참\s*/,"").replace(/^\(|\)$/g,"").trim()}
+      onChange={e=>{
+        const isAttend=(inf.clinic_time||"").startsWith("참석");
+        const prefix=isAttend?"참석":"불참";
+        setIC(uid,"clinic_time",e.target.value?prefix+" ("+e.target.value+")":prefix);
+      }}/>
+  </div>
+</td><td className="px-1 py-1 min-w-[110px]">
+  <div className="flex flex-col gap-1">
+    <input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full"
+      placeholder="90%"
+      value={(inf.assignment_score||"").replace("+👍","").replace("👍","").trim()}
+      onChange={e=>{
+        const hasBonus=(inf.assignment_score||"").includes("👍");
+        const v=e.target.value.trim();
+        setIC(uid,"assignment_score",v+(hasBonus?"+👍":""));
+      }}/>
+    <label className="flex items-center gap-1 cursor-pointer px-1">
+      <input type="checkbox" className="w-3 h-3 accent-[#D4AF37]"
+        checked={(inf.assignment_score||"").includes("👍")}
+        onChange={e=>{
+          const score=(inf.assignment_score||"").replace("+👍","").replace("👍","").trim();
+          setIC(uid,"assignment_score",score+(e.target.checked?"+👍":""));
+        }}/>
+      <span className="text-[10px] text-slate-400">추가과제👍</span>
+    </label>
+  </div>
+</td><td className="px-1 py-1"><input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.wrong_answer_score||""} onChange={e=>setIC(uid,"wrong_answer_score",e.target.value)}/></td><td className="px-1 py-1"><textarea className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full resize-none h-16" value={inf.comment||""} onChange={e=>setIC(uid,"comment",e.target.value)} placeholder="개인 코멘트"/></td></tr>);})}</tbody></table></div>
       <div className="bg-white rounded-2xl shadow-sm p-5"><h3 className="font-semibold text-sm mb-3">자동 계산 통계 (실시간)</h3><div className="grid grid-cols-3 gap-4 max-w-md"><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">반 평균</p><p className="text-xl font-bold text-[#D4AF37]">{(Math.round(avg*10)/10).toFixed(1)}</p></div><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">표준편차</p><p className="text-xl font-bold text-slate-600">{(Math.round(stdDev*10)/10).toFixed(1)}</p></div><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">최고점</p><p className="text-xl font-bold text-slate-600">{best}</p></div></div></div>
       <div className="bg-white rounded-2xl shadow-sm p-5 mt-4"><div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-sm">문항 설정</h3><div className="flex items-center gap-2"><label className="text-xs text-slate-400">문항수</label><input type="number" className="w-16 bg-slate-50 rounded-lg px-2 py-1.5 text-sm border-0 text-center font-semibold" value={qs.length} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=50)changeQCount(v);}}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div></div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
