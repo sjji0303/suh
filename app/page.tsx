@@ -552,22 +552,82 @@ function AdminClassManager({users}:{users:any[]}){
       <div className="bg-white rounded-2xl shadow-sm p-5 mt-4"><div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-sm">문항 설정</h3><div className="flex items-center gap-2"><label className="text-xs text-slate-400">문항수</label><input type="number" className="w-16 bg-slate-50 rounded-lg px-2 py-1.5 text-sm border-0 text-center font-semibold" value={qs.length} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=50)changeQCount(v);}}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div></div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(a.correct_rate||0)-(b.correct_rate||0));
-      return(<div style={{position:"fixed",left:0,top:0,zIndex:-1,opacity:0.01,pointerEvents:"none"}}><div ref={capRef} style={{width:"420px",padding:"24px",background:"white",fontFamily:"sans-serif"}}>
-        <div style={{textAlign:"center",marginBottom:"16px"}}><p style={{fontSize:"18px",fontWeight:"bold"}}>{fmtDate(selT.date)}</p><p style={{fontSize:"12px",color:"#94a3b8"}}>{selT.title}</p></div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}><div style={{display:"flex",gap:"8px",alignItems:"center"}}><span style={{fontSize:"11px",background:"#f0edff",color:"#6c63ff",padding:"2px 8px",borderRadius:"8px",fontWeight:"bold"}}>{selT.class_name||""}</span><span style={{fontSize:"13px",fontWeight:"bold"}}>{usr?.school||""} {usr?.name}</span></div></div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"12px",marginBottom:"12px"}}>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>출석</p><p style={{fontSize:"14px",fontWeight:"bold",color:inf.attendance==="출석"?"#16a34a":"#ef4444"}}>{inf.attendance||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>클리닉</p><p style={{fontSize:"14px",fontWeight:"600"}}>{inf.clinic_time||"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>과제</p><p style={{fontSize:"14px",fontWeight:"600"}}>{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
-          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>오답</p><p style={{fontSize:"14px",fontWeight:"600"}}>{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+      const rankData=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>({uid:m2.user_id,score:getS(m2.user_id)})).sort((a,b)=>b.score-a.score);
+      const myRank=rankData.findIndex(r=>r.uid===uid)+1;
+      return(<div style={{position:"fixed",left:0,top:0,zIndex:-1,opacity:0.01,pointerEvents:"none"}}><div ref={capRef} style={{width:"520px",padding:"28px",background:"white",fontFamily:"sans-serif"}}>
+        {/* 날짜 */}
+        <div style={{textAlign:"center",marginBottom:"8px"}}><p style={{fontSize:"20px",fontWeight:"bold"}}>{fmtDate(selT.date)}</p></div>
+        {/* 학생 정보 */}
+        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px"}}><span style={{fontSize:"11px",background:"#f0edff",color:"#6c63ff",padding:"3px 10px",borderRadius:"8px",fontWeight:"bold"}}>{selT.class_name||""}</span><span style={{fontSize:"14px",fontWeight:"bold"}}>{usr?.school||""} {usr?.name}</span></div>
+        {/* 출석/클리닉/과제/오답 */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>출석</p><p style={{fontSize:"15px",fontWeight:"bold",color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444"}}>{inf.attendance||"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>클리닉</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.clinic_time||"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>오답 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
         </div>
-        {inf.comment&&<div style={{background:"#f5f3ff",borderRadius:"16px",padding:"12px",marginBottom:"12px"}}><p style={{fontSize:"11px",fontWeight:"bold",color:"#6c63ff",marginBottom:"4px"}}>개인 코멘트</p><p style={{fontSize:"13px",color:"#334155",whiteSpace:"pre-line"}}>{inf.comment}</p></div>}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"12px"}}>
-          <div style={{background:"#f8fafc",borderRadius:"16px",padding:"12px",textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>내 점수</p><p style={{fontSize:"24px",fontWeight:"bold",color:"#6c63ff"}}>{sc}<span style={{fontSize:"12px"}}>점</span></p></div>
-          <div style={{background:"#f8fafc",borderRadius:"16px",padding:"12px",textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>반 평균</p><p style={{fontSize:"24px",fontWeight:"bold",color:"#475569"}}>{(Math.round(avg*10)/10).toFixed(1)}<span style={{fontSize:"12px"}}>점</span></p></div>
+        {/* 개인 코멘트 */}
+        {inf.comment&&<div style={{background:"#f5f3ff",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}><p style={{fontSize:"12px",fontWeight:"bold",color:"#6c63ff",marginBottom:"4px"}}>개인 코멘트</p><p style={{fontSize:"14px",color:"#334155",whiteSpace:"pre-line",lineHeight:"1.6"}}>{inf.comment}</p></div>}
+        {/* 2단 레이아웃: 왼쪽 문항별 결과 / 오른쪽 점수+등수 */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+          {/* 왼쪽: 문항별 결과 */}
+          <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
+            <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"10px"}}>문항별 결과</p>
+            {qs.map(q=>(<div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"6px",padding:"3px 0"}}>
+              <span style={{fontSize:"12px",color:"#94a3b8",width:"18px",textAlign:"right"}}>{q.question_number}</span>
+              <span style={{fontSize:"11px",color:"#64748b",flex:1}}>{q.topic||"—"}</span>
+              <span style={{fontSize:"13px",fontWeight:"bold",color:rm2[q.question_number]?"#2563eb":"#f87171",width:"20px",textAlign:"center"}}>{rm2[q.question_number]?"O":"X"}</span>
+              <span style={{fontSize:"10px",color:"#94a3b8",width:"34px",textAlign:"right"}}>{q.correct_rate}%</span>
+            </div>))}
+          </div>
+          {/* 오른쪽: 점수 + 등수 */}
+          <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+            <div style={{background:"linear-gradient(135deg, #ffffff, #f0edff)",borderRadius:"16px",padding:"14px",border:"1px solid #e8e5ff"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",textAlign:"center"}}>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>내 점수</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#6c63ff"}}>{sc}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>반 평균</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(avg*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>표준편차</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(stdDev*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>최고</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{best}<span style={{fontSize:"13px"}}>점</span></p></div>
+              </div>
+            </div>
+            {myRank>0&&<div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px",textAlign:"center"}}>
+              <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"6px"}}>등수</p>
+              <p style={{fontSize:"28px",fontWeight:"bold",color:"#6c63ff"}}>{myRank}<span style={{fontSize:"14px",color:"#94a3b8"}}>/{rankData.length}명</span></p>
+            </div>}
+          </div>
         </div>
-        <div style={{background:"#f8fafc",borderRadius:"16px",padding:"12px",marginBottom:"12px"}}><p style={{fontSize:"13px",fontWeight:"bold",marginBottom:"8px"}}>문항별 결과</p>{qs.map(q=>(<div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"8px",padding:"3px 0"}}><span style={{fontSize:"12px",color:"#94a3b8",width:"20px",textAlign:"right"}}>{q.question_number}</span><span style={{fontSize:"12px",color:"#64748b",flex:1}}>{q.topic||"—"}</span><span style={{fontSize:"12px",fontWeight:"bold",color:rm2[q.question_number]?"#2563eb":"#f87171",width:"20px",textAlign:"center"}}>{rm2[q.question_number]?"O":"X"}</span><span style={{fontSize:"10px",color:"#94a3b8",width:"36px",textAlign:"right"}}>{q.correct_rate}%</span></div>))}</div>
-        {wrong2.length>0&&<div style={{background:"#f8fafc",borderRadius:"16px",padding:"12px"}}><p style={{fontSize:"13px",fontWeight:"bold",marginBottom:"8px"}}>최다 오답</p>{wrong2.slice(0,3).map(q=>(<div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"8px",padding:"2px 0"}}><span style={{background:"#fef2f2",color:"#ef4444",fontWeight:"bold",width:"24px",height:"24px",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px"}}>{q.question_number}</span><span style={{flex:1,fontSize:"12px"}}>{q.topic||"—"}</span><span style={{fontSize:"11px",color:"#94a3b8"}}>{q.correct_rate}%</span></div>))}</div>}
+        {/* 정답률 차트 */}
+        <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
+          <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"12px"}}>정답률</p>
+          <div style={{display:"flex",alignItems:"flex-end",gap:"4px",height:"100px"}}>
+            {qs.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm2[q.question_number];return(
+              <div key={q.question_number} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:"2px"}}>
+                <div style={{width:"100%",height:"70px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+                  <div style={{width:"100%",borderRadius:"3px 3px 0 0",background:isCorrect?"#6c63ff":"#ff6b6b",height:`${Math.max(rate,4)}%`}}/>
+                </div>
+                <span style={{fontSize:"9px",color:"#64748b",fontWeight:"600"}}>{q.question_number}</span>
+                <span style={{fontSize:"8px",color:"#94a3b8"}}>{rate}%</span>
+              </div>
+            );})}
+          </div>
+        </div>
+        {/* 최다 오답 TOP 3 */}
+        {wrong2.length>0&&<div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
+          <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"12px"}}>최다 오답 TOP 3</p>
+          <div style={{display:"flex",justifyContent:"center",gap:"24px"}}>
+            {wrong2.slice(0,3).map(q=>{const rate=q.correct_rate||0;const circ=2*Math.PI*30;const filled=circ*(rate/100);const empty=circ-filled;return(
+              <div key={q.question_number} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"6px"}}>
+                <svg viewBox="0 0 68 68" width="68" height="68" style={{transform:"rotate(-90deg)"}}>
+                  <circle cx="34" cy="34" r="30" fill="none" stroke="#f1f5f9" strokeWidth="5"/>
+                  <circle cx="34" cy="34" r="30" fill="none" stroke="#ff6b6b" strokeWidth="5" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/>
+                </svg>
+                <div style={{marginTop:"-52px",marginBottom:"16px",textAlign:"center"}}><p style={{fontSize:"20px",fontWeight:"bold",color:"#334155"}}>{q.question_number}</p><p style={{fontSize:"9px",color:"#94a3b8"}}>번</p></div>
+                <p style={{fontSize:"12px",fontWeight:"600",color:"#f87171"}}>{rate}%</p>
+                <p style={{fontSize:"10px",color:"#94a3b8"}}>{q.topic||"—"}</p>
+              </div>
+            );})}
+          </div>
+        </div>}
       </div></div>);})()}
     </div>);
   }
