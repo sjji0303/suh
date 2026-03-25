@@ -19,7 +19,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
   const pi=settings.profile_image||"/profile.png";const nm=settings.profile_name||"서정인 수학";const bio=(settings.profile_bio||"").split("\\n").join("\n");
   const px=mouse.x*-18;const py=mouse.y*-12;
   const lx=mouse.x*30;const ly=mouse.y*20;
-  return(<div ref={containerRef} className="min-h-screen relative flex flex-col overflow-hidden" >
+  return(<div ref={containerRef} className="min-h-screen relative flex flex-col overflow-hidden" style={{fontFamily:"'Cormorant Garamond','Playfair Display',Georgia,serif"}}>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     {/* 패럴랙스 배경 */}
     <div className="absolute inset-0 z-0 scale-125 transition-transform duration-75" style={{backgroundImage:`url(${bg})`,backgroundSize:"cover",backgroundPosition:"center",filter:"blur(5px)",transform:`scale(1.15) translate(${px}px,${py}px)`}}/>
@@ -34,39 +34,39 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
       {/* PC 레이아웃 */}
       <div className={`hidden md:flex w-full max-w-4xl gap-6 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-10"}`}>
         {/* 프로필 카드 — 글래스모피즘 */}
-        <div className="w-[300px] flex-shrink-0 rounded-3xl p-6 flex flex-col border" >
+        <div className="w-[300px] flex-shrink-0 rounded-3xl p-6 flex flex-col border" style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderColor:"rgba(212,175,55,0.2)",boxShadow:"0 8px 48px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.12)"}}>
           <div className="text-center mb-4">
             <div className="relative inline-block mb-4">
               <div className="absolute inset-0 rounded-full animate-pulse" style={{background:"radial-gradient(circle,rgba(212,175,55,0.3),transparent 70%)",filter:"blur(8px)",transform:"scale(1.3)"}}/>
               <img src={pi} alt="" className="w-24 h-24 rounded-full shadow-2xl object-cover relative" style={{border:"2px solid rgba(212,175,55,0.4)",boxShadow:"0 0 0 4px rgba(212,175,55,0.1),0 8px 32px rgba(0,0,0,0.5)"}}/>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-white/20 shadow-lg"/>
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2" >{nm}</h2>
+            <h2 className="text-xl font-semibold text-white mb-2" style={{fontFamily:"'Playfair Display',serif",letterSpacing:"0.02em"}}>{nm}</h2>
             <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"}}/><div className="w-1.5 h-1.5 rounded-full" style={{background:"rgba(212,175,55,0.7)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"}}/></div>
           </div>
-          {bio&&<div className="text-[11px] leading-relaxed whitespace-pre-line text-center px-2" >{bio}</div>}
-          <div className="mt-auto pt-4 border-t text-center" >수학의 자신감을 키우는 곳</p></div>
+          {bio&&<div className="text-[11px] leading-relaxed whitespace-pre-line text-center px-2" style={{color:"rgba(255,255,255,0.55)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{bio}</div>}
+          <div className="mt-auto pt-4 border-t text-center" style={{borderColor:"rgba(212,175,55,0.15)"}}><p className="text-[10px] tracking-widest uppercase" style={{color:"rgba(212,175,55,0.45)",fontFamily:"'Montserrat',sans-serif"}}>수학의 자신감을 키우는 곳</p></div>
         </div>
 
         {/* 로그인 카드 — 글래스모피즘 (밝음) */}
-        <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" >
+        <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" style={{background:"rgba(255,255,255,0.9)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",borderColor:"rgba(212,175,55,0.25)",boxShadow:"0 8px 64px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.9)"}}>
           <div className="mb-7">
-            <p className="text-[10px] tracking-[0.25em] uppercase mb-2" >Welcome</p>
+            <p className="text-[10px] tracking-[0.25em] uppercase mb-2" style={{color:"rgba(212,175,55,0.8)",fontFamily:"'Montserrat',sans-serif",fontWeight:500}}>Welcome</p>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.6rem",lineHeight:1.3,color:"#1a1628"}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1>
             <div className="mt-3 h-px max-w-[120px]" style={{background:"linear-gradient(90deg,rgba(212,175,55,0.5),transparent)"}}/>
           </div>
           <div className="space-y-4 max-w-sm">
             <div>
-              <label className="text-[10px] tracking-widest uppercase mb-1.5 block" >아이디</label>
+              <label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>아이디</label>
               <input className="w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="이름+학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()} onFocus={e=>{e.target.style.border="1px solid rgba(108,99,255,0.5)";e.target.style.boxShadow="0 0 0 3px rgba(108,99,255,0.08)";}} onBlur={e=>{e.target.style.border="1px solid rgba(108,99,255,0.15)";e.target.style.boxShadow="none";}}/>
             </div>
             <div>
-              <label className="text-[10px] tracking-widest uppercase mb-1.5 block" >비밀번호</label>
+              <label className="text-[10px] tracking-widest uppercase mb-1.5 block" style={{color:"rgba(108,99,255,0.7)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>비밀번호</label>
               <input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&go()} onFocus={e=>{e.target.style.border="1px solid rgba(108,99,255,0.5)";e.target.style.boxShadow="0 0 0 3px rgba(108,99,255,0.08)";}} onBlur={e=>{e.target.style.border="1px solid rgba(108,99,255,0.15)";e.target.style.boxShadow="none";}}/>
             </div>
-            {err&&<p className="text-xs px-3 py-2 rounded-xl" >{err}</p>}
+            {err&&<p className="text-xs px-3 py-2 rounded-xl" style={{color:"#e05555",background:"rgba(224,85,85,0.07)",fontFamily:"'Montserrat',sans-serif"}}>{err}</p>}
             {/* 쉬머 버튼 */}
-            <button onClick={go} disabled={ld} className="w-full py-3.5 rounded-2xl font-semibold text-sm relative overflow-hidden transition-all duration-300 disabled:opacity-60" >
+            <button onClick={go} disabled={ld} className="w-full py-3.5 rounded-2xl font-semibold text-sm relative overflow-hidden transition-all duration-300 disabled:opacity-60" style={{fontFamily:"'Montserrat',sans-serif",letterSpacing:"0.12em",background:"linear-gradient(135deg,#1a1040 0%,#2d2060 40%,#1a1040 100%)",color:"white",boxShadow:"0 4px 24px rgba(108,99,255,0.35)"}}>
               <span className="relative z-10">{ld?"로그인 중...":"SIGN IN"}</span>
               <span className="shimmer-btn absolute inset-0 pointer-events-none"/>
             </button>
@@ -76,7 +76,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
       {/* 모바일 */}
       <div className={`md:hidden w-full max-w-xs transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-10"}`}>
-        <div className="rounded-2xl p-4 px-5 mb-4 border" >
+        <div className="rounded-2xl p-4 px-5 mb-4 border" style={{background:"rgba(255,255,255,0.08)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.2)",boxShadow:"0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.1)"}}>
           <div className="flex items-center gap-3 justify-center">
             <div className="relative flex-shrink-0">
               <img src={pi} alt="" className="w-16 h-16 rounded-full object-cover" style={{border:"2px solid rgba(212,175,55,0.35)",boxShadow:"0 0 0 3px rgba(212,175,55,0.08),0 6px 20px rgba(0,0,0,0.5)"}}/>
@@ -88,11 +88,11 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
             </div>
           </div>
         </div>
-        <div className="rounded-2xl p-5 border" >
-          <h1 className="mb-4" >뚜렷한 선택으로</span></h1>
-          <div className="rounded-xl px-3 py-2 mb-3" >
-            <p className="text-[10px]" >이름+학부모번호뒷4자리</span></p>
-            <p className="text-[10px]" >학부모번호뒷4자리</span></p>
+        <div className="rounded-2xl p-5 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",borderColor:"rgba(212,175,55,0.2)",boxShadow:"0 8px 48px rgba(0,0,0,0.35)"}}>
+          <h1 className="mb-4" style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:"#1a1628",lineHeight:1.35}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1>
+          <div className="rounded-xl px-3 py-2 mb-3" style={{background:"rgba(108,99,255,0.04)",border:"1px solid rgba(108,99,255,0.1)"}}>
+            <p className="text-[10px]" style={{color:"rgba(100,100,130,0.7)",fontFamily:"'Montserrat',sans-serif"}}>아이디: <span style={{fontWeight:500,color:"rgba(80,80,110,0.8)"}}>이름+학부모번호뒷4자리</span></p>
+            <p className="text-[10px]" style={{color:"rgba(100,100,130,0.7)",fontFamily:"'Montserrat',sans-serif"}}>비밀번호: <span style={{fontWeight:500,color:"rgba(80,80,110,0.8)"}}>학부모번호뒷4자리</span></p>
           </div>
           <div className="space-y-2.5">
             <input className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="아이디" onKeyDown={e=>e.key==="Enter"&&go()}/>
@@ -109,14 +109,14 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
 
     {/* 후기 슬라이더 */}
     {reviews.length>0&&<div className={`relative z-10 pb-6 pt-3 transition-all duration-1000 ${ready?"opacity-100":"opacity-0"}`}>
-      <p className="text-center text-[10px] tracking-[0.3em] uppercase mb-3" >Student Reviews</p>
+      <p className="text-center text-[10px] tracking-[0.3em] uppercase mb-3" style={{color:"rgba(212,175,55,0.45)",fontFamily:"'Montserrat',sans-serif"}}>Student Reviews</p>
       <div className="overflow-hidden">
         <div className="flex gap-4 review-scroll pl-4">
-          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className={`w-64 flex-shrink-0 rounded-2xl p-4 pt-4.5 border cursor-default transition-all duration-300`} >
-            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" >수강생</span></div>}</div>
-            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" >🏆 성적 향상 · {r.best_grade}</span></div>}
-            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-medium px-1.5 py-0.5 rounded-full" >#{kw}</span>))}</div>}
-            <p className="text-[10px] leading-relaxed review-clamp" >{r.content}</p>
+          {[...reviews,...reviews,...reviews].map((r:any,i:number)=>{const hasBestGrade=r.best_grade&&r.best_grade.trim();const animals=["🦊","🐶","🐱","🐰","🐦","🐯","🦁"];const animalIcon=animals[i%animals.length];return(<div key={i} className="w-64 flex-shrink-0 rounded-2xl p-4 border cursor-default transition-all duration-300" style={{background:hasBestGrade?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderColor:hasBestGrade?"rgba(212,175,55,0.25)":"rgba(255,255,255,0.1)",boxShadow:hasBestGrade?"0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 rgba(212,175,55,0.15)":"0 4px 16px rgba(0,0,0,0.2)"}}>
+            <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{background:"rgba(255,255,255,0.12)"}}>{animalIcon}</div><div><span className="text-[11px] font-semibold text-white block leading-none pb-0.5" style={{fontFamily:"'Montserrat',sans-serif"}}>{r.display_name||"학생"}</span><span className="text-[9px]" style={{color:"rgba(255,255,255,0.35)",fontFamily:"'Montserrat',sans-serif"}}>{r.display_school||""}</span></div>{!hasBestGrade&&<div className="ml-auto"><span className="text-[9px] px-2 py-0.5 rounded-lg" style={{color:"rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",fontFamily:"'Montserrat',sans-serif"}}>수강생</span></div>}</div>
+            {hasBestGrade&&<div className="mb-2"><span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{color:"#fff",background:"linear-gradient(135deg,rgba(212,175,55,0.7),rgba(197,160,48,0.6))",fontFamily:"'Montserrat',sans-serif"}}>🏆 성적 향상 · {r.best_grade}</span></div>}
+            {r.keywords&&<div className="flex flex-wrap gap-1 mb-2">{r.keywords.split(",").slice(0,3).map((kw:string,ki:number)=>(<span key={ki} className="text-[8px] font-medium px-1.5 py-0.5 rounded-full" style={{color:"rgba(180,176,255,0.9)",background:"rgba(108,99,255,0.15)",fontFamily:"'Montserrat',sans-serif"}}>#{kw}</span>))}</div>}
+            <p className="text-[10px] leading-relaxed review-clamp" style={{color:"rgba(255,255,255,0.6)",fontFamily:"'Montserrat',sans-serif",fontWeight:300}}>{r.content}</p>
           </div>)})}
         </div>
       </div>
@@ -213,7 +213,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
   const wrong=test?questions.filter(q=>rm[q.question_number]===false).sort((a,b)=>a.correct_rate-b.correct_rate):[];
   const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
-  return(<div className="min-h-screen flex" >
+  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#f8f7ff 0%,#fdfcff 40%,#f5f3ff 100%)",fontFamily:"'Montserrat','Cormorant Garamond',sans-serif"}}>
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
       .luxury-nav-btn{transition:all 0.2s ease;position:relative;overflow:hidden;}
@@ -230,7 +230,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
       .shimmer-action-btn:active{transform:scale(0.98);}
     `}</style>
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
-      <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" >
+      <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08),inset 0 1px 0 rgba(255,255,255,0.95)"}}>
         <div className="flex items-center justify-between mb-6 px-1">
           <div className="rounded-2xl px-3 py-1.5" ><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div>
           <button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"rgba(212,175,55,0.8)"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(212,175,55,0.1)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
@@ -243,7 +243,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           <div className="ml-auto h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent)"}}/>
         </div>
         <nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`} style={tab!==m.id?{}:{}}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
-        <div className="pt-4 mt-4" >
+        <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}>
           <div className="px-1 mb-3">
             <p className="text-xs font-semibold" >{user.name}</p>
             <p className="text-[10px]" >{user.school||""}</p>
@@ -253,7 +253,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         </div>
       </div>
     </aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" >
+    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid rgba(212,175,55,0.12)",boxShadow:"0 2px 20px rgba(108,99,255,0.07)"}}>
       <button onClick={()=>setMm(!mm)} className="p-1 rounded-xl transition-colors" ><Icon type={mm?"close":"menu"} size={22}/></button>
       <div className="flex items-center gap-2.5">
         <span className="text-[10px] font-semibold" >🔥 {myTokens}</span>
@@ -1068,13 +1068,13 @@ export default function Home(){
 
   const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
     {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
-    <div className="pt-2 mt-2" >
+    <div className="pt-2 mt-2" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}>
       <button onClick={()=>{if(adminUnlocked){setAdminUnlocked(false);setAdminPwInput("");setTab("classes");if(mob)setMm(false);}else{setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 mb-1 text-[10px] font-semibold" >{adminUnlocked?"🔓 관리 메뉴 (잠그기)":"🔒 관리 메뉴 (잠김)"}</button>
       {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
     </div>
   </nav>);
 
-  return(<div className="min-h-screen flex" >
+  return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#f8f7ff 0%,#fdfcff 40%,#f5f3ff 100%)",fontFamily:"'Montserrat',sans-serif"}}>
     <style>{`
       .luxury-nav-btn{transition:all 0.2s ease;position:relative;overflow:hidden;}
       .luxury-nav-btn.admin-active{background:linear-gradient(135deg,#1a1040,#2d2060)!important;color:white!important;box-shadow:0 4px 16px rgba(108,99,255,0.25);}
@@ -1086,19 +1086,19 @@ export default function Home(){
       .shimmer-action-btn:hover{transform:translateY(-1px);}
     `}</style>
     <aside className="hidden lg:flex flex-col w-56 min-h-screen fixed left-0 top-0 bottom-0 z-40 p-2">
-      <div className="flex flex-col flex-1 rounded-3xl p-5 border" >
-        <div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" >서정인 수학</span></div>
+      <div className="flex flex-col flex-1 rounded-3xl p-5 border" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderColor:"rgba(212,175,55,0.15)",boxShadow:"0 8px 48px rgba(108,99,255,0.08),inset 0 1px 0 rgba(255,255,255,0.95)"}}>
+        <div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" style={{color:"#1a1628",fontFamily:"'Playfair Display',serif"}}>서정인 수학</span></div>
         {navEl()}
-        <div className="pt-4 mt-4" >
+        <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.12)"}}>
           <div className="flex items-center gap-3 mb-3 px-1">
             <div className="w-8 h-8 rounded-full flex items-center justify-center" ><Icon type="user" size={14}/></div>
-            <div><p className="text-xs font-semibold" >관리자</p></div>
+            <div><p className="text-xs font-semibold" style={{color:"#1a1628"}}>{user.name}</p><p className="text-[10px]" style={{color:"rgba(108,99,255,0.5)"}}>관리자</p></div>
           </div>
           <button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" ><Icon type="logout" size={16}/>로그아웃</button>
         </div>
       </div>
     </aside>
-    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" >서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
+    <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center" style={{background:"rgba(255,255,255,0.88)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid rgba(212,175,55,0.12)",boxShadow:"0 2px 20px rgba(108,99,255,0.07)"}}><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm" style={{fontFamily:"'Playfair Display',serif"}}>서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
     {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" ><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
       {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" >확인</button></div></div>}
