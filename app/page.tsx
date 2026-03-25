@@ -59,34 +59,51 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         transform: translateY(-2px);
       }
 
+      .glass-card, .glass-card-strong {
+        position: relative;
+        overflow: hidden;
+      }
+      .glass-card::after, .glass-card-strong::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -150%; width: 50%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
+        transform: skewX(-25deg);
+        animation: loginShimmerAnim 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 1;
+      }
+      @keyframes loginShimmerAnim {
+        0% { left: -150%; opacity: 0; }
+        15% { opacity: 1; }
+        50% { left: 200%; opacity: 0; }
+        100% { left: 200%; opacity: 0; }
+      }
       .glass-card {
-        background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
+        background: linear-gradient(145deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
         backdrop-filter: blur(32px) saturate(200%);
         -webkit-backdrop-filter: blur(32px) saturate(200%);
-        border: 1px solid rgba(255,255,255,0.6);
-        border-right-color: rgba(255,255,255,0.2);
-        border-bottom-color: rgba(255,255,255,0.2);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.8), inset 0 0 20px rgba(255,255,255,0.5);
+        border: 1px solid rgba(255,255,255,1);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08), inset 0 2px 5px rgba(255,255,255,1);
       }
       .glass-card-strong {
-        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.5) 100%);
+        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%);
         backdrop-filter: blur(48px) saturate(200%);
         -webkit-backdrop-filter: blur(48px) saturate(200%);
-        border: 1px solid rgba(255,255,255,0.8);
-        border-right-color: rgba(255,255,255,0.3);
-        border-bottom-color: rgba(255,255,255,0.3);
-        box-shadow: 0 30px 80px rgba(212,175,55,0.15), inset 0 2px 6px rgba(255,255,255,1), inset 0 0 30px rgba(255,255,255,0.6);
+        border: 1px solid rgba(255,255,255,1);
+        box-shadow: 0 30px 80px rgba(212,175,55,0.15), inset 0 2px 6px rgba(255,255,255,1);
       }
 
       .lux-input {
         background: rgba(255,255,255,0.9);
-        border: 1px solid rgba(212,175,55,0.3);
+        border: 1px solid rgba(255,255,255,0.8);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
         transition: all 0.3s;
       }
       .lux-input:focus {
         border-color: #D4AF37 !important;
         background: #fff;
-        box-shadow: 0 0 0 3px rgba(212,175,55,0.2) !important;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.2), inset 0 2px 4px rgba(0,0,0,0.02) !important;
       }
     `}</style>
     {/* 골드 빛망울 포인트 */}
@@ -97,21 +114,21 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
     <div className="flex flex-col items-center justify-start md:justify-center pt-12 md:pt-16 px-4 relative z-10 w-full flex-shrink-0">
       {/* PC */}
       <div className={`hidden md:flex w-full max-w-4xl gap-8 transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-12"}`}>
-        <div className="w-[320px] flex-shrink-0 rounded-[32px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
-          <div className="text-center mb-6">
+        <div className="w-[320px] flex-shrink-0 rounded-[36px] p-8 flex flex-col glass-card" style={{animation: "floatAnim 6s ease-in-out infinite"}}>
+          <div className="text-center mb-6 relative z-10">
             <div className="relative inline-block mb-5">
               <img src={pi} alt="" className="w-[168px] h-[168px] rounded-full shadow-2xl object-cover transition-transform duration-500 hover:scale-105" style={{border:"4px solid rgba(212,175,55,0.8)", padding:"5px", background:"#fff", margin:"0 auto"}}/>
             </div>
             <h2 className="text-2xl mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
             <div className="flex items-center justify-center gap-2 mb-4"><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-12" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
           </div>
-          {bioLines.length>0&&<div className="text-[13px] leading-relaxed text-center px-4 text-[#444]">
+          {bioLines.length>0&&<div className="text-[13px] leading-relaxed text-center px-4 text-[#444] relative z-10">
             {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
           </div>}
-          <div className="mt-auto pt-6 border-t text-center" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">AGREESUH</p></div>
+          <div className="mt-auto pt-6 border-t text-center relative z-10" style={{borderColor:"rgba(212,175,55,0.3)"}}><p className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#AA8C2C]">AGREESUH</p></div>
         </div>
-        <div className="flex-1 rounded-[32px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
-          <div className="mb-8 pl-5 border-l-[3px] border-[#D4AF37]" style={{position: "relative", zIndex: 2}}>
+        <div className="flex-1 rounded-[36px] p-10 flex flex-col justify-center glass-card-strong relative overflow-hidden">
+          <div className="mb-8 pl-5 border-l-[3px] border-[#D4AF37]" style={{position: "relative", zIndex: 10}}>
             <p className="text-[11px] font-bold tracking-[0.25em] uppercase mb-3 text-[#AA8C2C]">AGREESUH</p>
             <h1 style={{fontFamily:"var(--font-serif)",fontSize:"2.4rem",lineHeight:1.4, letterSpacing:"-0.02em"}}>
               <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
@@ -121,37 +138,40 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
           <div className="space-y-4 max-w-[360px] pl-5 relative z-10">
             <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">아이디</label><input className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
             <div><label className="text-[11px] font-bold tracking-widest uppercase mb-2 block text-[#555]">비밀번호</label><input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-sm outline-none text-[#222]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="학부모번호뒷4자리" onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-            {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50">{err}</p>}
-            <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em]"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+            {err&&<p className="text-xs px-3 py-2 rounded-xl text-red-500 bg-red-50 text-center">{err}</p>}
+            <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 uppercase tracking-[0.2em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
           </div>
         </div>
       </div>
       
-      {/* 모바일 (특히 온라인에서 가장 중요한 부분) */}
+      {/* 모바일 (완전한 중심 정렬의 애플 리퀴드 글래스 스타일) */}
       <div className={`md:hidden w-full max-w-sm transition-all duration-1000 ${ready?"opacity-100 translate-y-0":"opacity-0 translate-y-8"}`}>
-        <div className="rounded-[28px] p-6 glass-card-strong relative overflow-hidden">
-          <div className="mb-5 pl-4 border-l-[3px] border-[#D4AF37] relative z-10">
-            <p className="text-[9px] font-bold tracking-[0.25em] uppercase mb-1.5 text-[#AA8C2C]">AGREESUH</p>
-            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.6rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
-              <span style={{color:"#444", fontWeight:400}}>흐릿한 시작을,</span><br/>
+        <div className="rounded-[36px] p-6 glass-card-strong relative overflow-hidden flex flex-col items-center">
+          
+          <div className="text-center mt-2 mb-5 relative z-10 w-full">
+            <div className="relative inline-block mb-4">
+              <img src={pi} alt="" className="w-[100px] h-[100px] rounded-full object-cover transition-transform duration-500 hover:scale-105" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"3px", background:"#fff", margin:"0 auto", boxShadow:"0 8px 24px rgba(212,175,55,0.2)"}}/>
+            </div>
+            <h2 className="text-[20px] mb-2" style={{fontFamily:"var(--font-serif)", fontWeight:800, color:"#111"}}>{nm}</h2>
+            <div className="flex items-center justify-center gap-2 mb-3"><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/><div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" style={{boxShadow:"0 0 8px rgba(212,175,55,0.8)"}}/><div className="h-px w-8" style={{background:"linear-gradient(90deg,transparent,#D4AF37,transparent)"}}/></div>
+            {bioLines.length>0&&<div className="text-[12px] leading-relaxed text-[#555] font-medium px-4">
+              {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
+            </div>}
+          </div>
+
+          <div className="text-center mb-6 relative z-10 w-full">
+            <h1 style={{fontFamily:"var(--font-serif)",fontSize:"1.4rem",lineHeight:1.35, letterSpacing:"-0.02em"}}>
               <strong style={{background:"linear-gradient(135deg, #B5952F 0%, #D4AF37 50%, #AA8C2C 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent", fontWeight:800, textShadow:"0 2px 10px rgba(212,175,55,0.1)"}}>뚜렷한 선택으로.</strong>
             </h1>
+            <p className="text-[8px] font-bold tracking-[0.25em] uppercase mt-2 text-[#AA8C2C]">AGREESUH</p>
           </div>
-          <div className="rounded-[24px] p-4 mb-5 bg-white/60 border border-[#D4AF37]/30 flex items-center gap-4 justify-center shadow-sm relative z-10 backdrop-blur-md">
-            <img src={pi} alt="" className="w-[84px] h-[84px] rounded-full object-cover flex-shrink-0" style={{border:"3px solid rgba(212,175,55,0.8)", padding:"3px", background:"#fff", boxShadow:"0 4px 12px rgba(212,175,55,0.15)"}}/>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-[17px] text-[#111]" style={{fontFamily:"var(--font-serif)", fontWeight:800}}>{nm}</h2>
-              {bioLines.length>0&&<div className="text-[11px] mt-1 text-[#555] leading-relaxed font-medium">
-                {bioLines.map((line:string, i:number)=><span key={i} className="block">{line}</span>)}
-              </div>}
-            </div>
-          </div>
-          <div className="space-y-3 relative z-10">
+
+          <div className="w-full space-y-3 relative z-10 px-1">
             <input className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={id} onChange={e=>{setId(e.target.value);setErr("");}} placeholder="예: 서정인1234 (이름+학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
             <input type="password" className="lux-input w-full rounded-2xl px-5 py-3.5 text-[13px] outline-none text-[#222] font-medium placeholder-[#888]" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} placeholder="예: 1234 (학부모번호뒷4자리)" onKeyDown={e=>e.key==="Enter"&&go()}/>
           </div>
-          {err&&<p className="text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50/80 border border-red-100">{err}</p>}
-          <button onClick={go} disabled={ld} className="btn-gold w-full mt-4 py-3.5 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
+          {err&&<p className="w-full text-xs px-3 py-2 rounded-xl mt-3 text-red-500 bg-red-50 text-center relative z-10 mx-1">{err}</p>}
+          <button onClick={go} disabled={ld} className="btn-gold w-full mt-5 py-4 rounded-2xl font-bold text-[13px] relative overflow-hidden disabled:opacity-70 tracking-[0.15em] shadow-lg relative z-10 mx-1"><span className="relative z-10 drop-shadow-md">{ld?"Authenticating...":"SIGN IN"}</span><span className="shimmer-btn absolute inset-0 pointer-events-none"/></button>
         </div>
       </div>
     </div>
