@@ -52,7 +52,7 @@ function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<
         <div className="flex-1 rounded-3xl p-8 flex flex-col justify-center border" >
           <div className="mb-7">
             <p className="text-[10px] tracking-[0.25em] uppercase mb-2" >Welcome</p>
-            <h1 >뚜렷한 선택으로</span></h1>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.6rem",lineHeight:1.3,color:"#1a1628"}}>흐릿한 시작을,<br/><span style={{background:"linear-gradient(135deg,#6c63ff,#8b83ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>뚜렷한 선택으로</span></h1>
             <div className="mt-3 h-px max-w-[120px]" style={{background:"linear-gradient(90deg,rgba(212,175,55,0.5),transparent)"}}/>
           </div>
           <div className="space-y-4 max-w-sm">
@@ -509,9 +509,23 @@ function AdminClassManager({users}:{users:any[]}){
   const capRef=useRef<HTMLDivElement>(null);
 
   // 성적표 이미지 캡쳐
+  const[capComputedRates,setCapComputedRates]=useState<Record<number,number>>({});
   const captureReport=async(uid:number)=>{
+    // 캡처 전 현재 그리드 기반 실시간 정답률 계산 (DB 저장 전에도 정확한 값 표시)
+    const computedRates:Record<number,number>={};
+    for(const q of qs){
+      const qn=q.question_number;
+      let correct=0;let total=0;
+      for(const mem of members){
+        const k=`${mem.user_id}-${qn}`;
+        const v=grid[k];
+        if(v===1||v===0){total++;if(v===1)correct++;}
+      }
+      computedRates[qn]=total>0?Math.round((correct/total)*100):(q.correct_rate||0);
+    }
+    setCapComputedRates(computedRates);
     setCapId(uid);
-    await new Promise(r=>setTimeout(r,500));
+    await new Promise(r=>setTimeout(r,600));
     if(!capRef.current){setCapId(null);return;}
     try{
       const html2canvas=(await import("html2canvas")).default;
@@ -674,79 +688,80 @@ function AdminClassManager({users}:{users:any[]}){
       <div className="bg-white rounded-2xl shadow-sm p-5"><h3 className="font-semibold text-sm mb-3">자동 계산 통계 (실시간)</h3><div className="grid grid-cols-3 gap-4 max-w-md"><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">반 평균</p><p className="text-xl font-bold text-[#6c63ff]">{(Math.round(avg*10)/10).toFixed(1)}</p></div><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">표준편차</p><p className="text-xl font-bold text-slate-600">{(Math.round(stdDev*10)/10).toFixed(1)}</p></div><div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-[10px] text-slate-400">최고점</p><p className="text-xl font-bold text-slate-600">{best}</p></div></div></div>
       <div className="bg-white rounded-2xl shadow-sm p-5 mt-4"><div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-sm">문항 설정</h3><div className="flex items-center gap-2"><label className="text-xs text-slate-400">문항수</label><input type="number" className="w-16 bg-slate-50 rounded-lg px-2 py-1.5 text-sm border-0 text-center font-semibold" value={qs.length} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=50)changeQCount(v);}}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div></div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
-      {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(a.correct_rate||0)-(b.correct_rate||0));
+      {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(capComputedRates[a.question_number]??a.correct_rate??0)-(capComputedRates[b.question_number]??b.correct_rate??0));
       const rankData=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>({uid:m2.user_id,score:getS(m2.user_id)})).sort((a,b)=>b.score-a.score);
       const myRank=rankData.findIndex(r=>r.uid===uid)+1;
-      return(<div >
-        {/* 날짜 */}
-        <div >{fmtDate(selT.date)}</p></div>
-        {/* 학생 정보 */}
-        <div >{usr?.school||""} {usr?.name}</span></div>
-        {/* 출석/클리닉/과제/오답 */}
-        <div >
-          <div >{inf.attendance||"—"}</p></div>
-          <div >{inf.clinic_time||"—"}</p></div>
-          <div >{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
-          <div >{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+      const scores2=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>getS(m2.user_id));
+      const avg2=scores2.length>0?(scores2.reduce((a,b)=>a+b,0)/scores2.length):0;
+      const best2=scores2.length>0?Math.max(...scores2):0;
+      const stdDev2=scores2.length>1?Math.sqrt(scores2.reduce((a,b)=>a+Math.pow(b-avg2,2),0)/scores2.length):0;
+      return(<div ref={capRef} style={{position:"fixed",left:"-9999px",top:0,width:"480px",background:"#ffffff",padding:"24px",fontFamily:"'Pretendard',sans-serif"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}}>
+          <p style={{fontSize:"18px",fontWeight:"bold"}}>{fmtDate(selT.date)}</p>
+          <p style={{fontSize:"13px",color:"#64748b"}}>{selT.class_name}</p>
         </div>
-        {/* 개인 코멘트 */}
-        {inf.comment&&<div >{inf.comment}</p></div>}
-        {/* 2단 레이아웃: 왼쪽 문항별 결과 / 오른쪽 점수+등수 */}
-        <div >
-          {/* 왼쪽: 문항별 결과 */}
-          <div >
-            <p >문항별 결과</p>
-            {qs.map(q=>(<div key={q.question_number} >
-              <span >{q.question_number}</span>
-              <span >{q.topic||"—"}</span>
-              <span >{rm2[q.question_number]?"O":"X"}</span>
-              <span >{q.correct_rate}%</span>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px",paddingBottom:"10px",borderBottom:"1px solid #f1f5f9"}}>
+          <p style={{fontSize:"15px",fontWeight:"600"}}>{usr?.school||""} {usr?.name}</p>
+          <p style={{fontSize:"12px",color:"#94a3b8"}}>#{myRank}등 / {rankData.length}명</p>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",marginBottom:"14px",background:"#f8fafc",borderRadius:"12px",padding:"12px"}}>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>출석</p><p style={{fontSize:"15px",fontWeight:"600",color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444"}}>{inf.attendance||"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>클리닉</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.clinic_time||"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>과제 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.assignment_score?(String(inf.assignment_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+          <div style={{textAlign:"center"}}><p style={{fontSize:"10px",color:"#94a3b8"}}>오답 성취도</p><p style={{fontSize:"15px",fontWeight:"600"}}>{inf.wrong_answer_score?(String(inf.wrong_answer_score).replace(/%/g,"").trim()+"%"):"—"}</p></div>
+        </div>
+        {inf.comment&&<div style={{background:"#f5f3ff",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}><p style={{fontSize:"12px",fontWeight:"bold",color:"#6c63ff",marginBottom:"4px"}}>개인 코멘트</p><p style={{fontSize:"14px",color:"#334155",whiteSpace:"pre-line",lineHeight:"1.6"}}>{inf.comment}</p></div>}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+          <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
+            <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"10px"}}>문항별 결과</p>
+            {qs.map(q=>(<div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"6px",padding:"3px 0"}}>
+              <span style={{fontSize:"12px",color:"#94a3b8",width:"18px",textAlign:"right"}}>{q.question_number}</span>
+              <span style={{fontSize:"11px",color:"#64748b",flex:1}}>{q.topic||"—"}</span>
+              <span style={{fontSize:"13px",fontWeight:"bold",color:rm2[q.question_number]?"#2563eb":"#f87171",width:"20px",textAlign:"center"}}>{rm2[q.question_number]?"O":"X"}</span>
+              <span style={{fontSize:"10px",color:"#94a3b8",width:"34px",textAlign:"right"}}>{capComputedRates[q.question_number]??q.correct_rate??0}%</span>
             </div>))}
           </div>
-          {/* 오른쪽: 점수 */}
-          <div >
-            <div >
-              <div >
-                <div><p >점</span></p></div>
-                <div><p >점</span></p></div>
-                <div><p >점</span></p></div>
-                <div><p >점</span></p></div>
+          <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+            <div style={{background:"linear-gradient(135deg,#ffffff,#f0edff)",borderRadius:"16px",padding:"14px",border:"1px solid #e8e5ff"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",textAlign:"center"}}>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>내 점수</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#6c63ff"}}>{sc}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>반 평균</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(avg2*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>표준편차</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{(Math.round(stdDev2*10)/10).toFixed(1)}<span style={{fontSize:"13px"}}>점</span></p></div>
+                <div><p style={{fontSize:"10px",color:"#94a3b8"}}>최고</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#475569"}}>{best2}<span style={{fontSize:"13px"}}>점</span></p></div>
               </div>
             </div>
-            <div >
-              <div >시험 2회 이상부터 추이 표시</span></div>
-              <div >앱에서 확인하세요</p></div>
+            <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}><p style={{fontSize:"14px",fontWeight:"bold"}}>등수 변화</p><span style={{fontSize:"10px",color:"#94a3b8"}}>시험 2회 이상부터 추이 표시</span></div>
+              <div style={{height:"60px",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:"11px",color:"#cbd5e1"}}>앱에서 확인하세요</p></div>
             </div>
           </div>
         </div>
-        {/* 정답률 차트 */}
-        <div >
-          <p >정답률</p>
-          <div >
-            {qs.map(q=>{const rate=q.correct_rate||0;const isCorrect=rm2[q.question_number];return(
-              <div key={q.question_number} >
-                <div >
+        <div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
+          <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"12px"}}>정답률</p>
+          <div style={{display:"flex",alignItems:"flex-end",gap:"4px",height:"100px"}}>
+            {qs.map(q=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const isCorrect=rm2[q.question_number];return(
+              <div key={q.question_number} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:"2px"}}>
+                <div style={{width:"100%",height:"70px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
                   <div style={{width:"100%",borderRadius:"3px 3px 0 0",background:isCorrect?"#6c63ff":"#ff6b6b",height:`${Math.max(rate,4)}%`}}/>
                 </div>
-                <span >{q.question_number}</span>
-                <span >{rate}%</span>
+                <span style={{fontSize:"9px",color:"#64748b",fontWeight:"600"}}>{q.question_number}</span>
+                <span style={{fontSize:"8px",color:"#94a3b8"}}>{rate}%</span>
               </div>
             );})}
           </div>
         </div>
-        {/* 최다 오답 TOP 3 */}
-        {wrong2.length>0&&<div >
-          <p >최다 오답 TOP 3</p>
-          <div >
-            {wrong2.slice(0,3).map(q=>{const rate=q.correct_rate||0;const circ=2*Math.PI*30;const filled=circ*(rate/100);const empty=circ-filled;return(
-              <div key={q.question_number} >
-                <svg viewBox="0 0 68 68" width="68" height="68" >
+        {wrong2.length>0&&<div style={{background:"#f8fafc",borderRadius:"16px",padding:"14px"}}>
+          <p style={{fontSize:"14px",fontWeight:"bold",marginBottom:"12px"}}>최다 오답 TOP 3</p>
+          <div style={{display:"flex",justifyContent:"center",gap:"24px"}}>
+            {wrong2.slice(0,3).map(q=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const circ=2*Math.PI*30;const filled=circ*(rate/100);const empty=circ-filled;return(
+              <div key={q.question_number} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"6px"}}>
+                <svg viewBox="0 0 68 68" width="68" height="68" style={{transform:"rotate(-90deg)"}}>
                   <circle cx="34" cy="34" r="30" fill="none" stroke="#f1f5f9" strokeWidth="5"/>
                   <circle cx="34" cy="34" r="30" fill="none" stroke="#ff6b6b" strokeWidth="5" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/>
                 </svg>
-                <div >번</p></div>
-                <p >{rate}%</p>
-                <p >{q.topic||"—"}</p>
+                <div style={{marginTop:"-52px",marginBottom:"16px",textAlign:"center"}}><p style={{fontSize:"20px",fontWeight:"bold",color:"#334155"}}>{q.question_number}</p><p style={{fontSize:"9px",color:"#94a3b8"}}>번</p></div>
+                <p style={{fontSize:"12px",fontWeight:"600",color:"#f87171"}}>{rate}%</p>
+                <p style={{fontSize:"10px",color:"#94a3b8"}}>{q.topic||"—"}</p>
               </div>
             );})}
           </div>
