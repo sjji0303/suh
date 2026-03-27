@@ -1177,7 +1177,7 @@ function AdminClassManager({users}:{users:any[]}){
             <span style={{fontSize:"11px",color:"#94a3b8"}}>{usr?.school||""}</span>
           </div>
           <p style={{fontSize:"17px",fontWeight:"700",color:"#1e293b",margin:0}}>{usr?.name}</p>
-          <p style={{fontSize:"11px",color:"#94a3b8",margin:"2px 0 0 0"}}>#{myRank}등 / {rankData.length}명</p>
+
         </div>
         {/* 출석/클리닉/과제/오답 */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",background:"#f8fafc",borderRadius:"16px",padding:"14px",marginBottom:"14px"}}>
