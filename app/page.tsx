@@ -1025,24 +1025,25 @@ function AdminClassManager({users}:{users:any[]}){
   // 선택문항 설정 저장
   const saveSecCfg=async()=>{
     if(!selT)return;
-    await supabase.from("tests").update({has_sections:secCfg.has_sections,common_count:secCfg.common_count,section1_name:secCfg.section1_name,section2_name:secCfg.section2_name,section1_count:secCfg.section1_count,section2_count:secCfg.section2_count}).eq("id",selT.id);
-    // 문항별 section 자동 할당
-    if(secCfg.has_sections){
-      const commonEnd=secCfg.common_count;
-      const sec1End=commonEnd+secCfg.section1_count;
-      const sec2End=sec1End+secCfg.section2_count;
+    const totalQ=qs.length;
+    const secCount=Math.floor((totalQ-secCfg.common_count)/2);
+    const s1c=secCount;const s2c=secCount;
+    const cfg={...secCfg,section1_count:s1c,section2_count:s2c};
+    await supabase.from("tests").update({has_sections:cfg.has_sections,common_count:cfg.common_count,section1_name:cfg.section1_name,section2_name:cfg.section2_name,section1_count:s1c,section2_count:s2c}).eq("id",selT.id);
+    if(cfg.has_sections){
+      const commonEnd=cfg.common_count;
+      const sec1End=commonEnd+s1c;
       for(const q of qs){
         const qn=q.question_number;
-        let sec="common";
-        if(qn>commonEnd&&qn<=sec1End)sec="opt1";
-        else if(qn>sec1End&&qn<=sec2End)sec="opt2";
+        const sec=qn<=commonEnd?"common":qn<=sec1End?"opt1":"opt2";
         await supabase.from("test_questions").update({section:sec}).eq("id",q.id);
       }
       const{data:freshQ}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number");
       if(freshQ)setQs(freshQ);
+      setSecCfg(p=>({...p,section1_count:s1c,section2_count:s2c}));
     }
     setShowSecCfg(false);
-    alert("선택문항 설정이 저장되었습니다!");
+    alert(`저장 완료! 공통 ${cfg.common_count}문항 · 선택1 ${s1c}문항 · 선택2 ${s2c}문항`);
   };
 
   // Excel view
@@ -1054,8 +1055,9 @@ function AdminClassManager({users}:{users:any[]}){
     return(<div>
       <button onClick={()=>setSelT(null)} className="flex items-center gap-1 text-sm text-slate-400 mb-3"><Icon type="back" size={16}/>돌아가기</button>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2"><div><h2 className="text-lg font-bold">{selT.title}</h2><p className="text-xs text-slate-400">{fmtDate(selT.date)} · 과제: {selT.assignment||"없음"}</p></div><div className="flex items-center gap-3"><button onClick={saveAll} disabled={saving} className="bg-[#D4AF37] text-white px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">{saving?"저장 중...":"💾 전체 저장"}</button>{saveMsg&&<span className={`text-sm font-semibold ${saveMsg.includes("완료")?"text-green-500":"text-red-500"}`}>{saveMsg}</span>}</div></div>
-      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{secCfg.has_sections&&<th className="px-2 py-2 font-semibold text-slate-500 min-w-[60px]">선택지</th>}{qs.map(q=>{const sec=q.section||"common";const bg=secCfg.has_sections?(sec==="opt1"?"#dbeafe":sec==="opt2"?"#dcfce7":""):"";;return(<th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center" style={{background:bg,borderRadius:"4px"}}>{q.question_number}</th>);})}</tr></thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);const selSec=ig[uid]?.selected_section||"";return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#D4AF37]">{ans?sc:"미응시"}</td>{secCfg.has_sections&&<td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-1 py-1 text-[10px] border-0 w-full font-semibold" value={selSec} onChange={e=>setIC(uid,"selected_section",e.target.value)}><option value="">미선택</option><option value="opt1">{secCfg.section1_name}</option><option value="opt2">{secCfg.section2_name}</option></select></td>}{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);const sec=q.section||"common";// 선택문항이면 본인 선택지만 입력 가능
-        const isDisabled=secCfg.has_sections&&sec!=="common"&&selSec!==sec;return(<td key={q.question_number} className="px-0.5 py-1 text-center" style={{opacity:isDisabled?0.2:1}} onMouseDown={isDisabled?undefined:()=>onCellMouseDown(ri,ci)} onMouseEnter={isDisabled?undefined:()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly disabled={isDisabled} className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D4AF37] ${isSel?"ring-2 ring-[#D4AF37] border-[#D4AF37]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={isDisabled?undefined:e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/5 border-t border-[#D4AF37]/10"><span className="text-xs text-[#D4AF37] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
+      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{secCfg.has_sections&&<th className="px-2 py-2 font-semibold text-slate-500 min-w-[60px]">선택지</th>}{qs.map(q=>{const sec=q.section||"common";const bg=secCfg.has_sections?(sec==="opt1"?"#dbeafe":sec==="opt2"?"#dcfce7":""):"";;return(<th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center" style={{background:bg,borderRadius:"4px"}}>{q.question_number}</th>);})}</tr></thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);const selSec=ig[uid]?.selected_section||"";return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#D4AF37]">{ans?sc:"미응시"}</td>{secCfg.has_sections&&<td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-1 py-1 text-[10px] border-0 w-full font-semibold" value={selSec} onChange={e=>setIC(uid,"selected_section",e.target.value)}><option value="">미선택</option><option value="opt1">{secCfg.section1_name}</option><option value="opt2">{secCfg.section2_name}</option></select></td>}{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);const qSec=q.section||"common";
+        // 선택지 문항: 본인이 선택한 선택지만 활성. 미선택이면 선택지 모두 비활성
+        const isDisabled=secCfg.has_sections&&qSec!=="common"&&(selSec===""||selSec!==qSec);return(<td key={q.question_number} className="px-0.5 py-1 text-center" style={{opacity:isDisabled?0.15:1}} onMouseDown={isDisabled?undefined:()=>onCellMouseDown(ri,ci)} onMouseEnter={isDisabled?undefined:()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly disabled={isDisabled} className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D4AF37] ${isSel?"ring-2 ring-[#D4AF37] border-[#D4AF37]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={isDisabled?undefined:e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/5 border-t border-[#D4AF37]/10"><span className="text-xs text-[#D4AF37] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
       <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4"><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500">출석</th><th className="px-2 py-2 font-semibold text-slate-500">클리닉</th><th className="px-2 py-2 font-semibold text-slate-500">과제 성취도</th><th className="px-2 py-2 font-semibold text-slate-500">오답 성취도</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[280px]">개인 코멘트</th></tr></thead><tbody>{members.map((m:any)=>{const uid=m.user_id;const usr=m.users;const inf=ig[uid]||{};return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold"><div className="flex items-center gap-1">{usr?.login_id||usr?.name||"?"}{(inf.attendance==="출석"||inf.attendance==="영상")&&<button onClick={()=>captureReport(uid)} className="text-[9px] font-semibold text-slate-600 hover:text-[#D4AF37] bg-slate-100 px-1.5 py-0.5 rounded transition-colors">📷</button>}</div></td><td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.attendance||""} onChange={e=>setIC(uid,"attendance",e.target.value)}><option value="">—</option><option>출석</option><option>결석</option><option>영상</option></select></td><td className="px-1 py-1" style={{minWidth:"140px"}}><div className="flex flex-col gap-1">
   <select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={(()=>{const v=inf.clinic_time||"";if(v.startsWith("참석"))return"참석";if(v.startsWith("불참"))return"불참";return"";})()}
     onChange={e=>{const sel=e.target.value;if(sel==="참석"){setIC(uid,"clinic_time","참석");}else if(sel==="불참"){setIC(uid,"clinic_time","불참");}else{setIC(uid,"clinic_time","");}}}>
@@ -1113,27 +1115,53 @@ function AdminClassManager({users}:{users:any[]}){
         {/* 선택문항 설정 패널 */}
         {showSecCfg&&<div className="mb-4 p-4 bg-blue-50 rounded-2xl space-y-3 border border-blue-100">
           <p className="text-xs font-bold text-blue-700">📋 선택문항 구조 설정</p>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={secCfg.has_sections} onChange={e=>setSecCfg(p=>({...p,has_sections:e.target.checked}))} className="w-4 h-4 accent-blue-500"/>
-              <span className="text-xs font-semibold text-slate-700">선택문항 사용</span>
-            </label>
-          </div>
-          {secCfg.has_sections&&<>
-            <div className="grid grid-cols-3 gap-3">
-              <div><label className="text-[10px] font-semibold text-slate-500 block mb-1">공통문항 수</label><input type="number" className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-blue-200 text-center font-semibold" value={secCfg.common_count} onChange={e=>setSecCfg(p=>({...p,common_count:Number(e.target.value)}))}/></div>
-              <div><label className="text-[10px] font-semibold text-slate-500 block mb-1">선택1 이름</label><input className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-blue-200 font-semibold" value={secCfg.section1_name} onChange={e=>setSecCfg(p=>({...p,section1_name:e.target.value}))}/></div>
-              <div><label className="text-[10px] font-semibold text-slate-500 block mb-1">선택1 문항 수</label><input type="number" className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-blue-200 text-center font-semibold" value={secCfg.section1_count} onChange={e=>setSecCfg(p=>({...p,section1_count:Number(e.target.value)}))}/></div>
-              <div className="col-start-2"><label className="text-[10px] font-semibold text-slate-500 block mb-1">선택2 이름</label><input className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-blue-200 font-semibold" value={secCfg.section2_name} onChange={e=>setSecCfg(p=>({...p,section2_name:e.target.value}))}/></div>
-              <div><label className="text-[10px] font-semibold text-slate-500 block mb-1">선택2 문항 수</label><input type="number" className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-blue-200 text-center font-semibold" value={secCfg.section2_count} onChange={e=>setSecCfg(p=>({...p,section2_count:Number(e.target.value)}))}/></div>
-            </div>
-            <p className="text-[10px] text-blue-500">예) 공통 14문항 + 선택1(15~20번) 6문항 + 선택2(21~26번) 6문항 → 총 20문항 성적표</p>
-          </>}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={secCfg.has_sections} onChange={e=>setSecCfg(p=>({...p,has_sections:e.target.checked}))} className="w-4 h-4 accent-blue-500"/>
+            <span className="text-xs font-semibold text-slate-700">선택문항 사용</span>
+          </label>
+          {secCfg.has_sections&&(()=>{
+            const totalQ=qs.length;
+            const secCount=Math.floor((totalQ-secCfg.common_count)/2);
+            return(<>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-[10px] font-semibold text-slate-500 block mb-1">전체 문항 수</label><input type="number" readOnly className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm border border-blue-100 text-center font-bold text-slate-500" value={totalQ}/></div>
+                <div><label className="text-[10px] font-semibold text-slate-500 block mb-1">공통 문항 수</label><input type="number" className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-blue-200 text-center font-semibold" value={secCfg.common_count} onChange={e=>setSecCfg(p=>({...p,common_count:Number(e.target.value),section1_count:Math.floor((totalQ-Number(e.target.value))/2),section2_count:Math.floor((totalQ-Number(e.target.value))/2)}))}/></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-blue-100">
+                <div>
+                  <p className="text-[10px] font-bold text-blue-500 mb-2">선택1 ({secCfg.common_count+1}번 ~ {secCfg.common_count+secCount}번, {secCount}문항)</p>
+                  <input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm border border-blue-200 font-semibold" placeholder="예) 확률과 통계" value={secCfg.section1_name} onChange={e=>setSecCfg(p=>({...p,section1_name:e.target.value}))}/>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-green-500 mb-2">선택2 ({secCfg.common_count+secCount+1}번 ~ {totalQ}번, {secCount}문항)</p>
+                  <input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm border border-green-200 font-semibold" placeholder="예) 미적분" value={secCfg.section2_name} onChange={e=>setSecCfg(p=>({...p,section2_name:e.target.value}))}/>
+                </div>
+              </div>
+              <p className="text-[10px] text-blue-400">공통 {secCfg.common_count}문항 · 선택1 {secCount}문항 · 선택2 {secCount}문항 = 총 {totalQ}문항</p>
+            </>);
+          })()}
           <button onClick={saveSecCfg} className="bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">저장 및 문항 자동 분류</button>
         </div>}
-        {/* 문항별 단원명 + section 표시 */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>{const sec=q.section||"common";const secLabel=secCfg.has_sections?(sec==="opt1"?`[${secCfg.section1_name}]`:sec==="opt2"?`[${secCfg.section2_name}]`:"[공통]"):"";const secColor=sec==="opt1"?"text-blue-500":sec==="opt2"?"text-green-500":"text-slate-300";return(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span>{secCfg.has_sections&&<span className={`text-[9px] font-bold ${secColor} w-10 flex-shrink-0`}>{secLabel}</span>}<input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>);})}
-        </div>
+        {/* 문항별 단원명 — 선택문항이면 두 컬럼으로 분리 */}
+        {secCfg.has_sections?(()=>{
+          const commonQs=qs.filter(q=>!q.section||q.section==="common");
+          const opt1Qs=qs.filter(q=>q.section==="opt1");
+          const opt2Qs=qs.filter(q=>q.section==="opt2");
+          const topicInput=(q:any,color:string)=>(
+            <div key={q.id} className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span>
+              <input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)} style={{borderLeft:`2px solid ${color}`}}/>
+            </div>
+          );
+          return(<>
+            {commonQs.length>0&&<><p className="text-[10px] font-bold text-slate-400 mt-1 mb-1">공통 문항</p><div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{commonQs.map(q=>topicInput(q,"#e2e8f0"))}</div></>}
+            <div className="grid grid-cols-2 gap-4 mt-3">
+              {opt1Qs.length>0&&<div><p className="text-[10px] font-bold text-blue-500 mb-1">{secCfg.section1_name} 문항</p><div className="space-y-1.5">{opt1Qs.map(q=>topicInput(q,"#3b82f6"))}</div></div>}
+              {opt2Qs.length>0&&<div><p className="text-[10px] font-bold text-green-500 mb-1">{secCfg.section2_name} 문항</p><div className="space-y-1.5">{opt2Qs.map(q=>topicInput(q,"#22c55e"))}</div></div>}
+            </div>
+          </>);
+        })()
+        :<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div>}
       </div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(capComputedRates[a.question_number]??a.correct_rate??0)-(capComputedRates[b.question_number]??b.correct_rate??0));
