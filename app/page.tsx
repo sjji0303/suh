@@ -747,11 +747,21 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
   const[showImport,setShowImport]=useState(false);const[importText,setImportText]=useState("");
   const[editStu,setEditStu]=useState<any>(null);const[editForm,setEditForm]=useState({name:"",school:"",parent_phone:"",student_phone:""});
   const[checked,setChecked]=useState<Set<number>>(new Set());const[bulkDeleting,setBulkDeleting]=useState(false);
+  const[stuGroups,setStuGroups]=useState<Record<number,number[]>>({});
+  const loadStuGroups=async()=>{const{data}=await supabase.from("class_members").select("user_id,class_group_id");if(data){const m:Record<number,number[]>={};data.forEach((r:any)=>{if(!m[r.user_id])m[r.user_id]=[];m[r.user_id].push(r.class_group_id);});setStuGroups(m);}};
+  useEffect(()=>{loadStuGroups();},[]);
   const students=users.filter((u:any)=>u.role==="student"&&u.status==="approved");
+  const sortedStudents=[...students].sort((a:any,b:any)=>{
+    const aGids=stuGroups[a.id]||[];const bGids=stuGroups[b.id]||[];
+    const aIdx=aGids.length>0?Math.min(...aGids.map((id:number)=>groups.findIndex((g:any)=>g.id===id)).filter(i=>i>=0)):9999;
+    const bIdx=bGids.length>0?Math.min(...bGids.map((id:number)=>groups.findIndex((g:any)=>g.id===id)).filter(i=>i>=0)):9999;
+    if(aIdx!==bIdx)return aIdx-bIdx;
+    return(a.name||"").localeCompare(b.name||"",'ko');
+  });
   const fileRef=useRef<HTMLInputElement>(null);
 
   const toggleCheck=(id:number)=>{setChecked(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});};
-  const toggleAll=()=>{if(checked.size===students.length)setChecked(new Set());else setChecked(new Set(students.map((s:any)=>s.id)));};
+  const toggleAll=()=>{if(checked.size===sortedStudents.length)setChecked(new Set());else setChecked(new Set(sortedStudents.map((s:any)=>s.id)));};
   const bulkDelete=async()=>{if(checked.size===0)return;if(!confirm(`선택한 ${checked.size}명의 학생을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`))return;setBulkDeleting(true);for(const id of checked){await supabase.from("users").delete().eq("id",id);}setChecked(new Set());setBulkDeleting(false);fetchUsers();};
 
   const addStudent=async()=>{
@@ -820,7 +830,7 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
       <div className="flex gap-2"><button onClick={saveEditStu} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setEditStu(null)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
     </div>}
 
-    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50"><th className="px-3 py-3 text-left w-10"><input type="checkbox" checked={students.length>0&&checked.size===students.length} onChange={toggleAll} className="w-4 h-4 rounded border-slate-300 text-[#D4AF37] cursor-pointer accent-[#D4AF37]"/></th>{["이름","학교","아이디","학부모","학생",""].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{students.map((s:any)=>(<tr key={s.id} className={`border-t border-slate-50 transition-colors ${checked.has(s.id)?"bg-red-50/50":"hover:bg-slate-50/50"}`}><td className="px-3 py-3"><input type="checkbox" checked={checked.has(s.id)} onChange={()=>toggleCheck(s.id)} className="w-4 h-4 rounded border-slate-300 text-[#D4AF37] cursor-pointer accent-[#D4AF37]"/></td><td className="px-4 py-3 font-semibold">{s.login_id||s.name}</td><td className="px-4 py-3 text-xs text-slate-500">{s.school||"—"}</td><td className="px-4 py-3 font-mono text-xs text-[#D4AF37]">{s.login_id}</td><td className="px-4 py-3 text-xs text-slate-500">{s.parent_phone||"—"}</td><td className="px-4 py-3 text-xs text-slate-500">{s.student_phone||s.phone||"—"}</td><td className="px-4 py-3 text-right flex gap-2 justify-end"><button onClick={()=>startEdit(s)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">수정</button><button onClick={()=>removeStudent(s.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button></td></tr>))}{students.length===0&&<tr><td colSpan={7} className="text-center py-10 text-slate-400 text-sm">학생을 추가하세요</td></tr>}</tbody></table></div>
+    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50"><th className="px-3 py-3 text-left w-10"><input type="checkbox" checked={sortedStudents.length>0&&checked.size===sortedStudents.length} onChange={toggleAll} className="w-4 h-4 rounded border-slate-300 text-[#D4AF37] cursor-pointer accent-[#D4AF37]"/></th>{["이름","반","학교","아이디","학부모","학생",""].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{sortedStudents.map((s:any)=>{const gids=stuGroups[s.id]||[];const sGroups=groups.filter((g:any)=>gids.includes(g.id));return(<tr key={s.id} className={`border-t border-slate-50 transition-colors ${checked.has(s.id)?"bg-red-50/50":"hover:bg-slate-50/50"}`}><td className="px-3 py-3"><input type="checkbox" checked={checked.has(s.id)} onChange={()=>toggleCheck(s.id)} className="w-4 h-4 rounded border-slate-300 text-[#D4AF37] cursor-pointer accent-[#D4AF37]"/></td><td className="px-4 py-3 font-semibold">{s.login_id||s.name}</td><td className="px-3 py-2"><div className="flex flex-wrap gap-1">{sGroups.length>0?sGroups.map((g:any)=>(<span key={g.id} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#AA8C2C] whitespace-nowrap">{g.name}</span>)):<span className="text-[10px] text-slate-300">미배정</span>}</div></td><td className="px-4 py-3 text-xs text-slate-500">{s.school||"—"}</td><td className="px-4 py-3 font-mono text-xs text-[#D4AF37]">{s.login_id}</td><td className="px-4 py-3 text-xs text-slate-500">{s.parent_phone||"—"}</td><td className="px-4 py-3 text-xs text-slate-500">{s.student_phone||s.phone||"—"}</td><td className="px-4 py-3 text-right flex gap-2 justify-end"><button onClick={()=>startEdit(s)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">수정</button><button onClick={()=>removeStudent(s.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button></td></tr>)})}{sortedStudents.length===0&&<tr><td colSpan={8} className="text-center py-10 text-slate-400 text-sm">학생을 추가하세요</td></tr>}</tbody></table></div>
   </div>);
 }
 
@@ -865,7 +875,7 @@ function AdminClassManager({users}:{users:any[]}){
   };
   const approved=users.filter((u:any)=>u.status==="approved"&&u.role!=="admin");
   const fG=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
-  const fM=async(gid:number)=>{const{data}=await supabase.from("class_members").select("*, users:user_id(*)").eq("class_group_id",gid);if(data)setMembers(data);return data||[];};
+  const fM=async(gid:number)=>{const{data}=await supabase.from("class_members").select("*, users:user_id(*)").eq("class_group_id",gid);if(data){const sorted=[...data].sort((a:any,b:any)=>(a.users?.name||"").localeCompare(b.users?.name||"",'ko'));setMembers(sorted);return sorted;}return[];};
   const fT=async(gid:number)=>{const{data}=await supabase.from("tests").select("*").eq("class_group_id",gid).order("date",{ascending:false});if(data)setTests(data);};
   useEffect(()=>{fG();},[]);
 
