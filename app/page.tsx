@@ -876,22 +876,7 @@ function AdminClassManager({users}:{users:any[]}){
     await new Promise(r=>setTimeout(r,80));
     try{
       const html2canvas=(await import("html2canvas")).default;
-      const canvas=await html2canvas(capRef.current,{backgroundColor:"#f0f2f8",scale:2,useCORS:true,logging:false,allowTaint:true,removeContainer:true,imageTimeout:0,onclone:(doc)=>{
-        // html2canvas가 lab()/oklch() 등 최신 CSS 색상함수 미지원
-        // cloned document의 모든 스타일시트에서 해당 색상 포함 규칙 제거
-        Array.from(doc.styleSheets).forEach(ss=>{
-          try{
-            Array.from(ss.cssRules||[]).forEach((rule:any,i)=>{
-              try{
-                const txt=rule.cssText||"";
-                if(txt.includes("lab(")||txt.includes("oklch(")||txt.includes("lch(")||txt.includes("color(")){
-                  ss.deleteRule(i);
-                }
-              }catch{}
-            });
-          }catch{}
-        });
-      }});
+      const canvas=await html2canvas(capRef.current,{backgroundColor:"#f0f2f8",scale:2,useCORS:true,logging:false,allowTaint:true,removeContainer:true,imageTimeout:0,onclone:(doc)=>{Array.from(doc.styleSheets).forEach(ss=>{try{Array.from(ss.cssRules||[]).forEach((rule:any,i)=>{try{const txt=rule.cssText||"";if(txt.includes("lab(")||txt.includes("oklch(")||txt.includes("lch(")||txt.includes("color(")){ss.deleteRule(i);}}catch{}});}catch{}});}});
       const blob:Blob=await new Promise(r=>canvas.toBlob(b=>r(b!),"image/png"));
       if(!blob){setCapId(null);return;}
       try{await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);alert("📷 성적표 이미지가 클립보드에 복사되었습니다!\n카톡에서 Ctrl+V로 붙여넣기 하세요.");}
@@ -1221,79 +1206,77 @@ function AdminClassManager({users}:{users:any[]}){
         })()
         :<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{qs.map(q=>(<div key={q.id} className="flex items-center gap-1.5"><span className="text-xs text-slate-400 w-5 text-right font-semibold">{q.question_number}</span><input className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0" defaultValue={q.topic||""} placeholder="단원명" onBlur={e=>saveTopic(q.id,e.target.value)}/></div>))}</div>}
       </div>
-      {/* 숨겨진 성적표 캡쳐 영역 — 학생 뷰와 동일한 구조 */}
+      {/* 숨겨진 성적표 캡쳐 영역 */}
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};
       const mySelSec=inf.selected_section||"";
       const capQs=selT.has_sections?qs.filter(q=>{const sec=q.section||"common";return sec==="common"||(mySelSec&&sec===mySelSec);}):qs;
       const rm2:any={};capQs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});
       const wrong2=capQs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(capComputedRates[a.question_number]??a.correct_rate??0)-(capComputedRates[b.question_number]??b.correct_rate??0));
       const capSecName=mySelSec==="opt1"?(selT.section1_name||"선택1"):mySelSec==="opt2"?(selT.section2_name||"선택2"):"";
+      // 컨테이너: 440px, 패딩 20px×2 → 콘텐츠 400px
+      // 카드 패딩 16px×2 → 카드 내부 368px → 차트는 368px
+      const CONT=440;const PAD=20;const CPAD=16;const chartW=CONT-PAD*2-CPAD*2;
+      const card:React.CSSProperties={background:"#ffffff",borderRadius:"16px",padding:`${CPAD}px`,marginBottom:"12px",boxShadow:"0 1px 6px rgba(0,0,0,0.07)",overflow:"hidden",boxSizing:"border-box" as const};
       return(
         <div style={{position:"fixed",left:"-9999px",top:0,pointerEvents:"none",zIndex:-1}}>
-          <div id="cap-area" ref={capRef} style={{width:"420px",padding:"20px",background:"#f8fafc",fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif",boxSizing:"border-box"}}>
+          <div ref={capRef} style={{width:`${CONT}px`,padding:`${PAD}px`,background:"#f0f2f8",fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif",boxSizing:"border-box"}}>
             {/* 날짜 + 학생 정보 */}
-            <div style={{textAlign:"center",marginBottom:"12px"}}>
-              <p style={{fontSize:"20px",fontWeight:"bold",margin:"0 0 4px 0",color:"#1e293b"}}>{fmtDate(selT.date)}</p>
+            <div style={{textAlign:"center",marginBottom:"14px"}}>
+              <p style={{fontSize:"20px",fontWeight:"bold",margin:"0 0 6px 0",color:"#1e293b"}}>{fmtDate(selT.date)}</p>
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"6px"}}>
-                <span style={{fontSize:"11px",background:"rgba(212,175,55,0.12)",color:"#D4AF37",padding:"2px 10px",borderRadius:"8px",fontWeight:"700"}}>{selT.class_name||""}</span>
+                <span style={{fontSize:"11px",background:"rgba(212,175,55,0.15)",color:"#D4AF37",padding:"2px 10px",borderRadius:"8px",fontWeight:"700"}}>{selT.class_name||""}</span>
                 <span style={{fontSize:"13px",fontWeight:"600",color:"#334155"}}>{usr?.school||""} {usr?.name}</span>
               </div>
             </div>
             {/* 출석/클리닉/과제/오답 */}
-            <div className="ios-glass-card" style={{padding:"14px",marginBottom:"12px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",textAlign:"center"}}>
+            <div style={{...card,display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",textAlign:"center"}}>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>출석</p><p style={{fontSize:"16px",fontWeight:"bold",margin:0,color:inf.attendance==="출석"?"#16a34a":inf.attendance==="영상"?"#d97706":"#ef4444"}}>{inf.attendance||"—"}</p></div>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>클리닉</p><p style={{fontSize:"13px",fontWeight:"600",margin:0}}>{inf.clinic_time||"—"}</p></div>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>과제</p><p style={{fontSize:"13px",fontWeight:"600",margin:0}}>{(()=>{const r=inf.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const num=r.replace("+ 추가과제 👍","").replace("+추가과제👍","").replace(/%/g,"").trim();return num?num+"%":"—";})()}</p></div>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>오답</p><p style={{fontSize:"13px",fontWeight:"600",margin:0}}>{(()=>{const r=inf.wrong_answer_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";return r.replace(/%/g,"").trim()+"%";})()}</p></div>
             </div>
             {/* 개인 코멘트 */}
-            {inf.comment&&<div className="ios-glass-card" style={{padding:"14px",marginBottom:"12px",textAlign:"center"}}>
-              <p style={{fontSize:"10px",fontWeight:"bold",letterSpacing:"0.15em",textTransform:"uppercase",color:"#D4AF37",marginBottom:"6px"}}>선생님 코멘트</p>
+            {inf.comment&&<div style={{...card,textAlign:"center"}}>
+              <p style={{fontSize:"10px",fontWeight:"bold",letterSpacing:"0.1em",textTransform:"uppercase",color:"#D4AF37",marginBottom:"6px"}}>선생님 코멘트</p>
               <p style={{fontSize:"14px",color:"#334155",lineHeight:1.6,margin:0,whiteSpace:"pre-line"}}>{inf.comment}</p>
             </div>}
             {/* 점수 4칸 */}
-            <div className="ios-glass-card" style={{padding:"16px",marginBottom:"12px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",textAlign:"center"}}>
+            <div style={{...card,display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"8px",textAlign:"center"}}>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>내 점수</p><p style={{fontSize:"26px",fontWeight:"bold",color:"#D4AF37",margin:0}}>{sc}<span style={{fontSize:"13px",color:"#94a3b8",fontWeight:"normal"}}>점</span></p></div>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>반 평균</p><p style={{fontSize:"20px",fontWeight:"bold",color:"#475569",margin:0}}>{(Math.round(avg*10)/10).toFixed(1)}<span style={{fontSize:"12px",color:"#94a3b8",fontWeight:"normal"}}>점</span></p></div>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>표준편차</p><p style={{fontSize:"20px",fontWeight:"bold",color:"#475569",margin:0}}>{(Math.round(stdDev*10)/10).toFixed(1)}<span style={{fontSize:"12px",color:"#94a3b8",fontWeight:"normal"}}>점</span></p></div>
               <div><p style={{fontSize:"10px",color:"#94a3b8",margin:"0 0 3px 0"}}>최고</p><p style={{fontSize:"20px",fontWeight:"bold",color:"#475569",margin:0}}>{best}<span style={{fontSize:"12px",color:"#94a3b8",fontWeight:"normal"}}>점</span></p></div>
             </div>
             {/* 문항별 결과 */}
-            <div className="ios-glass-card" style={{padding:"16px",marginBottom:"12px"}}>
+            <div style={card}>
               <p style={{fontSize:"15px",fontWeight:"800",marginBottom:"10px",color:"#1e293b"}}>문항별 결과{capSecName&&<span style={{fontSize:"10px",color:"#94a3b8",fontWeight:"normal",marginLeft:"6px"}}>공통 + {capSecName}</span>}</p>
               {capQs.map(q=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const isCorrect=rm2[q.question_number];const isCool=isCorrect&&rate<30;const isCry=!isCorrect&&rate>=80;return(
-                <div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"8px",padding:"4px 6px",borderBottom:"1px solid rgba(0,0,0,0.04)"}}>
-                  <span style={{fontSize:"12px",fontWeight:"bold",color:"#94a3b8",width:"20px",textAlign:"right"}}>{q.question_number}</span>
-                  <span style={{fontSize:"12px",color:"#64748b",flex:1}}>{q.topic||"—"}</span>
-                  <span style={{fontSize:"14px",width:"20px",textAlign:"center"}}>{isCool?"😎":isCry?"😭":""}</span>
-                  <span style={{fontSize:"15px",fontWeight:"800",color:isCorrect?"#D4AF37":"#f87171",width:"24px",textAlign:"center"}}>{isCorrect?"O":"X"}</span>
-                  <span style={{fontSize:"10px",color:"#94a3b8",width:"32px",textAlign:"right"}}>{rate}%</span>
+                <div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"8px",padding:"4px 0",borderBottom:"1px solid rgba(0,0,0,0.04)"}}>
+                  <span style={{fontSize:"12px",fontWeight:"bold",color:"#94a3b8",width:"20px",textAlign:"right",flexShrink:0}}>{q.question_number}</span>
+                  <span style={{fontSize:"12px",color:"#64748b",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{q.topic||"—"}</span>
+                  <span style={{fontSize:"14px",width:"20px",textAlign:"center",flexShrink:0}}>{isCool?"😎":isCry?"😭":""}</span>
+                  <span style={{fontSize:"15px",fontWeight:"800",color:isCorrect?"#D4AF37":"#f87171",width:"24px",textAlign:"center",flexShrink:0}}>{isCorrect?"O":"X"}</span>
+                  <span style={{fontSize:"10px",color:"#94a3b8",width:"32px",textAlign:"right",flexShrink:0}}>{rate}%</span>
                 </div>
               );})}
             </div>
             {/* 정답률 차트 */}
-            <div className="ios-glass-card" style={{padding:"16px",marginBottom:"12px"}}>
+            <div style={card}>
               <p style={{fontSize:"15px",fontWeight:"700",marginBottom:"10px",color:"#1e293b"}}>정답률</p>
               {(()=>{
-                const chartW=376;const barH=70;const labelH=36;const totalH=barH+labelH;const n=capQs.length;const barW=Math.max(10,Math.floor((chartW-(n-1)*2)/n));const gap=n>1?(chartW-barW*n)/(n-1):0;const dense=barW<16;
-                return(<svg width={chartW} height={totalH} style={{display:"block",overflow:"visible"}}>
+                const barH=70;const labelH=36;const n=capQs.length;const barW=Math.max(10,Math.floor((chartW-(n-1)*2)/n));const gap=n>1?(chartW-barW*n)/(n-1):0;const dense=barW<16;
+                return(<svg width={chartW} height={barH+labelH} style={{display:"block",overflow:"visible",maxWidth:"100%"}}>
                   {capQs.map((q,i)=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const isCorrect=rm2[q.question_number];const bh=Math.max(3,Math.round(barH*(rate/100)));const x=i*(barW+gap);const cx=x+barW/2;return(
                     <g key={q.question_number}>
                       <rect x={x} y={barH-bh} width={barW} height={bh} rx={2} fill={isCorrect?"#D4AF37":"#ff6b6b"}/>
-                      {dense?(<>
-                        <text transform={`rotate(-45,${cx},${barH+8})`} x={cx} y={barH+8} textAnchor="end" fontSize={8} fill="#64748b" fontWeight="600">{q.question_number}</text>
-                        <text transform={`rotate(-45,${cx},${barH+20})`} x={cx} y={barH+20} textAnchor="end" fontSize={7} fill="#94a3b8">{rate}%</text>
-                      </>):(<>
-                        <text x={cx} y={barH+13} textAnchor="middle" fontSize={9} fill="#64748b" fontWeight="600">{q.question_number}</text>
-                        <text x={cx} y={barH+26} textAnchor="middle" fontSize={8} fill="#94a3b8">{rate}%</text>
-                      </>)}
+                      {dense?(<><text transform={`rotate(-45,${cx},${barH+8})`} x={cx} y={barH+8} textAnchor="end" fontSize={8} fill="#64748b" fontWeight="600">{q.question_number}</text><text transform={`rotate(-45,${cx},${barH+20})`} x={cx} y={barH+20} textAnchor="end" fontSize={7} fill="#94a3b8">{rate}%</text></>):(<><text x={cx} y={barH+13} textAnchor="middle" fontSize={9} fill="#64748b" fontWeight="600">{q.question_number}</text><text x={cx} y={barH+26} textAnchor="middle" fontSize={8} fill="#94a3b8">{rate}%</text></>)}
                     </g>
                   );})}
                 </svg>);
               })()}
             </div>
             {/* 최다 오답 TOP 3 */}
-            {wrong2.length>0&&<div className="ios-glass-card" style={{padding:"16px"}}>
+            {wrong2.length>0&&<div style={card}>
               <p style={{fontSize:"15px",fontWeight:"700",marginBottom:"12px",color:"#1e293b"}}>최다 오답 TOP 3</p>
               <div style={{display:"flex",justifyContent:"center",gap:"24px"}}>
                 {wrong2.slice(0,3).map(q=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const circ=2*Math.PI*30;const filled=circ*(rate/100);const empty=circ-filled;return(
