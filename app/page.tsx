@@ -526,8 +526,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   return(<div style={cardStyle}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                       <h3 className="font-semibold text-base">등수 변화</h3>
-                      {status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
-                      {status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
+                      {status==="up"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 select-none">🎉 저번보다 잘봤어요</span>}
+                      {status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 못봤어요</span>}
                       {status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
                       {status==="first"&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
                     </div>
@@ -895,19 +895,19 @@ function AdminClassManager({users}:{users:any[]}){
   const setIC=(uid:number,key:string,val:string)=>{setIg((p:any)=>({...p,[uid]:{...p[uid],[key]:val}}));};
   const getS=(uid:number)=>{let c=0;const selSec2=ig[uid]?.selected_section||"";qs.forEach(q=>{const qSec=q.section||"common";if(secCfg.has_sections&&qSec!=="common"&&qSec!==selSec2)return;if(grid[`${uid}-${q.question_number}`]===1)c++;});return c;};
   const hasA=(uid:number)=>qs.some(q=>grid[`${uid}-${q.question_number}`]!==undefined);
-  // 실시간 문항별 오답률 (grid/ig 변경 즉시 반영)
-  const liveRates:Record<number,{wrong:number;total:number;rate:number}>=(() => {
-    const r:Record<number,{wrong:number;total:number;rate:number}>={};
+  // 실시간 문항별 정답률 (grid/ig 변경 즉시 반영)
+  const liveRates:Record<number,{correct:number;total:number;rate:number}>=(() => {
+    const r:Record<number,{correct:number;total:number;rate:number}>={};
     qs.forEach(q=>{
       const qn=q.question_number;const qSec=q.section||"common";
-      let total=0,wrong=0;
+      let total=0,correct=0;
       members.forEach((m:any)=>{
         const uid=m.user_id;const v=grid[`${uid}-${qn}`];
         if(v===undefined)return;
         if(secCfg.has_sections&&qSec!=="common"){if((ig[uid]?.selected_section||"")!==qSec)return;}
-        total++;if(v===0)wrong++;
+        total++;if(v===1)correct++;
       });
-      r[qn]={wrong,total,rate:total>0?Math.round((wrong/total)*100):0};
+      r[qn]={correct,total,rate:total>0?Math.round((correct/total)*100):0};
     });
     return r;
   })();
@@ -1072,7 +1072,7 @@ function AdminClassManager({users}:{users:any[]}){
       <button onClick={()=>setSelT(null)} className="flex items-center gap-1 text-sm text-slate-400 mb-3"><Icon type="back" size={16}/>돌아가기</button>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2"><div><h2 className="text-lg font-bold">{selT.title}</h2><p className="text-xs text-slate-400">{fmtDate(selT.date)} · 과제: {selT.assignment||"없음"}</p></div><div className="flex items-center gap-3"><button onClick={saveAll} disabled={saving} className="bg-[#D4AF37] text-white px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">{saving?"저장 중...":"💾 전체 저장"}</button>{saveMsg&&<span className={`text-sm font-semibold ${saveMsg.includes("완료")?"text-green-500":"text-red-500"}`}>{saveMsg}</span>}</div></div>
       <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{secCfg.has_sections&&<th className="px-2 py-2 font-semibold text-slate-500 min-w-[60px]">선택지</th>}{qs.map(q=>{const sec=q.section||"common";const bg=secCfg.has_sections?(sec==="opt1"?"#dbeafe":sec==="opt2"?"#dcfce7":""):"";;return(<th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center" style={{background:bg,borderRadius:"4px"}}>{q.question_number}</th>);})}</tr>
-        <tr className="bg-red-50/40 border-b border-red-100"><td className="sticky left-0 bg-red-50/60 z-10 px-3 py-1 text-[9px] font-bold text-red-400">오답률</td><td className="px-2 py-1 text-center text-[9px] text-slate-300">—</td>{secCfg.has_sections&&<td className="px-2 py-1"/>}{qs.map(q=>{const lr=liveRates[q.question_number];const rate=lr?.rate??0;const total=lr?.total??0;const color=rate>=70?"#ef4444":rate>=40?"#f97316":rate>=20?"#fbbf24":"#86efac";return(<td key={q.question_number} className="px-0.5 py-1 text-center">{total>0?<span className="text-[9px] font-bold" style={{color}}>{rate}%</span>:<span className="text-[9px] text-slate-200">—</span>}</td>);})}</tr>
+        <tr className="bg-blue-50/40 border-b border-blue-100"><td className="sticky left-0 bg-blue-50/60 z-10 px-3 py-1 text-[9px] font-bold text-blue-400">정답률</td><td className="px-2 py-1 text-center text-[9px] text-slate-300">—</td>{secCfg.has_sections&&<td className="px-2 py-1"/>}{qs.map(q=>{const lr=liveRates[q.question_number];const rate=lr?.rate??0;const total=lr?.total??0;const color=rate>=80?"#22c55e":rate>=50?"#3b82f6":rate>=30?"#f97316":"#ef4444";return(<td key={q.question_number} className="px-0.5 py-1 text-center">{total>0?<span className="text-[9px] font-bold" style={{color}}>{rate}%</span>:<span className="text-[9px] text-slate-200">—</span>}</td>);})}</tr>
       </thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);const selSec=ig[uid]?.selected_section||"";return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#D4AF37]">{ans?sc:"미응시"}</td>{secCfg.has_sections&&<td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-1 py-1 text-[10px] border-0 w-full font-semibold" value={selSec} onChange={e=>setIC(uid,"selected_section",e.target.value)}><option value="">미선택</option><option value="opt1">{secCfg.section1_name}</option><option value="opt2">{secCfg.section2_name}</option></select></td>}{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);const qSec=q.section||"common";
         // 선택지 문항: 본인이 선택한 선택지만 활성. 미선택이면 선택지 모두 비활성
         const isDisabled=secCfg.has_sections&&qSec!=="common"&&(selSec===""||selSec!==qSec);return(<td key={q.question_number} className="px-0.5 py-1 text-center" style={{opacity:isDisabled?0.15:1}} onMouseDown={isDisabled?undefined:()=>onCellMouseDown(ri,ci)} onMouseEnter={isDisabled?undefined:()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly disabled={isDisabled} className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D4AF37] ${isSel?"ring-2 ring-[#D4AF37] border-[#D4AF37]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={isDisabled?undefined:e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/5 border-t border-[#D4AF37]/10"><span className="text-xs text-[#D4AF37] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
