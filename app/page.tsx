@@ -207,35 +207,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[_tab,_setTab]=useState("grades");const setTab=(t:string)=>{_setTab(t);window.scrollTo(0,0);};const tab=_tab;const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
   const[topWrong,setTopWrong]=useState<any[]>([]);
-  const[showConfetti,setShowConfetti]=useState(false);
-  const confettiRef=useRef<HTMLCanvasElement>(null);
   const prevTabRef=useRef<string>("");
   const currentTestRef=useRef<any>(null);
-  // confetti 실행 함수
-  const fireConfetti=()=>{
-    setShowConfetti(true);
-    setTimeout(()=>{
-      const canvas=confettiRef.current;if(!canvas)return;
-      canvas.width=window.innerWidth;canvas.height=window.innerHeight;
-      const ctx=canvas.getContext("2d");if(!ctx)return;
-      const pieces:any[]=[];
-      const colors=["#D4AF37","#FFE566","#FF6B6B","#4ECDC4","#A78BFA","#F97316","#34D399","#60A5FA","#F472B6"];
-      for(let i=0;i<160;i++){pieces.push({x:Math.random()*canvas.width,y:-20-Math.random()*200,w:6+Math.random()*8,h:10+Math.random()*12,r:Math.random()*Math.PI*2,dr:0.1+Math.random()*0.3,dx:(Math.random()-0.5)*3,dy:2+Math.random()*4,color:colors[Math.floor(Math.random()*colors.length)],alpha:1});}
-      let frame=0;
-      const draw=()=>{
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        pieces.forEach(p=>{
-          ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.rotate(p.r);
-          ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
-          p.x+=p.dx;p.y+=p.dy;p.r+=p.dr;p.dy+=0.05;
-          if(frame>60)p.alpha=Math.max(0,p.alpha-0.015);
-        });
-        frame++;
-        if(frame<160)requestAnimationFrame(draw);else setShowConfetti(false);
-      };
-      requestAnimationFrame(draw);
-    },50);
-  };
   const[notifs,setNotifs]=useState<any[]>([]);const[showNotif,setShowNotif]=useState(false);
   const unreadCount=notifs.filter(n=>!n.is_read).length;
   const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data){const prev=notifs;setNotifs(data);const hasNewGrade=data.some((n:any)=>!n.is_read&&n.type==="grade");const hadNewGrade=prev.some((n:any)=>!n.is_read&&n.type==="grade");if(hasNewGrade&&!hadNewGrade&&currentTestRef.current){ld(currentTestRef.current);}}};
@@ -248,16 +221,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     return()=>clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
-  // 등수 향상 시 confetti (퍼센타일 기준, 5% 초과 상승)
-  useEffect(()=>{
-    if(rankHistory.length>=2){
-      const last=rankHistory[rankHistory.length-1];
-      const prev=rankHistory[rankHistory.length-2];
-      const lastPct=last.total<=1?50:Math.round(((last.total-last.rank)/(last.total-1))*100);
-      const prevPct=prev.total<=1?50:Math.round(((prev.total-prev.rank)/(prev.total-1))*100);
-      if(lastPct-prevPct>5){fireConfetti();}
-    }
-  },[rankHistory]);
+
   useEffect(()=>{(async()=>{
     // 학생이 속한 반의 시험만 가져오기
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
@@ -479,8 +443,6 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         transform: translateY(-1px);
       }
     `}</style>
-    {/* 🎉 Confetti Canvas */}
-    {showConfetti&&<canvas ref={confettiRef} className="fixed inset-0 pointer-events-none z-[9999]" style={{width:"100%",height:"100%"}}/>}
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}>
         <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(212,175,55,0.15)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
@@ -526,7 +488,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   return(<div style={cardStyle}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                       <h3 className="font-semibold text-base">등수 변화</h3>
-                      {status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
+                      {status==="up"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 select-none">🎉 저번보다 올랐어요</span>}
                       {status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
                       {status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
                       {status==="first"&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
@@ -1165,8 +1127,6 @@ function AdminClassManager({users}:{users:any[]}){
       </div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(capComputedRates[a.question_number]??a.correct_rate??0)-(capComputedRates[b.question_number]??b.correct_rate??0));
-      const rankData=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>({uid:m2.user_id,score:getS(m2.user_id)})).sort((a,b)=>b.score-a.score);
-      const myRank=rankData.findIndex(r=>r.uid===uid)+1;
       return(<div style={{position:"fixed",left:"-9999px",top:0,pointerEvents:"none"}}><div ref={capRef} style={{width:"520px",padding:"28px",background:"white",fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif",WebkitFontSmoothing:"antialiased",MozOsxFontSmoothing:"grayscale",lineHeight:1.5,boxSizing:"border-box"}}>
         {/* 날짜 */}
         <div style={{textAlign:"center",marginBottom:"10px"}}><p style={{fontSize:"18px",fontWeight:"bold",margin:0,padding:0,color:"#1e293b"}}>{fmtDate(selT.date)}</p></div>
