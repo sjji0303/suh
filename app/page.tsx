@@ -207,8 +207,35 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[_tab,_setTab]=useState("grades");const setTab=(t:string)=>{_setTab(t);window.scrollTo(0,0);};const tab=_tab;const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
   const[topWrong,setTopWrong]=useState<any[]>([]);
+  const[showConfetti,setShowConfetti]=useState(false);
+  const confettiRef=useRef<HTMLCanvasElement>(null);
   const prevTabRef=useRef<string>("");
   const currentTestRef=useRef<any>(null);
+  // confetti 실행 함수
+  const fireConfetti=()=>{
+    setShowConfetti(true);
+    setTimeout(()=>{
+      const canvas=confettiRef.current;if(!canvas)return;
+      canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+      const ctx=canvas.getContext("2d");if(!ctx)return;
+      const pieces:any[]=[];
+      const colors=["#D4AF37","#FFE566","#FF6B6B","#4ECDC4","#A78BFA","#F97316","#34D399","#60A5FA","#F472B6"];
+      for(let i=0;i<160;i++){pieces.push({x:Math.random()*canvas.width,y:-20-Math.random()*200,w:6+Math.random()*8,h:10+Math.random()*12,r:Math.random()*Math.PI*2,dr:0.1+Math.random()*0.3,dx:(Math.random()-0.5)*3,dy:2+Math.random()*4,color:colors[Math.floor(Math.random()*colors.length)],alpha:1});}
+      let frame=0;
+      const draw=()=>{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        pieces.forEach(p=>{
+          ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.rotate(p.r);
+          ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+          p.x+=p.dx;p.y+=p.dy;p.r+=p.dr;p.dy+=0.05;
+          if(frame>60)p.alpha=Math.max(0,p.alpha-0.015);
+        });
+        frame++;
+        if(frame<160)requestAnimationFrame(draw);else setShowConfetti(false);
+      };
+      requestAnimationFrame(draw);
+    },50);
+  };
   const[notifs,setNotifs]=useState<any[]>([]);const[showNotif,setShowNotif]=useState(false);
   const unreadCount=notifs.filter(n=>!n.is_read).length;
   const fNotifs=async()=>{const{data}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(data){const prev=notifs;setNotifs(data);const hasNewGrade=data.some((n:any)=>!n.is_read&&n.type==="grade");const hadNewGrade=prev.some((n:any)=>!n.is_read&&n.type==="grade");if(hasNewGrade&&!hadNewGrade&&currentTestRef.current){ld(currentTestRef.current);}}};
@@ -221,7 +248,16 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     return()=>clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
-
+  // 등수 향상 시 confetti (퍼센타일 기준, 5% 초과 상승)
+  useEffect(()=>{
+    if(rankHistory.length>=2){
+      const last=rankHistory[rankHistory.length-1];
+      const prev=rankHistory[rankHistory.length-2];
+      const lastPct=last.total<=1?50:Math.round(((last.total-last.rank)/(last.total-1))*100);
+      const prevPct=prev.total<=1?50:Math.round(((prev.total-prev.rank)/(prev.total-1))*100);
+      if(lastPct-prevPct>5){fireConfetti();}
+    }
+  },[rankHistory]);
   useEffect(()=>{(async()=>{
     // 학생이 속한 반의 시험만 가져오기
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
@@ -443,6 +479,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         transform: translateY(-1px);
       }
     `}</style>
+    {/* 🎉 Confetti Canvas */}
+    {showConfetti&&<canvas ref={confettiRef} className="fixed inset-0 pointer-events-none z-[9999]" style={{width:"100%",height:"100%"}}/>}
     <aside className="hidden lg:flex flex-col w-64 min-h-screen p-3 fixed left-0 top-0 bottom-0 z-40">
       <div className="flex-1 rounded-3xl p-5 flex flex-col m-2 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}>
         <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(212,175,55,0.15)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
@@ -466,7 +504,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group text-center"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 점수 + 등수변화 */}
           <div className="space-y-5 mb-5">
-                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-4 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl font-bold leading-none tracking-tight" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">반 평균</p><p className="grade-stat mt-1">{info.class_average}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">표준편차</p><p className="grade-stat mt-1">{info.std_dev||"—"}<span className="text-xs font-bold ml-1 text-slate-400">{info.std_dev?"점":""}</span></p></div><div><p className="grade-label">최고 점수</p><p className="grade-stat mt-1">{info.class_best}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div></div></div>}
+                {info&&<div className="ios-glass-card p-5 sm:p-6 relative z-10"><div className="grid grid-cols-2 gap-y-4 gap-x-3 text-center"><div><p className="grade-label">내 점수</p><p className="text-2xl font-bold leading-none tracking-tight" style={{color:"#D4AF37",textShadow:"0 2px 10px rgba(212,175,55,0.2)"}}>{info.total_score}<span className="text-sm font-bold ml-1 text-slate-400">점</span></p><p className="text-[10px] text-slate-400 mt-1">전체 {questions.length}문항 중</p></div><div><p className="grade-label">반 평균</p><p className="grade-stat mt-1">{info.class_average}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div><div><p className="grade-label">표준편차</p><p className="grade-stat mt-1">{info.std_dev||"—"}<span className="text-xs font-bold ml-1 text-slate-400">{info.std_dev?"점":""}</span></p></div><div><p className="grade-label">최고 점수</p><p className="grade-stat mt-1">{info.class_best}<span className="text-xs font-bold ml-1 text-slate-400">점</span></p></div></div></div>}
                 {rankHistory.length>=1&&(()=>{
                   // 퍼센타일 계산
                   const pcts=rankHistory.map(h=>h.total<=1?50:Math.round(((h.total-h.rank)/(h.total-1))*100));
@@ -488,7 +526,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   return(<div style={cardStyle}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                       <h3 className="font-semibold text-base">등수 변화</h3>
-                      {status==="up"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 select-none">🎉 저번보다 올랐어요</span>}
+                      {status==="up"&&<span onClick={fireConfetti} className="text-sm font-bold px-3 py-1 rounded-lg bg-green-50 text-green-600 cursor-pointer select-none">🎉 저번보다 올랐어요</span>}
                       {status==="down"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-red-50 text-red-500">📉 저번보다 내렸어요</span>}
                       {status==="maintain"&&<span className="text-sm font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-500">— 저번이랑 비슷해요</span>}
                       {status==="first"&&<span className="text-xs text-slate-400">시험 2회 이상부터 추이 표시</span>}
@@ -850,13 +888,29 @@ function AdminClassManager({users}:{users:any[]}){
     setSelT(test);setSaveMsg("");
     // 선택문항 설정 로드
     setSecCfg({has_sections:test.has_sections||false,common_count:test.common_count||0,section1_name:test.section1_name||"선택1",section2_name:test.section2_name||"선택2",section1_count:test.section1_count||0,section2_count:test.section2_count||0});
-    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");if(q)setQs(q);const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid,selected_section:""};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si,selected_section:si.selected_section||""};});setGrid(g);setIg(ig2);
+    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");if(q)setQs(q);const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid,selected_section:""};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si};});setGrid(g);setIg(ig2);
   };
 
   const setC=(uid:number,qn:number,val:string)=>{const k=`${uid}-${qn}`;setGrid((p:any)=>{const n={...p};if(val==="")delete n[k];else n[k]=Number(val);return n;});};
   const setIC=(uid:number,key:string,val:string)=>{setIg((p:any)=>({...p,[uid]:{...p[uid],[key]:val}}));};
-  const getS=(uid:number)=>{let c=0;qs.forEach(q=>{if(grid[`${uid}-${q.question_number}`]===1)c++;});return c;};
+  const getS=(uid:number)=>{let c=0;const selSec2=ig[uid]?.selected_section||"";qs.forEach(q=>{const qSec=q.section||"common";if(secCfg.has_sections&&qSec!=="common"&&qSec!==selSec2)return;if(grid[`${uid}-${q.question_number}`]===1)c++;});return c;};
   const hasA=(uid:number)=>qs.some(q=>grid[`${uid}-${q.question_number}`]!==undefined);
+  // 실시간 문항별 오답률 (grid/ig 변경 즉시 반영)
+  const liveRates:Record<number,{wrong:number;total:number;rate:number}>=(() => {
+    const r:Record<number,{wrong:number;total:number;rate:number}>={};
+    qs.forEach(q=>{
+      const qn=q.question_number;const qSec=q.section||"common";
+      let total=0,wrong=0;
+      members.forEach((m:any)=>{
+        const uid=m.user_id;const v=grid[`${uid}-${qn}`];
+        if(v===undefined)return;
+        if(secCfg.has_sections&&qSec!=="common"){if((ig[uid]?.selected_section||"")!==qSec)return;}
+        total++;if(v===0)wrong++;
+      });
+      r[qn]={wrong,total,rate:total>0?Math.round((wrong/total)*100):0};
+    });
+    return r;
+  })();
 
   // 드래그 선택 상태
   const[selCells,setSelCells]=useState<Set<string>>(new Set());
@@ -1017,9 +1071,11 @@ function AdminClassManager({users}:{users:any[]}){
     return(<div>
       <button onClick={()=>setSelT(null)} className="flex items-center gap-1 text-sm text-slate-400 mb-3"><Icon type="back" size={16}/>돌아가기</button>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2"><div><h2 className="text-lg font-bold">{selT.title}</h2><p className="text-xs text-slate-400">{fmtDate(selT.date)} · 과제: {selT.assignment||"없음"}</p></div><div className="flex items-center gap-3"><button onClick={saveAll} disabled={saving} className="bg-[#D4AF37] text-white px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">{saving?"저장 중...":"💾 전체 저장"}</button>{saveMsg&&<span className={`text-sm font-semibold ${saveMsg.includes("완료")?"text-green-500":"text-red-500"}`}>{saveMsg}</span>}</div></div>
-      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{secCfg.has_sections&&<th className="px-2 py-2 font-semibold text-slate-500 min-w-[60px]">선택지</th>}{qs.map(q=>{const sec=q.section||"common";const bg=secCfg.has_sections?(sec==="opt1"?"#dbeafe":sec==="opt2"?"#dcfce7":""):"";;return(<th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center" style={{background:bg,borderRadius:"4px"}}>{q.question_number}</th>);})}</tr></thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);const selSec=ig[uid]?.selected_section||"";return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#D4AF37]">{ans?sc:"미응시"}</td>{secCfg.has_sections&&<td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-1 py-1 text-[10px] border-0 w-full font-semibold" value={selSec} onChange={e=>setIC(uid,"selected_section",e.target.value)}><option value="">미선택</option><option value="opt1">{secCfg.section1_name}</option><option value="opt2">{secCfg.section2_name}</option></select></td>}{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);const qSec=q.section||"common";
+      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-x-auto" onMouseUp={onCellMouseUp} style={{userSelect:"none"}}><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[50px]">총점</th>{secCfg.has_sections&&<th className="px-2 py-2 font-semibold text-slate-500 min-w-[60px]">선택지</th>}{qs.map(q=>{const sec=q.section||"common";const bg=secCfg.has_sections?(sec==="opt1"?"#dbeafe":sec==="opt2"?"#dcfce7":""):"";;return(<th key={q.question_number} className="px-1 py-2 font-semibold text-slate-400 min-w-[32px] text-center" style={{background:bg,borderRadius:"4px"}}>{q.question_number}</th>);})}</tr>
+        <tr className="bg-red-50/40 border-b border-red-100"><td className="sticky left-0 bg-red-50/60 z-10 px-3 py-1 text-[9px] font-bold text-red-400">오답률</td><td className="px-2 py-1 text-center text-[9px] text-slate-300">—</td>{secCfg.has_sections&&<td className="px-2 py-1"/>}{qs.map(q=>{const lr=liveRates[q.question_number];const rate=lr?.rate??0;const total=lr?.total??0;const color=rate>=70?"#ef4444":rate>=40?"#f97316":rate>=20?"#fbbf24":"#86efac";return(<td key={q.question_number} className="px-0.5 py-1 text-center">{total>0?<span className="text-[9px] font-bold" style={{color}}>{rate}%</span>:<span className="text-[9px] text-slate-200">—</span>}</td>);})}</tr>
+      </thead><tbody>{members.map((m:any,ri:number)=>{const uid=m.user_id;const usr=m.users;const sc=getS(uid);const ans=hasA(uid);const selSec=ig[uid]?.selected_section||"";return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold text-slate-700">{usr?.login_id||usr?.name||"?"}</td><td className="px-2 py-2 text-center font-bold text-[#D4AF37]">{ans?sc:"미응시"}</td>{secCfg.has_sections&&<td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-1 py-1 text-[10px] border-0 w-full font-semibold" value={selSec} onChange={e=>setIC(uid,"selected_section",e.target.value)}><option value="">미선택</option><option value="opt1">{secCfg.section1_name}</option><option value="opt2">{secCfg.section2_name}</option></select></td>}{qs.map((q,ci:number)=>{const k=`${uid}-${q.question_number}`;const v=grid[k];const cellKey=`${ri}-${ci}`;const isSel=selCells.has(cellKey);const qSec=q.section||"common";
         // 선택지 문항: 본인이 선택한 선택지만 활성. 미선택이면 선택지 모두 비활성
-        const isDisabled=secCfg.has_sections&&qSec!=="common"&&((selSec||"")===""||selSec!==qSec);return(<td key={q.question_number} className="px-0.5 py-1 text-center" style={{opacity:isDisabled?0.15:1}} onMouseDown={isDisabled?undefined:()=>onCellMouseDown(ri,ci)} onMouseEnter={isDisabled?undefined:()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly disabled={isDisabled} className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D4AF37] ${isSel?"ring-2 ring-[#D4AF37] border-[#D4AF37]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={isDisabled?undefined:e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/5 border-t border-[#D4AF37]/10"><span className="text-xs text-[#D4AF37] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
+        const isDisabled=secCfg.has_sections&&qSec!=="common"&&(selSec===""||selSec!==qSec);return(<td key={q.question_number} className="px-0.5 py-1 text-center" style={{opacity:isDisabled?0.15:1}} onMouseDown={isDisabled?undefined:()=>onCellMouseDown(ri,ci)} onMouseEnter={isDisabled?undefined:()=>onCellMouseEnter(ri,ci)}><input data-grid-row={ri} data-grid-col={ci} readOnly disabled={isDisabled} className={`w-7 h-7 text-center rounded font-bold text-xs border cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D4AF37] ${isSel?"ring-2 ring-[#D4AF37] border-[#D4AF37]":v===1?"bg-blue-50 border-blue-200 text-blue-600":v===0?"bg-red-50 border-red-200 text-red-500":"bg-white border-slate-200"}`} value={v===undefined?"":v} onKeyDown={isDisabled?undefined:e=>cellKeyDown(e,ri,ci,uid,q.question_number)} onFocus={e=>e.target.select()}/></td>);})}</tr>);})}</tbody></table>{selCells.size>1&&<div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/5 border-t border-[#D4AF37]/10"><span className="text-xs text-[#D4AF37] font-semibold">{selCells.size}개 선택됨</span><button onClick={()=>applyToSelected("1")} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold">전체 O</button><button onClick={()=>applyToSelected("0")} className="bg-red-50 text-red-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 X</button><button onClick={()=>{applyToSelected("");setSelCells(new Set());}} className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold">전체 삭제</button><button onClick={()=>setSelCells(new Set())} className="text-xs text-slate-400 ml-auto">선택 해제</button></div>}</div>
       <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4"><table className="text-xs border-collapse w-full"><thead><tr className="bg-slate-50"><th className="sticky left-0 bg-slate-50 z-10 px-3 py-2 text-left font-semibold text-slate-500 min-w-[80px]">이름</th><th className="px-2 py-2 font-semibold text-slate-500">출석</th><th className="px-2 py-2 font-semibold text-slate-500">클리닉</th><th className="px-2 py-2 font-semibold text-slate-500">과제 성취도</th><th className="px-2 py-2 font-semibold text-slate-500">오답 성취도</th><th className="px-2 py-2 font-semibold text-slate-500 min-w-[280px]">개인 코멘트</th></tr></thead><tbody>{members.map((m:any)=>{const uid=m.user_id;const usr=m.users;const inf=ig[uid]||{};return(<tr key={uid} className="border-b border-slate-50"><td className="sticky left-0 bg-white z-10 px-3 py-2 font-semibold"><div className="flex items-center gap-1">{usr?.login_id||usr?.name||"?"}{(inf.attendance==="출석"||inf.attendance==="영상")&&<button onClick={()=>captureReport(uid)} className="text-[9px] font-semibold text-slate-600 hover:text-[#D4AF37] bg-slate-100 px-1.5 py-0.5 rounded transition-colors">📷</button>}</div></td><td className="px-1 py-1"><select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={inf.attendance||""} onChange={e=>setIC(uid,"attendance",e.target.value)}><option value="">—</option><option>출석</option><option>결석</option><option>영상</option></select></td><td className="px-1 py-1" style={{minWidth:"140px"}}><div className="flex flex-col gap-1">
   <select className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" value={(()=>{const v=inf.clinic_time||"";if(v.startsWith("참석"))return"참석";if(v.startsWith("불참"))return"불참";return"";})()}
     onChange={e=>{const sel=e.target.value;if(sel==="참석"){setIC(uid,"clinic_time","참석");}else if(sel==="불참"){setIC(uid,"clinic_time","불참");}else{setIC(uid,"clinic_time","");}}}>
@@ -1127,6 +1183,8 @@ function AdminClassManager({users}:{users:any[]}){
       </div>
       {/* 숨겨진 성적표 캡쳐 영역 */}
       {capId!==null&&(()=>{const m=members.find((m:any)=>m.user_id===capId);if(!m)return null;const usr=m.users;const uid=m.user_id;const sc=getS(uid);const inf=ig[uid]||{};const rm2:any={};qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rm2[q.question_number]=v===1;});const wrong2=qs.filter(q=>rm2[q.question_number]===false).sort((a,b)=>(capComputedRates[a.question_number]??a.correct_rate??0)-(capComputedRates[b.question_number]??b.correct_rate??0));
+      const rankData=members.filter((m2:any)=>hasA(m2.user_id)).map((m2:any)=>({uid:m2.user_id,score:getS(m2.user_id)})).sort((a,b)=>b.score-a.score);
+      const myRank=rankData.findIndex(r=>r.uid===uid)+1;
       return(<div style={{position:"fixed",left:"-9999px",top:0,pointerEvents:"none"}}><div ref={capRef} style={{width:"520px",padding:"28px",background:"white",fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif",WebkitFontSmoothing:"antialiased",MozOsxFontSmoothing:"grayscale",lineHeight:1.5,boxSizing:"border-box"}}>
         {/* 날짜 */}
         <div style={{textAlign:"center",marginBottom:"10px"}}><p style={{fontSize:"18px",fontWeight:"bold",margin:0,padding:0,color:"#1e293b"}}>{fmtDate(selT.date)}</p></div>
