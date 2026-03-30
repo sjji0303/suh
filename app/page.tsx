@@ -206,6 +206,8 @@ function fmtDate(d:string){try{const dt=new Date(d+"T00:00:00");return`${d} (${d
 function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[_tab,_setTab]=useState("grades");const setTab=(t:string)=>{_setTab(t);window.scrollTo(0,0);};const tab=_tab;const[tests,setTests]=useState<any[]>([]);const[idx,setIdx]=useState(0);const[questions,setQuestions]=useState<any[]>([]);const[results,setResults]=useState<any[]>([]);const[info,setInfo]=useState<any>(null);const[mm,setMm]=useState(false);const[pw,setPw]=useState({n1:"",n2:""});const[pwMsg,setPwMsg]=useState("");
   const[rankHistory,setRankHistory]=useState<{date:string;rank:number;total:number}[]>([]);
+  const[calTests,setCalTests]=useState<any[]>([]);
+  const[calMonth,setCalMonth]=useState(()=>{const n=new Date();return{y:n.getFullYear(),m:n.getMonth()};});
   const[topWrong,setTopWrong]=useState<any[]>([]);
   const[showConfetti,setShowConfetti]=useState(false);
   const confettiRef=useRef<HTMLCanvasElement>(null);
@@ -326,7 +328,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[myReview,setMyReview]=useState<any>(null);const[showReviewForm,setShowReviewForm]=useState(false);const[reviewForm,setReviewForm]=useState({best_grade:"",kw1:"",kw2:"",kw3:"",content:""});
   const kwOptions=["흥미유발","관리","발문해석","좋은자료","기발한풀이","이해가잘되는해설","친근함","열정","소통","꼼꼼함"];
   const fTokens=async()=>{const{data}=await supabase.from("users").select("tokens").eq("id",user.id).single();if(data)setMyTokens(data.tokens||0);};
-  useEffect(()=>{if(tab==="notice"){(async()=>{
+  useEffect(()=>{if(tab==="calendar"){(async()=>{const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);if(!cm||cm.length===0)return;const gids=cm.map((c:any)=>c.class_group_id);const{data}=await supabase.from("tests").select("id,date,title,class_name").in("class_group_id",gids).order("date",{ascending:true});if(data)setCalTests(data);})();}
+    if(tab==="notice"){(async()=>{
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
     if(!cm||cm.length===0)return;
     const gids=cm.map((c:any)=>c.class_group_id);
@@ -356,7 +359,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const startEditInq=(q:any)=>{const clean=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim()||"";setEditInqId(q.id);setEditInqForm({title:q.title||"",content:clean});setEditInqImg(null);setEditInqKeepImg(true);};
   const saveEditInq=async()=>{if(!editInqId||!editInqForm.content)return;let imgUrl="";if(editInqImg){imgUrl=await uploadImage(editInqImg,`inquiry_edit_${editInqId}`)||"";}const orig=inquiries.find((q:any)=>q.id===editInqId);const oldImgMatch=orig?.content?.match(/\[IMG\](.*?)\[\/IMG\]/);let imgPart="";if(imgUrl)imgPart=`\n[IMG]${imgUrl}[/IMG]`;else if(editInqKeepImg&&oldImgMatch)imgPart=`\n[IMG]${oldImgMatch[1]}[/IMG]`;await supabase.from("inquiries").update({title:editInqForm.title,content:editInqForm.content+imgPart}).eq("id",editInqId);setEditInqId(null);setEditInqImg(null);const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
-  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"review",icon:"msg",label:"후기 작성"},{id:"myexam",icon:"folder",label:"시험결과 작성"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
+  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"calendar",icon:"home",label:"시험 일정"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
       .ios-glass-card {
@@ -486,11 +489,11 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="flex items-center justify-between mb-6 px-1"><div className="rounded-2xl px-3 py-1.5" style={{background:"rgba(212,175,55,0.15)"}}><img src="/logo.png" alt="" className="h-5 object-contain opacity-70"/></div><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-all" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div>
         <div className="px-2 mb-4 flex items-center gap-2"><span className="text-sm">🔥</span><span className="text-[11px] font-semibold" style={{color:"var(--c-gold)",fontWeight:600}}>{myTokens} 서서갈비</span><div className="ml-auto h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent)"}}/></div>
         <nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav>
-        <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}><div className="px-1 mb-3"><p className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</p><p className="text-[10px]" style={{color:"var(--c-text-muted)",letterSpacing:"0.02em"}}>{user.school||""}</p></div><button onClick={()=>setTab("changepw")} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"var(--c-text-secondary)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div>
+        <div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}><div className="px-1 mb-3"><p className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</p><p className="text-[10px]" style={{color:"var(--c-text-muted)",letterSpacing:"0.02em"}}>{user.school||""}</p></div><button onClick={()=>setTab("review")} className={`luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors ${tab==="review"?"active":"text-slate-500"}`}><Icon type="msg" size={16}/>후기 작성</button><button onClick={()=>setTab("myexam")} className={`luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors ${tab==="myexam"?"active":"text-slate-500"}`}><Icon type="folder" size={16}/>시험결과 작성</button><button onClick={()=>setTab("changepw")} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"var(--c-text-secondary)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-2xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div>
       </div>
     </aside>
     <div className="lux-topbar lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center"><button onClick={()=>setMm(!mm)} className="p-1 rounded-xl transition-colors" style={{color:"var(--c-text-primary)"}}><Icon type={mm?"close":"menu"} size={22}/></button><div className="flex items-center gap-2"><div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" style={{background:"rgba(212,175,55,0.12)"}}><span style={{fontSize:"13px",lineHeight:1}}>🔥</span><span className="text-[11px] font-bold" style={{color:"var(--c-gold)",fontFamily:"'Montserrat',sans-serif",fontWeight:700}}>{myTokens} 서서갈비</span></div><span className="text-[11px] font-semibold" style={{color:"var(--c-text-primary)",fontFamily:"'Montserrat',sans-serif",fontWeight:600}}>{user.name}</span><button onClick={()=>{setShowNotif(!showNotif);if(!showNotif)markAllRead();}} className="relative p-1.5 rounded-xl transition-colors" style={{color:"var(--c-gold)"}}><Icon type="bell" size={18}/>{unreadCount>0&&<span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>}</button></div></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 z-50 rounded-r-3xl p-5 flex flex-col" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",boxShadow:"8px 0 40px rgba(212,175,55,0.1)",borderRight:"1px solid rgba(212,175,55,0.08)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><button onClick={()=>{setTab("changepw");setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-2" style={{color:"var(--c-text-secondary)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-1" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed left-0 top-2 bottom-2 w-64 z-50 rounded-r-3xl p-5 flex flex-col" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",boxShadow:"8px 0 40px rgba(212,175,55,0.1)",borderRight:"1px solid rgba(212,175,55,0.08)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div><nav className="flex-1 space-y-0.5">{mis.map(m=>(<button key={m.id} onClick={()=>{setTab(m.id);setMm(false);}} className={`luxury-nav-btn flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium ${tab===m.id?"active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}</nav><div className="pt-3 mt-2 space-y-0.5" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}><button onClick={()=>{setTab("review");setMm(false);}} className={`luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm ${tab==="review"?"active":"text-slate-500"}`}><Icon type="msg" size={16}/>후기 작성</button><button onClick={()=>{setTab("myexam");setMm(false);}} className={`luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm ${tab==="myexam"?"active":"text-slate-500"}`}><Icon type="folder" size={16}/>시험결과 작성</button><button onClick={()=>{setTab("changepw");setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm" style={{color:"var(--c-text-secondary)"}}><Icon type="settings" size={16}/>비밀번호 변경</button><button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-2xl text-sm mt-1" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></div></>}
     {/* 알림 패널 */}
     {showNotif&&<><div onClick={()=>setShowNotif(false)} className="fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.15)",backdropFilter:"blur(2px)"}}/><div className="fixed right-2 top-14 lg:left-14 lg:top-4 lg:right-auto w-80 max-h-[70vh] z-50 overflow-hidden rounded-2xl border" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.1)",boxShadow:"0 12px 40px rgba(212,175,55,0.12),0 2px 8px rgba(212,175,55,0.06)"}}><div className="flex items-center justify-between px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.1)",background:"linear-gradient(135deg,rgba(212,175,55,0.03),rgba(212,175,55,0.02))"}}><h3 className="font-semibold text-sm" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>🔔 알림</h3><button onClick={()=>setShowNotif(false)} className="transition-colors" style={{color:"rgba(130,120,150,0.6)"}}><Icon type="close" size={16}/></button></div><div className="overflow-y-auto max-h-[60vh]">{notifs.length>0?notifs.map((n:any)=>(<div key={n.id} className="px-4 py-3" style={{borderBottom:"1px solid rgba(212,175,55,0.06)",background:n.is_read?"transparent":"rgba(212,175,55,0.03)"}}><div className="flex items-start gap-2"><div className="flex-1"><p className="text-sm" style={{color:"#1a1628",fontFamily:"'Montserrat',sans-serif"}}>{n.message}</p><p className="text-[10px] mt-0.5" style={{color:"rgba(130,120,150,0.6)",fontFamily:"'Montserrat',sans-serif"}}>{n.created_at?.slice(0,10)} {n.created_at?.slice(11,16)}</p></div>{!n.is_read&&<span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{background:"var(--c-gold)"}}/>}</div></div>)):<div className="p-8 text-center text-sm" style={{color:"rgba(130,120,150,0.5)",fontFamily:"'Montserrat',sans-serif"}}>알림이 없습니다</div>}</div></div></>}
     <main className="flex-1 lg:ml-64 pt-14 lg:pt-0"><div className="max-w-3xl mx-auto p-4 sm:p-5 lg:p-8">
@@ -590,6 +593,72 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
           </div>
         </>:<div className="ios-glass-card p-12 text-center text-slate-400 text-sm">결과 미입력</div>}
       </>:<div className="ios-glass-card p-12 text-center text-slate-400">시험 없음</div>}</div>}
+      {tab==="calendar"&&(()=>{
+        const today=new Date();
+        const {y,m}=calMonth;
+        const firstDay=new Date(y,m,1).getDay();
+        const daysInMonth=new Date(y,m+1,0).getDate();
+        const monthStr=`${y}-${String(m+1).padStart(2,"0")}`;
+        const testsThisMonth=calTests.filter(t=>t.date?.startsWith(monthStr));
+        const testMap:Record<number,any[]>={};
+        testsThisMonth.forEach(t=>{const d=Number(t.date?.split("-")[2]);if(!testMap[d])testMap[d]=[];testMap[d].push(t);});
+        // 다음 시험
+        const upcoming=calTests.filter(t=>t.date&&t.date>=today.toISOString().slice(0,10)).slice(0,3);
+        const cells:any[]=[];for(let i=0;i<firstDay;i++)cells.push(null);for(let d=1;d<=daysInMonth;d++)cells.push(d);
+        while(cells.length%7!==0)cells.push(null);
+        return(<div>
+          <h2 className="text-xl font-bold mb-4">📅 시험 일정</h2>
+          {/* 다음 시험 배너 */}
+          {upcoming.length>0&&<div className="ios-glass-card p-4 mb-5">
+            <p className="text-xs font-bold text-[#D4AF37] tracking-widest uppercase mb-3">다가오는 시험</p>
+            <div className="space-y-2">
+              {upcoming.map((t:any)=>{
+                const dt=new Date(t.date+"T00:00:00");
+                const diff=Math.ceil((dt.getTime()-today.setHours(0,0,0,0))/(1000*60*60*24));
+                return(<div key={t.id} className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center flex-shrink-0" style={{background:"linear-gradient(135deg,#D4AF37,#B5952F)"}}>
+                    <span className="text-white text-[10px] font-bold">{String(dt.getMonth()+1).padStart(2,"0")}월</span>
+                    <span className="text-white text-lg font-bold leading-none">{dt.getDate()}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-slate-700">{t.title}</p>
+                    <p className="text-xs text-slate-400">{t.class_name||""} · {["일","월","화","수","목","금","토"][dt.getDay()]}요일</p>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff===0?"bg-red-50 text-red-500":diff<=7?"bg-amber-50 text-amber-600":"bg-slate-100 text-slate-500"}`}>
+                    {diff===0?"오늘":diff===1?"내일":`D-${diff}`}
+                  </span>
+                </div>);
+              })}
+            </div>
+          </div>}
+          {/* 캘린더 */}
+          <div className="ios-glass-card p-4">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={()=>setCalMonth(p=>{const d=new Date(p.y,p.m-1);return{y:d.getFullYear(),m:d.getMonth()};})} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="left" size={18}/></button>
+              <p className="font-bold text-base">{y}년 {m+1}월</p>
+              <button onClick={()=>setCalMonth(p=>{const d=new Date(p.y,p.m+1);return{y:d.getFullYear(),m:d.getMonth()};})} className="p-2 hover:bg-slate-100 rounded-xl"><Icon type="right" size={18}/></button>
+            </div>
+            <div className="grid grid-cols-7 mb-2">
+              {["일","월","화","수","목","금","토"].map((d,i)=>(
+                <div key={d} className={`text-center text-[11px] font-bold py-1 ${i===0?"text-red-400":i===6?"text-blue-400":"text-slate-400"}`}>{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-y-1">
+              {cells.map((d,i)=>{
+                const isToday=d&&y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate();
+                const tests=d?testMap[d]||[]:[];
+                const dow=i%7;
+                return(<div key={i} className="min-h-[52px] rounded-xl p-1 relative" style={{background:isToday?"rgba(212,175,55,0.08)":""}}>
+                  {d&&<span className={`text-xs font-semibold block text-center mb-0.5 w-6 h-6 rounded-full flex items-center justify-center mx-auto ${isToday?"bg-[#D4AF37] text-white":dow===0?"text-red-400":dow===6?"text-blue-400":"text-slate-600"}`}>{d}</span>}
+                  {tests.map((t:any,ti:number)=>(
+                    <div key={ti} className="text-[9px] font-semibold px-1 py-0.5 rounded mb-0.5 truncate text-white" style={{background:"linear-gradient(135deg,#D4AF37,#B5952F)"}} title={t.title}>{t.title}</div>
+                  ))}
+                </div>);
+              })}
+            </div>
+          </div>
+        </div>);
+      })()}
       {tab==="myexam"&&<div>
         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">📝 시험 결과</h2><button onClick={()=>{setShowExamAdd(true);setEditExamId(null);}} className="shimmer-action-btn text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-md transition-all" style={{background:"linear-gradient(135deg,#D4AF37,#B5952F)",boxShadow:"0 4px 14px rgba(212,175,55,0.4)"}}><Icon type="plus" size={15}/>성적 입력</button></div>
         {showExamAdd&&<div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-100/50 space-y-4">
