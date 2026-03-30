@@ -499,7 +499,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg font-semibold">{test.class_name||""}</span><span className="text-sm font-semibold text-slate-700">{user.school||""} {user.name}</span></div><button onClick={async()=>{try{if(navigator.share){await navigator.share({title:`${user.name} 성적표 - ${test.title}`,text:`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점\n${window.location.href}`,});} else{await navigator.clipboard.writeText(`${user.name} | ${test.title}\n점수: ${info?.total_score||0}점 | 반평균: ${info?.class_average||0}점`);alert("성적 정보가 복사되었습니다!");}}catch{}}} className="text-xs text-slate-400 hover:text-[#D4AF37] flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg"><Icon type="upload" size={14}/>공유</button></div>
         {results.length>0?<>
           {/* 1. 출석/클리닉/과제/오답 성취도 */}
-          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value-sm">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value-sm">{(()=>{const r=info.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const hasB=r.includes("추가과제👍");const num=r.replace("+ 추가과제 👍","").replace("+추가과제👍","").replace(/%/g,"").trim();return num?(num+"% "+(hasB?"+ 추가과제 👍":"")):"—";})()}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{(()=>{const r=info.wrong_answer_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";return r.replace(/%/g,"").trim()+"%";})()}</p></div></div>}
+          {info&&<div className="ios-glass-card p-4 sm:p-6 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4"><div className="text-center"><p className="grade-label">출석</p><p className={`grade-value ${info.attendance==="출석"?"text-green-600":info.attendance==="영상"?"text-amber-500":"text-red-500"}`}>{info.attendance||"—"}</p></div><div className="text-center"><p className="grade-label">클리닉</p><p className="grade-value-sm">{info.clinic_time||"—"}</p></div><div className="text-center"><p className="grade-label">과제 성취도</p><p className="grade-value-sm">{(()=>{const r=info.assignment_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";const hasB=r.includes("추가과제");const num=r.replace("+ 추가과제 👍","").replace("+추가과제👍","").replace(/%/g,"").trim();return num?(num+"% "+(hasB?"+ 추가과제 👍":"")):"—";})()}</p></div><div className="text-center"><p className="grade-label">오답 성취도</p><p className="grade-value">{(()=>{const r=info.wrong_answer_score||"";if(!r)return"—";if(r.startsWith("미제출"))return"미제출";return r.replace(/%/g,"").trim()+"%";})()}</p></div></div>}
           {/* 2. 개인 코멘트 */}
           {info?.comment&&<div className="ios-glass-card p-5 sm:p-6 mb-5 relative group text-center"><p className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-[#D4AF37] mb-2 opacity-90 group-hover:opacity-100 transition-opacity">선생님 코멘트</p><p className="text-[14px] sm:text-[16px] text-slate-800 leading-relaxed font-semibold whitespace-pre-line relative z-10 drop-shadow-sm">{info.comment}</p></div>}
           {/* 3. 점수 + 등수변화 */}
@@ -1017,29 +1017,34 @@ function AdminClassManager({users}:{users:any[]}){
         if(autoEnabled){
           const wrongPct=Number(st.auto_wrong_pct||70);const wrongReward=Number(st.auto_wrong_reward||1);
           const assignPct=Number(st.auto_assign_pct||70);const assignReward=Number(st.auto_assign_reward||1);
+          const clinicReward=Number(st.auto_clinic_reward||0);
           for(const m of members){
             const uid=m.user_id;if(!hasA(uid))continue;const inf=ig[uid]||{};
             const wrongVal=(inf.wrong_answer_score||"").startsWith("미제출")?0:parseFloat(String(inf.wrong_answer_score||"0").replace(/%/g,""));
             const assignVal=(inf.assignment_score||"").startsWith("미제출")?0:parseFloat(String(inf.assignment_score||"0").replace(/[^0-9.]/g,""));
             let totalReward=0;const reasons:string[]=[];
-            // 고정 reason 키: 시험ID 기반 (퍼센트 값 무관하게 시험당 1회만)
             const wrongKey=`자동:오답성취도(test_${testId})`;
             const assignKey=`자동:과제성취도(test_${testId})`;
-            // 오답 성취도 체크
+            const clinicKey=`자동:클리닉참석(test_${testId})`;
             if(wrongVal>=wrongPct&&wrongReward>0){
               const{data:dupW}=await supabase.from("token_logs").select("id").eq("user_id",uid).like("reason",`자동:오답성취도(test_${testId})%`).single();
               if(!dupW){totalReward+=wrongReward;reasons.push(`오답 ${wrongVal}%`);}
             }
-            // 과제 성취도 체크
             if(assignVal>=assignPct&&assignReward>0){
               const{data:dupA}=await supabase.from("token_logs").select("id").eq("user_id",uid).like("reason",`자동:과제성취도(test_${testId})%`).single();
               if(!dupA){totalReward+=assignReward;reasons.push(`과제 ${assignVal}%`);}
+            }
+            // 클리닉 참석 시 자동 지급
+            if(clinicReward>0&&(inf.clinic_time||"").startsWith("참석")){
+              const{data:dupC}=await supabase.from("token_logs").select("id").eq("user_id",uid).like("reason",`자동:클리닉참석(test_${testId})%`).single();
+              if(!dupC){totalReward+=clinicReward;reasons.push("클리닉 참석");}
             }
             if(totalReward>0){
               const{data:uData}=await supabase.from("users").select("tokens").eq("id",uid).single();const curTokens=uData?.tokens||0;
               await supabase.from("users").update({tokens:curTokens+totalReward}).eq("id",uid);
               if(reasons.some(r=>r.startsWith("오답")))await supabase.from("token_logs").insert({user_id:uid,amount:wrongReward,reason:wrongKey});
               if(reasons.some(r=>r.startsWith("과제")))await supabase.from("token_logs").insert({user_id:uid,amount:assignReward,reason:assignKey});
+              if(reasons.some(r=>r.startsWith("클리닉")))await supabase.from("token_logs").insert({user_id:uid,amount:clinicReward,reason:clinicKey});
               await sendNotif(uid,"token",`🥩 서서갈비 ${totalReward}개 자동 지급! (${reasons.join(", ")})`);
             }
           }
@@ -1114,12 +1119,12 @@ function AdminClassManager({users}:{users:any[]}){
   <input className="bg-slate-50 rounded-lg px-2 py-1.5 text-xs border-0 w-full" placeholder="(예)90"
     disabled={(inf.assignment_score||"").startsWith("미제출")}
     value={(inf.assignment_score||"").startsWith("미제출")?"":((inf.assignment_score||"").replace("+ 추가과제 👍","").trim())}
-    onChange={e=>{const hasB=(inf.assignment_score||"").includes("추가과제👍");setIC(uid,"assignment_score",e.target.value.trim()+(hasB?"+ 추가과제 👍":""));}}
+    onChange={e=>{const hasB=(inf.assignment_score||"").includes("추가과제");setIC(uid,"assignment_score",e.target.value.trim()+(hasB?"+ 추가과제 👍":""));}}
     style={{opacity:(inf.assignment_score||"").startsWith("미제출")?0.35:1}}/>
   <div className="flex gap-2 px-0.5">
     <label className="flex items-center gap-1 cursor-pointer">
       <input type="checkbox" className="w-3 h-3 accent-[#D4AF37]"
-        checked={(inf.assignment_score||"").includes("추가과제👍")}
+        checked={(inf.assignment_score||"").includes("추가과제")}
         disabled={(inf.assignment_score||"").startsWith("미제출")}
         onChange={e=>{const s=(inf.assignment_score||"").replace("+ 추가과제 👍","").trim();setIC(uid,"assignment_score",s+(e.target.checked?"+ 추가과제 👍":""));}}/>
       <span className="text-[10px] text-slate-400">추가👍</span>
@@ -1412,13 +1417,13 @@ function AdminTokenManager({users,fetchUsers}:{users:any[];fetchUsers:()=>void})
   const[logs,setLogs]=useState<any[]>([]);
   const[groups,setGroups]=useState<any[]>([]);const[batchGroup,setBatchGroup]=useState(0);const[batchAmt,setBatchAmt]=useState("");const[batchReason,setBatchReason]=useState("");const[batchLoading,setBatchLoading]=useState(false);
   // 자동지급 설정
-  const[autoSettings,setAutoSettings]=useState({wrong_pct:"70",wrong_reward:"1",assign_pct:"70",assign_reward:"1",enabled:true});const[autoMsg,setAutoMsg]=useState("");
+  const[autoSettings,setAutoSettings]=useState({wrong_pct:"70",wrong_reward:"1",assign_pct:"70",assign_reward:"1",clinic_reward:"0",enabled:true});const[autoMsg,setAutoMsg]=useState("");
   const userMap:any={};users.forEach(u=>{userMap[u.id]=u.name;});
   const fLogs=async()=>{const{data}=await supabase.from("token_logs").select("*").order("created_at",{ascending:false}).limit(50);if(data)setLogs(data);};
   const fGroups=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
-  const loadAutoSettings=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setAutoSettings({wrong_pct:s.auto_wrong_pct||"70",wrong_reward:s.auto_wrong_reward||"1",assign_pct:s.auto_assign_pct||"70",assign_reward:s.auto_assign_reward||"1",enabled:s.auto_token_enabled!=="false"});}};
+  const loadAutoSettings=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setAutoSettings({wrong_pct:s.auto_wrong_pct||"70",wrong_reward:s.auto_wrong_reward||"1",assign_pct:s.auto_assign_pct||"70",assign_reward:s.auto_assign_reward||"1",clinic_reward:s.auto_clinic_reward||"0",enabled:s.auto_token_enabled!=="false"});}};
   useEffect(()=>{fLogs();fGroups();loadAutoSettings();},[]);
-  const saveAutoSettings=async()=>{const pairs=[["auto_wrong_pct",autoSettings.wrong_pct],["auto_wrong_reward",autoSettings.wrong_reward],["auto_assign_pct",autoSettings.assign_pct],["auto_assign_reward",autoSettings.assign_reward],["auto_token_enabled",autoSettings.enabled?"true":"false"]];for(const[k,v] of pairs){const{data:ex}=await supabase.from("site_settings").select("id").eq("key",k).single();if(ex)await supabase.from("site_settings").update({value:v}).eq("key",k);else await supabase.from("site_settings").insert({key:k,value:v});}setAutoMsg("저장 완료!");setTimeout(()=>setAutoMsg(""),2000);};
+  const saveAutoSettings=async()=>{const pairs=[["auto_wrong_pct",autoSettings.wrong_pct],["auto_wrong_reward",autoSettings.wrong_reward],["auto_assign_pct",autoSettings.assign_pct],["auto_assign_reward",autoSettings.assign_reward],["auto_clinic_reward",autoSettings.clinic_reward],["auto_token_enabled",autoSettings.enabled?"true":"false"]];for(const[k,v] of pairs){const{data:ex}=await supabase.from("site_settings").select("id").eq("key",k).single();if(ex)await supabase.from("site_settings").update({value:v}).eq("key",k);else await supabase.from("site_settings").insert({key:k,value:v});}setAutoMsg("저장 완료!");setTimeout(()=>setAutoMsg(""),2000);};
   const giveToken=async(uid:number,subtract?:boolean)=>{const amt=Number(amount[uid]||0);if(!amt||amt<=0)return;const u=students.find(s=>s.id===uid);const cur=u?.tokens||0;const newVal=subtract?Math.max(0,cur-amt):cur+amt;await supabase.from("users").update({tokens:newVal}).eq("id",uid);const rsn=reason[uid]||(subtract?"관리자 차감":"관리자 지급");await supabase.from("token_logs").insert({user_id:uid,amount:subtract?-amt:amt,reason:rsn});await sendNotif(uid,"token",subtract?`🥩 서서갈비 ${amt}개 차감 (${rsn})`:`🥩 서서갈비 ${amt}개 지급! (${rsn})`);setAmount(p=>({...p,[uid]:""}));setReason(p=>({...p,[uid]:""}));fetchUsers();fLogs();};
   const batchGive=async()=>{if(!batchGroup||!batchAmt)return;const amt=Number(batchAmt);if(!amt||amt<=0)return;setBatchLoading(true);const{data:cms}=await supabase.from("class_members").select("user_id").eq("class_group_id",batchGroup);if(cms){const rsn=batchReason||"반 일괄 지급";for(const cm of cms){const u=users.find((u:any)=>u.id===cm.user_id);const cur=u?.tokens||0;await supabase.from("users").update({tokens:cur+amt}).eq("id",cm.user_id);await supabase.from("token_logs").insert({user_id:cm.user_id,amount:amt,reason:rsn});await sendNotif(cm.user_id,"token",`🥩 서서갈비 ${amt}개 지급! (${rsn})`);}alert(`${cms.length}명에게 ${amt}개씩 지급 완료!`);}setBatchGroup(0);setBatchAmt("");setBatchReason("");setBatchLoading(false);fetchUsers();fLogs();};
   return(<div><h2 className="text-lg font-bold mb-4">🥩 서서갈비 관리</h2>
@@ -1428,6 +1433,7 @@ function AdminTokenManager({users,fetchUsers}:{users:any[];fetchUsers:()=>void})
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-slate-50 rounded-xl p-4"><p className="text-xs font-semibold text-slate-600 mb-2">📝 오답 성취도 기준</p><div className="flex items-center gap-2"><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.wrong_pct} onChange={e=>setAutoSettings(p=>({...p,wrong_pct:e.target.value}))}/><span className="text-xs text-slate-400">% 이상이면</span><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.wrong_reward} onChange={e=>setAutoSettings(p=>({...p,wrong_reward:e.target.value}))}/><span className="text-xs text-slate-400">개 지급</span></div></div>
         <div className="bg-slate-50 rounded-xl p-4"><p className="text-xs font-semibold text-slate-600 mb-2">📋 과제 성취도 기준</p><div className="flex items-center gap-2"><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.assign_pct} onChange={e=>setAutoSettings(p=>({...p,assign_pct:e.target.value}))}/><span className="text-xs text-slate-400">% 이상이면</span><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.assign_reward} onChange={e=>setAutoSettings(p=>({...p,assign_reward:e.target.value}))}/><span className="text-xs text-slate-400">개 지급</span></div></div>
+        <div className="bg-slate-50 rounded-xl p-4"><p className="text-xs font-semibold text-slate-600 mb-2">🏥 클리닉 참석 기준</p><div className="flex items-center gap-2"><span className="text-xs text-slate-400">참석 시</span><input type="number" className="w-16 bg-white rounded-lg px-2 py-1.5 text-sm border border-slate-200 text-center" value={autoSettings.clinic_reward} onChange={e=>setAutoSettings(p=>({...p,clinic_reward:e.target.value}))}/><span className="text-xs text-slate-400">개 지급 (0이면 미지급)</span></div></div>
       </div>
       <div className="flex items-center gap-2 mt-3"><button onClick={saveAutoSettings} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">설정 저장</button>{autoMsg&&<span className="text-xs text-green-500 font-semibold">{autoMsg}</span>}<p className="text-[10px] text-slate-400 ml-auto">시험 저장 시 자동 적용 · 중복 지급 없음</p></div>
     </div>
