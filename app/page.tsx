@@ -328,7 +328,8 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const[myReview,setMyReview]=useState<any>(null);const[showReviewForm,setShowReviewForm]=useState(false);const[reviewForm,setReviewForm]=useState({best_grade:"",kw1:"",kw2:"",kw3:"",content:""});
   const kwOptions=["흥미유발","관리","발문해석","좋은자료","기발한풀이","이해가잘되는해설","친근함","열정","소통","꼼꼼함"];
   const fTokens=async()=>{const{data}=await supabase.from("users").select("tokens").eq("id",user.id).single();if(data)setMyTokens(data.tokens||0);};
-  useEffect(()=>{if(tab==="calendar"){(async()=>{const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);if(!cm||cm.length===0)return;const gids=cm.map((c:any)=>c.class_group_id);const{data}=await supabase.from("tests").select("id,date,title,class_name").in("class_group_id",gids).order("date",{ascending:true});if(data)setCalTests(data);})();}
+  useEffect(()=>{if(tab==="calendar"){(async()=>{const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);const gids=cm?cm.map((c:any)=>c.class_group_id):[];// 공통(class_group_id=null) + 내 반 일정
+      const{data:common}=await supabase.from("calendar_events").select("*").is("class_group_id",null).order("date",{ascending:true});const{data:mine}=gids.length>0?await supabase.from("calendar_events").select("*").in("class_group_id",gids).order("date",{ascending:true}):{data:[]};const merged=[...(common||[]),...(mine||[])].sort((a,b)=>a.date.localeCompare(b.date));setCalTests(merged);})();}
     if(tab==="notice"){(async()=>{
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
     if(!cm||cm.length===0)return;
@@ -359,7 +360,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const startEditInq=(q:any)=>{const clean=q.content?.replace(/\[IMG\].*?\[\/IMG\]/g,"").trim()||"";setEditInqId(q.id);setEditInqForm({title:q.title||"",content:clean});setEditInqImg(null);setEditInqKeepImg(true);};
   const saveEditInq=async()=>{if(!editInqId||!editInqForm.content)return;let imgUrl="";if(editInqImg){imgUrl=await uploadImage(editInqImg,`inquiry_edit_${editInqId}`)||"";}const orig=inquiries.find((q:any)=>q.id===editInqId);const oldImgMatch=orig?.content?.match(/\[IMG\](.*?)\[\/IMG\]/);let imgPart="";if(imgUrl)imgPart=`\n[IMG]${imgUrl}[/IMG]`;else if(editInqKeepImg&&oldImgMatch)imgPart=`\n[IMG]${oldImgMatch[1]}[/IMG]`;await supabase.from("inquiries").update({title:editInqForm.title,content:editInqForm.content+imgPart}).eq("id",editInqId);setEditInqId(null);setEditInqImg(null);const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);};
   const test=tests[idx];const rm:any={};results.forEach((r:any)=>{rm[r.question_number]=r.is_correct;});
-  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"calendar",icon:"home",label:"시험 일정"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
+  const mis=[{id:"grades",icon:"test",label:"성적표"},{id:"calendar",icon:"home",label:"캘린더"},{id:"notice",icon:"bell",label:"공지사항"},{id:"inquiry",icon:"msg",label:"문의사항"},{id:"shorts",icon:"play",label:"서정인T 쇼츠"},{id:"shop",icon:"cart",label:"상점"}];
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"var(--font-sans)"}}>
     <style>{`
       .ios-glass-card {
@@ -607,7 +608,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
         const cells:any[]=[];for(let i=0;i<firstDay;i++)cells.push(null);for(let d=1;d<=daysInMonth;d++)cells.push(d);
         while(cells.length%7!==0)cells.push(null);
         return(<div>
-          <h2 className="text-xl font-bold mb-4">📅 시험 일정</h2>
+          <h2 className="text-xl font-bold mb-4">📅 캘린더</h2>
           {/* 다음 시험 배너 */}
           {upcoming.length>0&&<div className="ios-glass-card p-4 mb-5">
             <p className="text-xs font-bold text-[#D4AF37] tracking-widest uppercase mb-3">다가오는 시험</p>
@@ -622,7 +623,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-slate-700">{t.title}</p>
-                    <p className="text-xs text-slate-400">{t.class_name||""} · {["일","월","화","수","목","금","토"][dt.getDay()]}요일</p>
+                    <p className="text-xs text-slate-400">{t.class_group_id?t.class_name||"":"전체"} · {["일","월","화","수","목","금","토"][dt.getDay()]}요일</p>
                   </div>
                   <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff===0?"bg-red-50 text-red-500":diff<=7?"bg-amber-50 text-amber-600":"bg-slate-100 text-slate-500"}`}>
                     {diff===0?"오늘":diff===1?"내일":`D-${diff}`}
@@ -1405,6 +1406,101 @@ function AdminClassManager({users}:{users:any[]}){
 }
 
 /* ═══ ADMIN: NOTICE MANAGER ═══ */
+/* ═══ ADMIN: CALENDAR MANAGER ═══ */
+function AdminCalendarManager({groups}:{groups:any[]}){
+  const[events,setEvents]=useState<any[]>([]);
+  const[form,setForm]=useState({date:"",title:"",memo:"",class_group_id:"" as string|number});
+  const[editId,setEditId]=useState<number|null>(null);
+  const[editForm,setEditForm]=useState({date:"",title:"",memo:"",class_group_id:"" as string|number});
+
+  const fE=async()=>{
+    const{data:common}=await supabase.from("calendar_events").select("*, class_groups(name)").is("class_group_id",null).order("date",{ascending:true});
+    const{data:classed}=await supabase.from("calendar_events").select("*, class_groups(name)").not("class_group_id","is",null).order("date",{ascending:true});
+    setEvents([...(common||[]),...(classed||[])].sort((a,b)=>a.date.localeCompare(b.date)));
+  };
+  useEffect(()=>{fE();},[]);
+
+  const addEvent=async()=>{
+    if(!form.date||!form.title)return;
+    await supabase.from("calendar_events").insert({date:form.date,title:form.title,memo:form.memo||null,class_group_id:form.class_group_id===""?null:Number(form.class_group_id)});
+    setForm({date:"",title:"",memo:"",class_group_id:""});fE();
+  };
+  const delEvent=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("calendar_events").delete().eq("id",id);fE();};
+  const startEdit=(e:any)=>{setEditId(e.id);setEditForm({date:e.date,title:e.title,memo:e.memo||"",class_group_id:e.class_group_id===null?"":e.class_group_id});};
+  const saveEdit=async()=>{if(!editId)return;await supabase.from("calendar_events").update({date:editForm.date,title:editForm.title,memo:editForm.memo||null,class_group_id:editForm.class_group_id===""?null:Number(editForm.class_group_id)}).eq("id",editId);setEditId(null);fE();};
+
+  const GroupSelect=({value,onChange}:{value:string|number;onChange:(v:string|number)=>void})=>(
+    <select className="w-full bg-slate-50 rounded-xl px-3 py-2 text-sm border-0" value={String(value)} onChange={e=>onChange(e.target.value)}>
+      <option value="">전체 공통</option>
+      {groups.map(g=>(<option key={g.id} value={String(g.id)}>{g.name}</option>))}
+    </select>
+  );
+
+  // 월별 그룹핑
+  const grouped:Record<string,any[]>={};
+  events.forEach(e=>{const k=e.date?.slice(0,7)||"";if(!grouped[k])grouped[k]=[];grouped[k].push(e);});
+
+  return(<div>
+    <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">📅 캘린더 관리</h2></div>
+    {/* 추가 폼 */}
+    <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 border border-[#D4AF37]/10">
+      <h3 className="font-semibold text-sm mb-3">+ 새 일정 추가</h3>
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div><label className="text-[10px] font-semibold text-slate-400">날짜 *</label><input type="date" className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))}/></div>
+        <div><label className="text-[10px] font-semibold text-slate-400">대상 반</label><div className="mt-1"><GroupSelect value={form.class_group_id} onChange={v=>setForm(p=>({...p,class_group_id:v}))}/></div></div>
+      </div>
+      <div className="mb-3"><label className="text-[10px] font-semibold text-slate-400">제목 *</label><input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" placeholder="예) 3월 모의고사, 클리닉 일정" value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))}/></div>
+      <div className="mb-3"><label className="text-[10px] font-semibold text-slate-400">메모 (선택)</label><input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" placeholder="추가 설명" value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))}/></div>
+      <button onClick={addEvent} className="bg-[#D4AF37] text-white px-5 py-2 rounded-xl text-xs font-semibold">추가</button>
+    </div>
+    {/* 일정 목록 */}
+    <div className="space-y-5">
+      {Object.keys(grouped).sort().map(month=>{
+        const [y,m]=month.split("-");
+        return(<div key={month}>
+          <p className="text-xs font-bold text-slate-400 mb-2 px-1">{y}년 {Number(m)}월</p>
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            {grouped[month].map((e:any,i:number)=>(
+              <div key={e.id} className={`p-4 ${i>0?"border-t border-slate-50":""}`}>
+                {editId===e.id?(
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="date" className="bg-slate-50 rounded-lg px-3 py-2 text-sm border-0" value={editForm.date} onChange={ev=>setEditForm(p=>({...p,date:ev.target.value}))}/>
+                      <GroupSelect value={editForm.class_group_id} onChange={v=>setEditForm(p=>({...p,class_group_id:v}))}/>
+                    </div>
+                    <input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm border-0" value={editForm.title} onChange={ev=>setEditForm(p=>({...p,title:ev.target.value}))}/>
+                    <input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm border-0" placeholder="메모" value={editForm.memo} onChange={ev=>setEditForm(p=>({...p,memo:ev.target.value}))}/>
+                    <div className="flex gap-2"><button onClick={saveEdit} className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-lg text-xs font-semibold">저장</button><button onClick={()=>setEditId(null)} className="bg-slate-100 text-slate-500 px-4 py-1.5 rounded-lg text-xs font-semibold">취소</button></div>
+                  </div>
+                ):(
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0" style={{background:"linear-gradient(135deg,#D4AF37,#B5952F)"}}>
+                      <span className="text-white text-[10px] font-bold leading-none">{e.date?.slice(5,7)}월</span>
+                      <span className="text-white text-base font-bold leading-none">{Number(e.date?.slice(8,10))}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-semibold text-slate-700 truncate">{e.title}</p>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${e.class_group_id?"bg-blue-50 text-blue-500":"bg-[#D4AF37]/10 text-[#AA8C2C]"}`}>{e.class_group_id?e.class_groups?.name||"반":"전체"}</span>
+                      </div>
+                      {e.memo&&<p className="text-xs text-slate-400 truncate">{e.memo}</p>}
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button onClick={()=>startEdit(e)} className="text-xs text-slate-500 hover:text-[#D4AF37] px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">수정</button>
+                      <button onClick={()=>delEvent(e.id)} className="text-xs text-slate-500 hover:text-red-500 px-2 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>);
+      })}
+      {events.length===0&&<div className="bg-white rounded-2xl p-10 text-center text-slate-400 text-sm shadow-sm">등록된 일정이 없습니다</div>}
+    </div>
+  </div>);
+}
+
 function AdminNoticeManager({groups}:{groups:any[]}){
   const[notices,setNotices]=useState<any[]>([]);const[showAdd,setShowAdd]=useState(false);
   const[form,setForm]=useState({class_group_id:0,title:"",content:""});const[noticeImg,setNoticeImg]=useState<File|null>(null);const noticeImgRef=useRef<HTMLInputElement>(null);
@@ -1689,7 +1785,7 @@ export default function Home(){
   const handleAdminTab=(id:string,mob?:boolean)=>{if(lockedTabs.includes(id)&&!adminUnlocked){setTab("unlock");if(mob)setMm(false);return;}setTab(id);if(mob)setMm(false);if(id==="inquiries")fInqCount();if(id==="shop")fOrderCount();};
 
   const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"}];
-  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
+  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
 
   const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
     {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
@@ -1711,6 +1807,7 @@ export default function Home(){
       {tab==="tokens"&&adminUnlocked&&<AdminTokenManager users={users} fetchUsers={fU}/>}
       {tab==="shop"&&adminUnlocked&&<AdminShopManager onProcess={fOrderCount}/>}
       {tab==="notices"&&adminUnlocked&&<AdminNoticeManager groups={groups}/>}
+      {tab==="calendar"&&adminUnlocked&&<AdminCalendarManager groups={groups}/>}
       {tab==="reviews"&&adminUnlocked&&<AdminReviewViewer/>}
       {tab==="studentReviews"&&adminUnlocked&&<AdminStudentReviewViewer/>}
       {tab==="shorts"&&adminUnlocked&&<AdminShortsManager/>}
