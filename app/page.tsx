@@ -1356,13 +1356,27 @@ function AdminClassManager({users}:{users:any[]}){
               <div style={{display:"flex",justifyContent:"center",gap:"24px"}}>
                 {wrong2.slice(0,3).map(q=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const circ=2*Math.PI*30;const filled=circ*(rate/100);const empty=circ-filled;return(
                   <div key={q.question_number} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"6px"}}>
-                    <svg viewBox="0 0 68 68" width="56" height="56" style={{transform:"rotate(-90deg)"}}>
+                    <svg viewBox="0 0 68 68" width="64" height="64">
+                      {/* 배경 원 */}
                       <circle cx="34" cy="34" r="30" fill="none" stroke="#f1f5f9" strokeWidth="5"/>
-                      <circle cx="34" cy="34" r="30" fill="none" stroke="#ff6b6b" strokeWidth="5" strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"/>
+                      {/* 진행 원 — rotate 변환 SVG 내부에서 처리 */}
+                      <circle cx="34" cy="34" r="30" fill="none" stroke="#ff6b6b" strokeWidth="5"
+                        strokeDasharray={`${filled} ${empty}`} strokeLinecap="round"
+                        transform="rotate(-90 34 34)"/>
+                      {/* 문항번호 텍스트 — SVG 안에서 직접 그림 */}
+                      <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
+                        fontSize="16" fontWeight="bold" fill="#334155"
+                        style={{fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif"}}>
+                        {q.question_number}
+                      </text>
+                      <text x="34" y="45" textAnchor="middle" dominantBaseline="middle"
+                        fontSize="9" fill="#94a3b8"
+                        style={{fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif"}}>
+                        번
+                      </text>
                     </svg>
-                    <div style={{marginTop:"-42px",marginBottom:"14px",textAlign:"center"}}><p style={{fontSize:"14px",fontWeight:"bold",color:"#334155",margin:0}}>{q.question_number}</p><p style={{fontSize:"8px",color:"#94a3b8",margin:0}}>번</p></div>
                     <p style={{fontSize:"11px",fontWeight:"600",color:"#f87171",margin:0}}>{rate}%</p>
-                    <p style={{fontSize:"10px",color:"#94a3b8",margin:0}}>{q.topic||"—"}</p>
+                    <p style={{fontSize:"10px",color:"#94a3b8",margin:0,maxWidth:"70px",textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{q.topic||"—"}</p>
                   </div>
                 );})}
               </div>
