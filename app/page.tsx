@@ -983,7 +983,12 @@ function AdminClassManager({users}:{users:any[]}){
     setSelT(test);setSaveMsg("");
     // 선택문항 설정 로드
     setSecCfg({has_sections:test.has_sections||false,common_count:test.common_count||0,section1_name:test.section1_name||"선택1",section2_name:test.section2_name||"선택2",section1_count:test.section1_count||0,section2_count:test.section2_count||0});
-    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");if(q)setQs(q);const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid,selected_section:""};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si};});setGrid(g);setIg(ig2);
+    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");
+    if(q)setQs(q.map((qi:any)=>({...qi,section:qi.section||"common"})));
+    const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid,selected_section:""};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});
+    // selected_section null 방어
+    if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si,selected_section:si.selected_section||""};});
+    setGrid(g);setIg(ig2);
   };
 
   const setC=(uid:number,qn:number,val:string)=>{const k=`${uid}-${qn}`;setGrid((p:any)=>{const n={...p};if(val==="")delete n[k];else n[k]=Number(val);return n;});};
@@ -1077,7 +1082,7 @@ function AdminClassManager({users}:{users:any[]}){
     else{setSaveMsg("✅ 저장 완료!");
       // 정답률 재조회 → qs state 업데이트 (항상 question_number 순으로)
       const{data:freshQs}=await supabase.from("test_questions").select("*").eq("test_id",testId).order("question_number",{ascending:true});
-      if(freshQs)setQs(freshQs);
+      if(freshQs)setQs(freshQs.map((qi:any)=>({...qi,section:qi.section||"common"})));
       // 알림 발송 → 학생 뷰에서 fNotifs 감지 → ld() 재호출 → questions 갱신 → wrong 재계산
       for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}
       // 자동 서서갈비 지급 (오답/과제 성취도 기준)
@@ -1129,7 +1134,7 @@ function AdminClassManager({users}:{users:any[]}){
     }else if(newCount<cur){
       for(let i=newCount+1;i<=cur;i++){await supabase.from("test_questions").delete().eq("test_id",selT.id).eq("question_number",i);}
     }
-    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number");if(q)setQs(q);
+    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number");if(q)setQs(q.map((qi:any)=>({...qi,section:qi.section||"common"})));
   };
   // 단원명 저장
   const saveTopic=async(qId:number,topic:string)=>{await supabase.from("test_questions").update({topic}).eq("id",qId);};
@@ -1157,7 +1162,7 @@ function AdminClassManager({users}:{users:any[]}){
     }
     // 항상 question_number 순으로 재조회
     const{data:freshQ}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number",{ascending:true});
-    if(freshQ)setQs(freshQ);
+    if(freshQ)setQs(freshQ.map((qi:any)=>({...qi,section:qi.section||"common"})));
     setShowSecCfg(false);
     alert(`저장 완료! 공통 ${cfg.common_count}문항 · 선택1 ${s1c}문항 · 선택2 ${s2c}문항`);
   };
@@ -1328,7 +1333,7 @@ function AdminClassManager({users}:{users:any[]}){
               {capQs.map(q=>{const rate=capComputedRates[q.question_number]??q.correct_rate??0;const isCorrect=rm2[q.question_number];const isCool=isCorrect&&rate<30;const isCry=!isCorrect&&rate>=80;return(
                 <div key={q.question_number} style={{display:"flex",alignItems:"center",gap:"8px",padding:"4px 0",borderBottom:"1px solid rgba(0,0,0,0.04)"}}>
                   <span style={{fontSize:"12px",fontWeight:"bold",color:"#94a3b8",width:"20px",textAlign:"right",flexShrink:0}}>{q.question_number}</span>
-                  <span style={{fontSize:"12px",color:"#64748b",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{q.topic||"—"}</span>
+                  <span style={{fontSize:"11px",color:"#64748b",flex:1,lineHeight:1.3,wordBreak:"keep-all",overflowWrap:"break-word"}}>{q.topic||"—"}</span>
                   <span style={{fontSize:"14px",width:"20px",textAlign:"center",flexShrink:0}}>{isCool?"😎":isCry?"😭":""}</span>
                   <span style={{fontSize:"15px",fontWeight:"800",color:isCorrect?"#D4AF37":"#f87171",width:"24px",textAlign:"center",flexShrink:0}}>{isCorrect?"O":"X"}</span>
                   <span style={{fontSize:"10px",color:"#94a3b8",width:"32px",textAlign:"right",flexShrink:0}}>{rate}%</span>
