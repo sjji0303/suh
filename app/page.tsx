@@ -907,6 +907,8 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
 /* ═══ ADMIN: CLASS + EXCEL TEST (with auto stats) ═══ */
 function AdminClassManager({users}:{users:any[]}){
   const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);const[saveMsg,setSaveMsg]=useState("");
+  // question_number 중복 제거 + section 정규화 헬퍼
+  const normalizeQs=(arr:any[])=>{const seen=new Set<number>();return arr.filter(q=>{if(seen.has(q.question_number))return false;seen.add(q.question_number);return true;}).map((qi:any)=>({...qi,section:qi.section||"common"})).sort((a:any,b:any)=>a.question_number-b.question_number);};
   const[newGN,setNewGN]=useState("");const[showNG,setShowNG]=useState(false);const[ntf,setNtf]=useState({date:"",title:"",qCount:15,assignment:""});const[ntp,setNtp]=useState<string[]>([]);const[showNT,setShowNT]=useState(false);const[showAM,setShowAM]=useState(false);const[searchM,setSearchM]=useState("");
   const[editGN,setEditGN]=useState("");const[editingGId,setEditingGId]=useState<number|null>(null);
   const[editTest,setEditTest]=useState<any>(null);const[editTF,setEditTF]=useState({date:"",title:"",assignment:""});
@@ -984,7 +986,7 @@ function AdminClassManager({users}:{users:any[]}){
     // 선택문항 설정 로드
     setSecCfg({has_sections:test.has_sections||false,common_count:test.common_count||0,section1_name:test.section1_name||"선택1",section2_name:test.section2_name||"선택2",section1_count:test.section1_count||0,section2_count:test.section2_count||0});
     const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",test.id).order("question_number");
-    if(q)setQs(q.map((qi:any)=>({...qi,section:qi.section||"common"})));
+    if(q)setQs(normalizeQs(q));
     const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid,selected_section:""};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});
     // selected_section null 방어
     if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si,selected_section:si.selected_section||""};});
@@ -1082,7 +1084,7 @@ function AdminClassManager({users}:{users:any[]}){
     else{setSaveMsg("✅ 저장 완료!");
       // 정답률 재조회 → qs state 업데이트 (항상 question_number 순으로)
       const{data:freshQs}=await supabase.from("test_questions").select("*").eq("test_id",testId).order("question_number",{ascending:true});
-      if(freshQs)setQs(freshQs.map((qi:any)=>({...qi,section:qi.section||"common"})));
+      if(freshQs)setQs(normalizeQs(freshQs));
       // 알림 발송 → 학생 뷰에서 fNotifs 감지 → ld() 재호출 → questions 갱신 → wrong 재계산
       for(const m of members){if(hasA(m.user_id))await sendNotif(m.user_id,"grade",`📊 새 성적표: ${selT.title}`);}
       // 자동 서서갈비 지급 (오답/과제 성취도 기준)
@@ -1134,7 +1136,7 @@ function AdminClassManager({users}:{users:any[]}){
     }else if(newCount<cur){
       for(let i=newCount+1;i<=cur;i++){await supabase.from("test_questions").delete().eq("test_id",selT.id).eq("question_number",i);}
     }
-    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number");if(q)setQs(q.map((qi:any)=>({...qi,section:qi.section||"common"})));
+    const{data:q}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number");if(q)setQs(normalizeQs(q));
   };
   // 단원명 저장
   const saveTopic=async(qId:number,topic:string)=>{await supabase.from("test_questions").update({topic}).eq("id",qId);};
@@ -1162,7 +1164,7 @@ function AdminClassManager({users}:{users:any[]}){
     }
     // 항상 question_number 순으로 재조회
     const{data:freshQ}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number",{ascending:true});
-    if(freshQ)setQs(freshQ.map((qi:any)=>({...qi,section:qi.section||"common"})));
+    if(freshQ)setQs(normalizeQs(freshQ));
     setShowSecCfg(false);
     alert(`저장 완료! 공통 ${cfg.common_count}문항 · 선택1 ${s1c}문항 · 선택2 ${s2c}문항`);
   };
