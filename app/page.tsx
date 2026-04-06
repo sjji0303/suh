@@ -907,7 +907,7 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
 /* ═══ ADMIN: CLASS + EXCEL TEST (with auto stats) ═══ */
 function AdminClassManager({users}:{users:any[]}){
   const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);const[saveMsg,setSaveMsg]=useState("");
-  // question_number 중복 제거 + section 정규화 헬퍼
+  // question_number 중복제거 + section 정규화 + 오름차순 정렬
   const normalizeQs=(arr:any[])=>{const seen=new Set<number>();return arr.filter(q=>{if(seen.has(q.question_number))return false;seen.add(q.question_number);return true;}).map((qi:any)=>({...qi,section:qi.section||"common"})).sort((a:any,b:any)=>a.question_number-b.question_number);};
   const[newGN,setNewGN]=useState("");const[showNG,setShowNG]=useState(false);const[ntf,setNtf]=useState({date:"",title:"",qCount:15,assignment:""});const[ntp,setNtp]=useState<string[]>([]);const[showNT,setShowNT]=useState(false);const[showAM,setShowAM]=useState(false);const[searchM,setSearchM]=useState("");
   const[editGN,setEditGN]=useState("");const[editingGId,setEditingGId]=useState<number|null>(null);
@@ -1143,26 +1143,29 @@ function AdminClassManager({users}:{users:any[]}){
   // 선택문항 설정 저장
   const saveSecCfg=async()=>{
     if(!selT)return;
-    const totalQ=qs.length;
+    // ① 저장 전 DB에서 중복 question_number row 먼저 제거
+    const{data:allQs}=await supabase.from("test_questions").select("id,question_number").eq("test_id",selT.id).order("id",{ascending:true});
+    if(allQs){
+      const seen=new Map<number,number>();
+      const dupIds:number[]=[];
+      allQs.forEach((r:any)=>{if(seen.has(r.question_number))dupIds.push(r.id);else seen.set(r.question_number,r.id);});
+      if(dupIds.length>0)await Promise.all(dupIds.map(id=>supabase.from("test_questions").delete().eq("id",id)));
+    }
+    // ② 중복 제거 후 최신 문항 재로드
+    const{data:cleanQ}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number",{ascending:true});
+    const cleanQs=normalizeQs(cleanQ||[]);
+    const totalQ=cleanQs.length;
     const secCount=Math.floor((totalQ-secCfg.common_count)/2);
     const s1c=secCount;const s2c=secCount;
     const cfg={...secCfg,section1_count:s1c,section2_count:s2c};
     await supabase.from("tests").update({has_sections:cfg.has_sections,common_count:cfg.common_count,section1_name:cfg.section1_name,section2_name:cfg.section2_name,section1_count:s1c,section2_count:s2c}).eq("id",selT.id);
     if(cfg.has_sections){
-      const commonEnd=cfg.common_count;
-      const sec1End=commonEnd+s1c;
-      // 병렬로 한번에 업데이트해서 순서 문제 방지
-      await Promise.all(qs.map(q=>{
-        const qn=q.question_number;
-        const sec=qn<=commonEnd?"common":qn<=sec1End?"opt1":"opt2";
-        return supabase.from("test_questions").update({section:sec}).eq("id",q.id);
-      }));
+      const commonEnd=cfg.common_count;const sec1End=commonEnd+s1c;
+      await Promise.all(cleanQs.map((q:any)=>{const qn=q.question_number;const sec=qn<=commonEnd?"common":qn<=sec1End?"opt1":"opt2";return supabase.from("test_questions").update({section:sec}).eq("id",q.id);}));
       setSecCfg(p=>({...p,section1_count:s1c,section2_count:s2c}));
     } else {
-      // 선택문항 OFF → 모든 문항 section 초기화
-      await Promise.all(qs.map(q=>supabase.from("test_questions").update({section:"common"}).eq("id",q.id)));
+      await Promise.all(cleanQs.map((q:any)=>supabase.from("test_questions").update({section:"common"}).eq("id",q.id)));
     }
-    // 항상 question_number 순으로 재조회
     const{data:freshQ}=await supabase.from("test_questions").select("*").eq("test_id",selT.id).order("question_number",{ascending:true});
     if(freshQ)setQs(normalizeQs(freshQ));
     setShowSecCfg(false);
@@ -1241,7 +1244,7 @@ function AdminClassManager({users}:{users:any[]}){
         {showSecCfg&&<div className="mb-4 p-4 bg-blue-50 rounded-2xl space-y-3 border border-blue-100">
           <p className="text-xs font-bold text-blue-700">📋 선택문항 구조 설정</p>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={secCfg.has_sections} onChange={e=>setSecCfg(p=>({...p,has_sections:e.target.checked}))} className="w-4 h-4 accent-blue-500"/>
+            <input type="checkbox" checked={secCfg.has_sections} onChange={e=>{const on=e.target.checked;setSecCfg(p=>{if(on&&p.common_count===0){const totalQ=qs.length;const common=Math.min(14,totalQ);const sec=Math.floor((totalQ-common)/2);return{...p,has_sections:true,common_count:common,section1_count:sec,section2_count:sec};}return{...p,has_sections:on};});}} className="w-4 h-4 accent-blue-500"/>
             <span className="text-xs font-semibold text-slate-700">선택문항 사용</span>
           </label>
           {secCfg.has_sections&&(()=>{
