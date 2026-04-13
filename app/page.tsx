@@ -921,10 +921,19 @@ function AdminClassManager({users}:{users:any[]}){
   // 성적표 이미지 캡쳐
   const[capComputedRates,setCapComputedRates]=useState<Record<number,number>>({});
   const captureReport=async(uid:number)=>{
+    const myInf=ig[uid]||{};const mySelSec=myInf.selected_section||"";
     const computedRates:Record<number,number>={};
     for(const q of qs){
       const qn=q.question_number;let correct=0;let total=0;
-      for(const mem of members){const k=`${mem.user_id}-${qn}`;const v=grid[k];if(v===1||v===0){total++;if(v===1)correct++;}}
+      const qSec=q.section||"common";
+      for(const mem of members){
+        const memSelSec=ig[mem.user_id]?.selected_section||"";
+        // 선택문항이면 같은 선택지를 고른 학생만 카운트
+        if(selT?.has_sections&&qSec!=="common"){
+          if(memSelSec!==qSec)continue;
+        }
+        const k=`${mem.user_id}-${qn}`;const v=grid[k];if(v===1||v===0){total++;if(v===1)correct++;}
+      }
       computedRates[qn]=total>0?Math.round((correct/total)*100):(q.correct_rate||0);
     }
     setCapComputedRates(computedRates);
