@@ -917,7 +917,8 @@ function AdminAccountManager({users,fetchUsers,currentUserId}:{users:any[];fetch
     if(form.password!==form.password2){alert("비밀번호가 일치하지 않습니다");return;}
     const{data:ex}=await supabase.from("users").select("id").eq("login_id",lid).single();
     if(ex){alert("이미 존재하는 아이디입니다: "+lid);return;}
-    await supabase.from("users").insert({login_id:lid,password:form.password,name,role:"admin",status:"approved",position:form.position});
+    const{error}=await supabase.from("users").insert({login_id:lid,password:form.password,name,role:"admin",status:"approved",position:form.position});
+    if(error){alert("생성 실패: "+error.message);return;}
     setForm({name:"",login_id:"",password:"",password2:"",position:"조교"});setShowAdd(false);fetchUsers();
   };
 
@@ -925,16 +926,19 @@ function AdminAccountManager({users,fetchUsers,currentUserId}:{users:any[];fetch
     if(id===currentUserId){alert("현재 로그인한 계정은 삭제할 수 없습니다");return;}
     if(admins.length<=1){alert("최소 1개의 관리자 계정은 남아있어야 합니다");return;}
     if(!confirm(`${name} 관리자 계정을 삭제할까요?`))return;
-    await supabase.from("users").delete().eq("id",id);fetchUsers();
+    const{error}=await supabase.from("users").delete().eq("id",id);
+    if(error){alert("삭제 실패: "+error.message);return;}
+    fetchUsers();
   };
 
   const doResetPw=async(id:number)=>{
     if(!resetPw){alert("새 비밀번호를 입력하세요");return;}
-    await supabase.from("users").update({password:resetPw}).eq("id",id);
+    const{error}=await supabase.from("users").update({password:resetPw}).eq("id",id);
+    if(error){alert("변경 실패: "+error.message);return;}
     alert("비밀번호가 변경되었습니다!");setResetId(null);setResetPw("");
   };
 
-  const changePosition=async(id:number,position:string)=>{await supabase.from("users").update({position}).eq("id",id);fetchUsers();};
+  const changePosition=async(id:number,position:string)=>{const{error}=await supabase.from("users").update({position}).eq("id",id);if(error){alert("변경 실패: "+error.message);return;}fetchUsers();};
 
   return(<div>
     <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">👤 관리자 계정</h2><button onClick={()=>setShowAdd(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>관리자 추가</button></div>
@@ -963,10 +967,10 @@ function AdminStaffNoticeManager({currentAdmin}:{currentAdmin:any}){
   const canWrite=currentAdmin?.position==="강사";
   const fN=async()=>{const{data}=await supabase.from("admin_notices").select("*").order("created_at",{ascending:false});if(data)setNotices(data);};
   useEffect(()=>{fN();},[]);
-  const addNotice=async()=>{if(!canWrite||!form.title.trim()||!form.content.trim())return;await supabase.from("admin_notices").insert({title:form.title.trim(),content:form.content.trim(),author_name:currentAdmin?.name||"",author_position:currentAdmin?.position||""});setForm({title:"",content:""});setShowAdd(false);fN();};
-  const delNotice=async(id:number)=>{if(!canWrite)return;if(!confirm("삭제?"))return;await supabase.from("admin_notices").delete().eq("id",id);fN();};
+  const addNotice=async()=>{if(!canWrite||!form.title.trim()||!form.content.trim())return;const{error}=await supabase.from("admin_notices").insert({title:form.title.trim(),content:form.content.trim(),author_name:currentAdmin?.name||"",author_position:currentAdmin?.position||""});if(error){alert("등록 실패: "+error.message);return;}setForm({title:"",content:""});setShowAdd(false);fN();};
+  const delNotice=async(id:number)=>{if(!canWrite)return;if(!confirm("삭제?"))return;const{error}=await supabase.from("admin_notices").delete().eq("id",id);if(error){alert("삭제 실패: "+error.message);return;}fN();};
   const startEdit=(n:any)=>{setEditId(n.id);setEditForm({title:n.title||"",content:n.content||""});};
-  const saveEdit=async()=>{if(!canWrite||!editId||!editForm.title.trim()||!editForm.content.trim())return;await supabase.from("admin_notices").update({title:editForm.title.trim(),content:editForm.content.trim()}).eq("id",editId);setEditId(null);fN();};
+  const saveEdit=async()=>{if(!canWrite||!editId||!editForm.title.trim()||!editForm.content.trim())return;const{error}=await supabase.from("admin_notices").update({title:editForm.title.trim(),content:editForm.content.trim()}).eq("id",editId);if(error){alert("저장 실패: "+error.message);return;}setEditId(null);fN();};
   return(<div>
     <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">🔔 관리자 공지</h2>{canWrite&&<button onClick={()=>setShowAdd(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>새 공지</button>}</div>
     {showAdd&&canWrite&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3">
