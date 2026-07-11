@@ -6,6 +6,7 @@ const Icon=({type,size=20}:{type:string;size?:number})=>{const s:any={width:size
 async function uploadImage(file:File,path:string){const ext=file.name.split(".").pop()||"jpg";const safePath=path.replace(/[^a-zA-Z0-9_-]/g,"_");const fn=`${safePath}_${Date.now()}.${ext}`;const{error}=await supabase.storage.from("images").upload(fn,file,{upsert:true,contentType:file.type});if(error){console.error("Upload error:",error);alert("이미지 업로드 실패: "+error.message);return null;}return supabase.storage.from("images").getPublicUrl(fn).data.publicUrl;}
 async function sendNotif(userId:number,type:string,message:string){await supabase.from("notifications").insert({user_id:userId,type,message});}
 function stripAuthorTag(s:string){return(s||"").replace(/^\[[^\]]*(강사|조교)\]\s*/,"");}
+async function logActivity(admin:any,action:string,targetType:string,targetName:string,detail?:string){const{error}=await supabase.from("admin_activity_log").insert({admin_name:admin?.name||"",admin_position:admin?.position||"",action,target_type:targetType,target_name:targetName||"",detail:detail||""});if(error)console.error("활동 로그 저장 실패:",error.message);}
 
 /* ═══ LOGIN ═══ */
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
@@ -813,7 +814,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
 }
 
 /* ═══ ADMIN: STUDENT MANAGER + EXCEL IMPORT ═══ */
-function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:()=>void;groups:any[]}){
+function AdminStudentManager({users,fetchUsers,groups,currentAdmin}:{users:any[];fetchUsers:()=>void;groups:any[];currentAdmin:any}){
   const[showAdd,setShowAdd]=useState(false);const[form,setForm]=useState({name:"",school:"",parent_phone:"",student_phone:"",class_ids:[] as number[]});
   const[showImport,setShowImport]=useState(false);const[importText,setImportText]=useState("");
   const[editStu,setEditStu]=useState<any>(null);const[editForm,setEditForm]=useState({name:"",school:"",parent_phone:"",student_phone:""});
@@ -833,7 +834,7 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
 
   const toggleCheck=(id:number)=>{setChecked(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});};
   const toggleAll=()=>{if(checked.size===sortedStudents.length)setChecked(new Set());else setChecked(new Set(sortedStudents.map((s:any)=>s.id)));};
-  const bulkDelete=async()=>{if(checked.size===0)return;if(!confirm(`선택한 ${checked.size}명의 학생을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`))return;setBulkDeleting(true);for(const id of checked){await supabase.from("users").delete().eq("id",id);}setChecked(new Set());setBulkDeleting(false);fetchUsers();};
+  const bulkDelete=async()=>{if(checked.size===0)return;if(!confirm(`선택한 ${checked.size}명의 학생을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`))return;setBulkDeleting(true);const names=students.filter((s:any)=>checked.has(s.id)).map((s:any)=>s.name).join(", ");for(const id of checked){await supabase.from("users").delete().eq("id",id);}await logActivity(currentAdmin,"삭제","학생",`${checked.size}명 일괄삭제`,names);setChecked(new Set());setBulkDeleting(false);fetchUsers();};
 
   const addStudent=async()=>{
     if(!form.name||!form.parent_phone)return;
@@ -861,8 +862,8 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
     alert(`${count}명 추가 완료!`);setImportText("");setShowImport(false);fetchUsers();
   };
 
-  const removeStudent=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("users").delete().eq("id",id);fetchUsers();};
-  const saveEditStu=async()=>{if(!editStu)return;const{name,school,parent_phone,student_phone}=editForm;if(!name||!parent_phone){alert("이름과 학부모 연락처는 필수입니다.");return;}const last4=parent_phone.slice(-4);const lid=name+last4;await supabase.from("users").update({name,school,parent_phone,student_phone,phone:student_phone,login_id:lid,password:last4}).eq("id",editStu.id);setEditStu(null);fetchUsers();};
+  const removeStudent=async(id:number)=>{if(!confirm("삭제?"))return;const name=students.find((s:any)=>s.id===id)?.name||"";await supabase.from("users").delete().eq("id",id);await logActivity(currentAdmin,"삭제","학생",name);fetchUsers();};
+  const saveEditStu=async()=>{if(!editStu)return;const{name,school,parent_phone,student_phone}=editForm;if(!name||!parent_phone){alert("이름과 학부모 연락처는 필수입니다.");return;}const last4=parent_phone.slice(-4);const lid=name+last4;await supabase.from("users").update({name,school,parent_phone,student_phone,phone:student_phone,login_id:lid,password:last4}).eq("id",editStu.id);await logActivity(currentAdmin,"수정","학생",name);setEditStu(null);fetchUsers();};
   const startEdit=(s:any)=>{setEditStu(s);setEditForm({name:s.name||"",school:s.school||"",parent_phone:s.parent_phone||"",student_phone:s.student_phone||s.phone||""});};
   const toggleClass=(cid:number)=>{setForm(p=>({...p,class_ids:p.class_ids.includes(cid)?p.class_ids.filter(x=>x!==cid):[...p.class_ids,cid]}));};
 
@@ -993,6 +994,29 @@ function AdminStaffNoticeManager({currentAdmin}:{currentAdmin:any}){
   </div>);
 }
 
+/* ═══ ADMIN: ACTIVITY LOG (수정/삭제 내역, 강사 전용) ═══ */
+function AdminActivityLog(){
+  const[logs,setLogs]=useState<any[]>([]);
+  const fL=async()=>{const{data}=await supabase.from("admin_activity_log").select("*").order("created_at",{ascending:false}).limit(300);if(data)setLogs(data);};
+  useEffect(()=>{fL();},[]);
+  const dateKey=(iso:string)=>{if(!iso)return"날짜 없음";const dt=new Date(iso);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;};
+  const grouped:Record<string,any[]>={};
+  logs.forEach((l:any)=>{const d=dateKey(l.created_at);if(!grouped[d])grouped[d]=[];grouped[d].push(l);});
+  const dates=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+  return(<div>
+    <h2 className="text-lg font-bold mb-4">📋 활동 내역</h2>
+    {dates.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">아직 기록이 없습니다</div>}
+    {dates.map(d=>(<div key={d} className="mb-5">
+      <p className="text-xs font-bold text-slate-400 mb-2">{d}</p>
+      <div className="bg-white rounded-2xl shadow-sm divide-y divide-slate-50">{grouped[d].map((l:any)=>(<div key={l.id} className="px-4 py-3 flex items-center gap-3">
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${l.action==="삭제"?"bg-red-50 text-red-500":"bg-[#D4AF37]/10 text-[#AA8C2C]"}`}>{l.action}</span>
+        <span className="text-sm text-slate-600 flex-1"><b className="text-slate-800">{l.admin_name}{l.admin_position}</b>님이 {l.target_type} <b className="text-slate-800">{l.target_name}</b>{l.action==="삭제"?"를 삭제":"를 수정"}했습니다{l.detail&&<span className="text-slate-400"> · {l.detail}</span>}</span>
+        <span className="text-xs text-slate-300 shrink-0">{l.created_at?new Date(l.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):""}</span>
+      </div>))}</div>
+    </div>))}
+  </div>);
+}
+
 /* ═══ ADMIN: CLASS + EXCEL TEST (with auto stats) ═══ */
 function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
   const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);const[saveMsg,setSaveMsg]=useState("");
@@ -1069,6 +1093,8 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
 
   const cG=async()=>{if(!newGN)return;const{error}=await supabase.from("class_groups").insert({name:newGN});if(error){alert("생성 실패: "+error.message);return;}setNewGN("");setShowNG(false);fG();};
   const dG=async(id:number)=>{
+    if(currentAdmin?.position!=="강사"){alert("반 삭제는 강사만 할 수 있습니다");return;}
+    const groupName=groups.find((g:any)=>g.id===id)?.name||"";
     const{data:groupTests}=await supabase.from("tests").select("id").eq("class_group_id",id);
     const{data:groupMembers}=await supabase.from("class_members").select("user_id").eq("class_group_id",id);
     const testCount=groupTests?.length||0;const memberCount=groupMembers?.length||0;
@@ -1081,10 +1107,11 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
     await supabase.from("calendar_events").delete().eq("class_group_id",id);
     const{error}=await supabase.from("class_groups").delete().eq("id",id);
     if(error){alert("삭제 실패: "+error.message);return;}
+    await logActivity(currentAdmin,"삭제","반",groupName);
     if(selG?.id===id){setSelG(null);setMembers([]);setTests([]);setSelT(null);}
     fG();
   };
-  const renameG=async(id:number)=>{if(!editGN.trim())return;const{error}=await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);if(error){alert("수정 실패: "+error.message);return;}setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>prev?{...prev,name:editGN.trim()}:prev);};
+  const renameG=async(id:number)=>{if(!editGN.trim())return;const oldName=groups.find((g:any)=>g.id===id)?.name||"";const{error}=await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);if(error){alert("수정 실패: "+error.message);return;}await logActivity(currentAdmin,"수정","반",editGN.trim(),oldName&&oldName!==editGN.trim()?`이전 이름: ${oldName}`:undefined);setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>prev?{...prev,name:editGN.trim()}:prev);};
   const aM=async(uid:number)=>{if(!selG)return;await supabase.from("class_members").insert({class_group_id:selG.id,user_id:uid});fM(selG.id);};
   const rM=async(id:number)=>{await supabase.from("class_members").delete().eq("id",id);if(selG)fM(selG.id);};
   const cT=async()=>{if(!selG||!ntf.date)return;const title=`${ntf.date} ${selG.name}`;const{data:t}=await supabase.from("tests").insert({date:ntf.date,title,class_group_id:selG.id,class_name:selG.name,assignment:""}).select().single();if(!t)return;const rows=Array.from({length:15},(_,i)=>({test_id:t.id,question_number:i+1,topic:"",correct_rate:0}));await supabase.from("test_questions").insert(rows);setShowNT(false);setNtf({date:"",title:"",qCount:15,assignment:""});setNtp([]);fT(selG.id);};
@@ -1540,7 +1567,7 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
   return(<div>
     <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">📁 반 관리</h2><button onClick={()=>setShowNG(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>새 반</button></div>
     {showNG&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 flex gap-3 items-end"><div className="flex-1"><label className="text-xs font-semibold text-slate-500">반 이름</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={newGN} onChange={e=>setNewGN(e.target.value)} placeholder="수학 정규반"/></div><button onClick={cG} className="bg-[#D4AF37] text-white px-4 py-2.5 rounded-xl text-xs font-semibold">만들기</button></div>}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{groups.map(g=>(<div key={g.id} className="bg-white rounded-xl p-5 shadow-sm hover:ring-2 hover:ring-[#D4AF37]/20 cursor-pointer" onClick={()=>selectGroup(g)}><div className="flex justify-between items-start"><div className="flex items-center gap-2"><Icon type="folder" size={20}/>{editingGId===g.id?<div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}><input className="bg-slate-50 rounded-lg px-2 py-1 text-sm border border-slate-200 focus:outline-none focus:border-[#D4AF37] w-36" value={editGN} onChange={e=>setEditGN(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")renameG(g.id);if(e.key==="Escape"){setEditingGId(null);setEditGN("");}}} autoFocus/><button onClick={()=>renameG(g.id)} className="text-xs text-[#D4AF37] font-semibold">확인</button><button onClick={()=>{setEditingGId(null);setEditGN("");}} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>:<span className="font-semibold">{g.name}</span>}</div><div className="flex gap-2" onClick={e=>e.stopPropagation()}><button onClick={()=>{setEditingGId(g.id);setEditGN(g.name);}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button><button onClick={()=>dG(g.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button></div></div></div>))}{groups.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm col-span-2">반을 만들어 보세요!</div>}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{groups.map(g=>(<div key={g.id} className="bg-white rounded-xl p-5 shadow-sm hover:ring-2 hover:ring-[#D4AF37]/20 cursor-pointer" onClick={()=>selectGroup(g)}><div className="flex justify-between items-start"><div className="flex items-center gap-2"><Icon type="folder" size={20}/>{editingGId===g.id?<div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}><input className="bg-slate-50 rounded-lg px-2 py-1 text-sm border border-slate-200 focus:outline-none focus:border-[#D4AF37] w-36" value={editGN} onChange={e=>setEditGN(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")renameG(g.id);if(e.key==="Escape"){setEditingGId(null);setEditGN("");}}} autoFocus/><button onClick={()=>renameG(g.id)} className="text-xs text-[#D4AF37] font-semibold">확인</button><button onClick={()=>{setEditingGId(null);setEditGN("");}} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>:<span className="font-semibold">{g.name}</span>}</div><div className="flex gap-2" onClick={e=>e.stopPropagation()}><button onClick={()=>{setEditingGId(g.id);setEditGN(g.name);}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button>{currentAdmin?.position==="강사"&&<button onClick={()=>dG(g.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button>}</div></div></div>))}{groups.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm col-span-2">반을 만들어 보세요!</div>}</div>
   </div>);
 }
 
@@ -1919,18 +1946,18 @@ export default function Home(){
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
   const ADMIN_SECRET="Tjwjddls1!";
-  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site","changepw","admins"];
+  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site","changepw","admins","activityLog"];
   const tryUnlock=()=>{if(adminPwInput===ADMIN_SECRET){setAdminUnlocked(true);setAdminPwErr("");}else{setAdminPwErr("비밀번호가 틀렸습니다");}};
   const handleAdminTab=(id:string,mob?:boolean)=>{if(lockedTabs.includes(id)&&!adminUnlocked){setTab("unlock");if(mob)setMm(false);return;}setTab(id);if(mob)setMm(false);if(id==="inquiries")fInqCount();if(id==="shop")fOrderCount();};
 
   const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"},{id:"staffNotices",icon:"bell",label:"관리자 공지"}];
-  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"admins",icon:"user",label:"관리자 계정"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
+  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"admins",icon:"user",label:"관리자 계정"},{id:"activityLog",icon:"search",label:"활동 내역",instructorOnly:true},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
 
   const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
     {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
     <div className="pt-2 mt-2" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}>
       <button onClick={()=>{if(adminUnlocked){setAdminUnlocked(false);setAdminPwInput("");setTab("classes");if(mob)setMm(false);}else{setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 mb-1 text-[10px] font-semibold" style={{color:"rgba(212,175,55,0.65)",fontFamily:"'Montserrat',sans-serif"}}>{adminUnlocked?"🔓 관리 메뉴 (잠그기)":"🔒 관리 메뉴 (잠김)"}</button>
-      {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
+      {adminUnlocked&&miLocked.filter(m=>!m.instructorOnly||user.position==="강사").map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
     </div>
   </nav>);
 
@@ -1941,7 +1968,7 @@ export default function Home(){
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
       {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" style={{background:"rgba(250,249,255,0.97)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.1)",boxShadow:"var(--c-shadow-card)"}}><div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl" style={{background:"linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.06))"}}>🔒</div><h2 className="text-lg font-semibold mb-1" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>관리 메뉴</h2><p className="text-xs mb-6" style={{color:"rgba(130,120,150,0.7)",fontFamily:"'Montserrat',sans-serif"}}>접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-center mb-3" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(212,175,55,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs mb-3" style={{color:"#e05555",fontFamily:"'Montserrat',sans-serif"}}>{adminPwErr}</p>}<button onClick={tryUnlock} className="admin-btn w-full py-3 rounded-2xl font-semibold text-sm" style={{letterSpacing:"0.1em"}}>확인</button></div></div>}
       {tab==="classes"&&<AdminClassManager users={users} currentAdmin={user}/>}
-      {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups}/>}
+      {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups} currentAdmin={user}/>}
       {tab==="staffNotices"&&<AdminStaffNoticeManager currentAdmin={user}/>}
       {tab==="exams"&&adminUnlocked&&<AdminExamViewer users={users}/>}
       {tab==="tokens"&&adminUnlocked&&<AdminTokenManager users={users} fetchUsers={fU}/>}
@@ -1954,6 +1981,7 @@ export default function Home(){
       {tab==="inquiries"&&adminUnlocked&&<AdminInquiryManager onReply={fInqCount}/>}
       {tab==="site"&&adminUnlocked&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
       {tab==="admins"&&adminUnlocked&&<AdminAccountManager users={users} fetchUsers={fU} currentUserId={user.id}/>}
+      {tab==="activityLog"&&adminUnlocked&&user.position==="강사"&&<AdminActivityLog/>}
       {tab==="changepw"&&adminUnlocked&&<div className="max-w-sm"><h2 className="text-lg font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white rounded-2xl p-6 shadow-sm space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw1" placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw2" placeholder="새 비밀번호 확인"/><button onClick={async()=>{const p1=(document.getElementById("admin-pw1") as HTMLInputElement).value;const p2=(document.getElementById("admin-pw2") as HTMLInputElement).value;if(!p1){alert("비밀번호를 입력하세요");return;}if(p1!==p2){alert("비밀번호가 일치하지 않습니다");return;}await supabase.from("users").update({password:p1}).eq("id",user.id);alert("비밀번호가 변경되었습니다!");(document.getElementById("admin-pw1") as HTMLInputElement).value="";(document.getElementById("admin-pw2") as HTMLInputElement).value="";}} className="admin-btn w-full py-3 rounded-xl font-semibold text-sm">변경</button></div></div>}
     </div></main>
   </div>);
