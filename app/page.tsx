@@ -904,6 +904,53 @@ function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:(
   </div>);
 }
 
+/* ═══ ADMIN: ACCOUNT MANAGER (관리자 계정) ═══ */
+function AdminAccountManager({users,fetchUsers,currentUserId}:{users:any[];fetchUsers:()=>void;currentUserId:number}){
+  const[showAdd,setShowAdd]=useState(false);const[form,setForm]=useState({name:"",login_id:"",password:"",password2:""});
+  const[resetId,setResetId]=useState<number|null>(null);const[resetPw,setResetPw]=useState("");
+  const admins=users.filter((u:any)=>u.role==="admin").sort((a:any,b:any)=>(a.name||"").localeCompare(b.name||"",'ko'));
+
+  const addAdmin=async()=>{
+    const name=form.name.trim();const lid=form.login_id.trim();
+    if(!name||!lid||!form.password){alert("이름, 아이디, 비밀번호를 모두 입력하세요");return;}
+    if(form.password!==form.password2){alert("비밀번호가 일치하지 않습니다");return;}
+    const{data:ex}=await supabase.from("users").select("id").eq("login_id",lid).single();
+    if(ex){alert("이미 존재하는 아이디입니다: "+lid);return;}
+    await supabase.from("users").insert({login_id:lid,password:form.password,name,role:"admin",status:"approved"});
+    setForm({name:"",login_id:"",password:"",password2:""});setShowAdd(false);fetchUsers();
+  };
+
+  const removeAdmin=async(id:number,name:string)=>{
+    if(id===currentUserId){alert("현재 로그인한 계정은 삭제할 수 없습니다");return;}
+    if(admins.length<=1){alert("최소 1개의 관리자 계정은 남아있어야 합니다");return;}
+    if(!confirm(`${name} 관리자 계정을 삭제할까요?`))return;
+    await supabase.from("users").delete().eq("id",id);fetchUsers();
+  };
+
+  const doResetPw=async(id:number)=>{
+    if(!resetPw){alert("새 비밀번호를 입력하세요");return;}
+    await supabase.from("users").update({password:resetPw}).eq("id",id);
+    alert("비밀번호가 변경되었습니다!");setResetId(null);setResetPw("");
+  };
+
+  return(<div>
+    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">👤 관리자 계정</h2><button onClick={()=>setShowAdd(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>관리자 추가</button></div>
+
+    {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 border border-[#D4AF37]/20">
+      <h3 className="font-semibold text-sm mb-3">새 관리자 계정</h3>
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div><label className="text-[10px] font-semibold text-slate-400">이름 *</label><input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))}/></div>
+        <div><label className="text-[10px] font-semibold text-slate-400">아이디 *</label><input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.login_id} onChange={e=>setForm(p=>({...p,login_id:e.target.value}))}/></div>
+        <div><label className="text-[10px] font-semibold text-slate-400">비밀번호 *</label><input type="password" className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.password} onChange={e=>setForm(p=>({...p,password:e.target.value}))}/></div>
+        <div><label className="text-[10px] font-semibold text-slate-400">비밀번호 확인 *</label><input type="password" className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.password2} onChange={e=>setForm(p=>({...p,password2:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addAdmin()}/></div>
+      </div>
+      <div className="flex gap-2"><button onClick={addAdmin} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">추가</button><button onClick={()=>setShowAdd(false)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
+    </div>}
+
+    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50">{["이름","아이디",""].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{admins.map((a:any)=>(<tr key={a.id} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors"><td className="px-4 py-3 font-semibold">{a.name}{a.id===currentUserId&&<span className="ml-1.5 text-[10px] font-bold text-[#D4AF37]">(나)</span>}</td><td className="px-4 py-3 font-mono text-xs text-[#D4AF37]">{a.login_id}</td><td className="px-4 py-3 text-right">{resetId===a.id?<div className="flex gap-1.5 items-center justify-end"><input type="password" autoFocus className="bg-slate-50 rounded-lg px-2.5 py-1.5 text-xs border-0 w-28" placeholder="새 비밀번호" value={resetPw} onChange={e=>setResetPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doResetPw(a.id)}/><button onClick={()=>doResetPw(a.id)} className="text-xs font-semibold text-white bg-[#D4AF37] px-2.5 py-1.5 rounded-lg">확인</button><button onClick={()=>{setResetId(null);setResetPw("");}} className="text-xs font-semibold text-slate-500 px-2 py-1.5">취소</button></div>:<div className="flex gap-2 justify-end"><button onClick={()=>{setResetId(a.id);setResetPw("");}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">비밀번호 초기화</button><button onClick={()=>removeAdmin(a.id,a.name)} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button></div>}</td></tr>))}{admins.length===0&&<tr><td colSpan={3} className="text-center py-10 text-slate-400 text-sm">관리자 계정이 없습니다</td></tr>}</tbody></table></div>
+  </div>);
+}
+
 /* ═══ ADMIN: CLASS + EXCEL TEST (with auto stats) ═══ */
 function AdminClassManager({users}:{users:any[]}){
   const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);const[saveMsg,setSaveMsg]=useState("");
@@ -1813,12 +1860,12 @@ export default function Home(){
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
   const ADMIN_SECRET="Tjwjddls1!";
-  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site","changepw"];
+  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site","changepw","admins"];
   const tryUnlock=()=>{if(adminPwInput===ADMIN_SECRET){setAdminUnlocked(true);setAdminPwErr("");}else{setAdminPwErr("비밀번호가 틀렸습니다");}};
   const handleAdminTab=(id:string,mob?:boolean)=>{if(lockedTabs.includes(id)&&!adminUnlocked){setTab("unlock");if(mob)setMm(false);return;}setTab(id);if(mob)setMm(false);if(id==="inquiries")fInqCount();if(id==="shop")fOrderCount();};
 
   const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"}];
-  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
+  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"admins",icon:"user",label:"관리자 계정"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
 
   const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
     {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
@@ -1846,6 +1893,7 @@ export default function Home(){
       {tab==="shorts"&&adminUnlocked&&<AdminShortsManager/>}
       {tab==="inquiries"&&adminUnlocked&&<AdminInquiryManager onReply={fInqCount}/>}
       {tab==="site"&&adminUnlocked&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
+      {tab==="admins"&&adminUnlocked&&<AdminAccountManager users={users} fetchUsers={fU} currentUserId={user.id}/>}
       {tab==="changepw"&&adminUnlocked&&<div className="max-w-sm"><h2 className="text-lg font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white rounded-2xl p-6 shadow-sm space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw1" placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw2" placeholder="새 비밀번호 확인"/><button onClick={async()=>{const p1=(document.getElementById("admin-pw1") as HTMLInputElement).value;const p2=(document.getElementById("admin-pw2") as HTMLInputElement).value;if(!p1){alert("비밀번호를 입력하세요");return;}if(p1!==p2){alert("비밀번호가 일치하지 않습니다");return;}await supabase.from("users").update({password:p1}).eq("id",user.id);alert("비밀번호가 변경되었습니다!");(document.getElementById("admin-pw1") as HTMLInputElement).value="";(document.getElementById("admin-pw2") as HTMLInputElement).value="";}} className="admin-btn w-full py-3 rounded-xl font-semibold text-sm">변경</button></div></div>}
     </div></main>
   </div>);
