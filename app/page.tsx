@@ -964,9 +964,11 @@ function AdminStaffNoticeManager({currentAdmin}:{currentAdmin:any}){
   const[notices,setNotices]=useState<any[]>([]);const[showAdd,setShowAdd]=useState(false);
   const[form,setForm]=useState({title:"",content:""});
   const[editId,setEditId]=useState<number|null>(null);const[editForm,setEditForm]=useState({title:"",content:""});
+  const[openIds,setOpenIds]=useState<Set<number>>(new Set());
   const canWrite=currentAdmin?.position==="강사";
   const fN=async()=>{const{data}=await supabase.from("admin_notices").select("*").order("created_at",{ascending:false});if(data)setNotices(data);};
   useEffect(()=>{fN();},[]);
+  const toggleOpen=(id:number)=>{setOpenIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});};
   const addNotice=async()=>{if(!canWrite||!form.title.trim()||!form.content.trim())return;const{error}=await supabase.from("admin_notices").insert({title:form.title.trim(),content:form.content.trim(),author_name:currentAdmin?.name||"",author_position:currentAdmin?.position||""});if(error){alert("등록 실패: "+error.message);return;}setForm({title:"",content:""});setShowAdd(false);fN();};
   const delNotice=async(id:number)=>{if(!canWrite)return;if(!confirm("삭제?"))return;const{error}=await supabase.from("admin_notices").delete().eq("id",id);if(error){alert("삭제 실패: "+error.message);return;}fN();};
   const startEdit=(n:any)=>{setEditId(n.id);setEditForm({title:n.title||"",content:n.content||""});};
@@ -978,16 +980,16 @@ function AdminStaffNoticeManager({currentAdmin}:{currentAdmin:any}){
       <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm mt-1 border-0 resize-none h-28" value={form.content} onChange={e=>setForm(p=>({...p,content:e.target.value}))} placeholder="공지 내용을 입력하세요"/></div>
       <div className="flex gap-2"><button onClick={addNotice} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>setShowAdd(false)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
     </div>}
-    <div className="space-y-3">{notices.map((n:any)=>(<div key={n.id} className="bg-white rounded-2xl p-5 shadow-sm">
+    <div className="space-y-3">{notices.map((n:any)=>{const isOpen=openIds.has(n.id);return(<div key={n.id} className="bg-white rounded-2xl p-5 shadow-sm">
       {editId===n.id?<div className="space-y-3">
         <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={editForm.title} onChange={e=>setEditForm(p=>({...p,title:e.target.value}))}/></div>
         <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm mt-1 border-0 resize-none h-28" value={editForm.content} onChange={e=>setEditForm(p=>({...p,content:e.target.value}))}/></div>
         <div className="flex gap-2"><button onClick={saveEdit} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setEditId(null)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
       </div>:<>
-        <div className="flex items-start justify-between mb-2"><div><h3 className="font-semibold text-sm">{n.title}</h3><div className="flex items-center gap-2 mt-1"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.author_name}{n.author_position}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div>{canWrite&&<div className="flex items-center gap-2"><button onClick={()=>startEdit(n)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button><button onClick={()=>delNotice(n.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button></div>}</div>
-        <p className="text-sm text-slate-600 whitespace-pre-line">{n.content}</p>
+        <div className="flex items-start justify-between gap-2 cursor-pointer" onClick={()=>toggleOpen(n.id)}><div className="flex items-start gap-2"><span className="text-[10px] text-slate-300 mt-1">{isOpen?"▲":"▼"}</span><div><h3 className="font-semibold text-sm">{n.title}</h3><div className="flex items-center gap-2 mt-1"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.author_name}{n.author_position}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div></div>{canWrite&&<div className="flex items-center gap-2 shrink-0" onClick={e=>e.stopPropagation()}><button onClick={()=>startEdit(n)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button><button onClick={()=>delNotice(n.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button></div>}</div>
+        {isOpen&&<p className="text-sm text-slate-600 whitespace-pre-line mt-3 pt-3" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}>{n.content}</p>}
       </>}
-    </div>))}{notices.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">{canWrite?"공지를 작성해보세요":"등록된 공지가 없습니다"}</div>}</div>
+    </div>);})}{notices.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">{canWrite?"공지를 작성해보세요":"등록된 공지가 없습니다"}</div>}</div>
   </div>);
 }
 
