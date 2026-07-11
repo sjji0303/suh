@@ -1065,9 +1065,24 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
   // 반 선택 — useEffect 없이 직접 호출
   const selectGroup=async(g:any)=>{setSelG(g);setSelT(null);setGrid({});setIg({});setQs([]);setMembers([]);setTests([]);if(g){await fM(g.id);await fT(g.id);}};
 
-  const cG=async()=>{if(!newGN)return;await supabase.from("class_groups").insert({name:newGN});setNewGN("");setShowNG(false);fG();};
-  const dG=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("class_groups").delete().eq("id",id);if(selG?.id===id){setSelG(null);setMembers([]);setTests([]);setSelT(null);}fG();};
-  const renameG=async(id:number)=>{if(!editGN.trim())return;await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>prev?{...prev,name:editGN.trim()}:prev);};
+  const cG=async()=>{if(!newGN)return;const{error}=await supabase.from("class_groups").insert({name:newGN});if(error){alert("생성 실패: "+error.message);return;}setNewGN("");setShowNG(false);fG();};
+  const dG=async(id:number)=>{
+    const{data:groupTests}=await supabase.from("tests").select("id").eq("class_group_id",id);
+    const{data:groupMembers}=await supabase.from("class_members").select("user_id").eq("class_group_id",id);
+    const testCount=groupTests?.length||0;const memberCount=groupMembers?.length||0;
+    const warnMsg=(testCount>0||memberCount>0)?`이 반에는 학생 배정 ${memberCount}명, 시험 ${testCount}개(성적 포함)가 있습니다.\n반을 삭제하면 이 데이터도 함께 삭제됩니다. 계속할까요?`:"이 반을 삭제할까요?";
+    if(!confirm(warnMsg))return;
+    if(groupTests)for(const t of groupTests){await supabase.from("test_student_info").delete().eq("test_id",t.id);await supabase.from("test_results").delete().eq("test_id",t.id);await supabase.from("test_questions").delete().eq("test_id",t.id);}
+    await supabase.from("tests").delete().eq("class_group_id",id);
+    await supabase.from("class_members").delete().eq("class_group_id",id);
+    await supabase.from("class_notices").delete().eq("class_group_id",id);
+    await supabase.from("calendar_events").delete().eq("class_group_id",id);
+    const{error}=await supabase.from("class_groups").delete().eq("id",id);
+    if(error){alert("삭제 실패: "+error.message);return;}
+    if(selG?.id===id){setSelG(null);setMembers([]);setTests([]);setSelT(null);}
+    fG();
+  };
+  const renameG=async(id:number)=>{if(!editGN.trim())return;const{error}=await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);if(error){alert("수정 실패: "+error.message);return;}setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>prev?{...prev,name:editGN.trim()}:prev);};
   const aM=async(uid:number)=>{if(!selG)return;await supabase.from("class_members").insert({class_group_id:selG.id,user_id:uid});fM(selG.id);};
   const rM=async(id:number)=>{await supabase.from("class_members").delete().eq("id",id);if(selG)fM(selG.id);};
   const cT=async()=>{if(!selG||!ntf.date)return;const title=`${ntf.date} ${selG.name}`;const{data:t}=await supabase.from("tests").insert({date:ntf.date,title,class_group_id:selG.id,class_name:selG.name,assignment:""}).select().single();if(!t)return;const rows=Array.from({length:15},(_,i)=>({test_id:t.id,question_number:i+1,topic:"",correct_rate:0}));await supabase.from("test_questions").insert(rows);setShowNT(false);setNtf({date:"",title:"",qCount:15,assignment:""});setNtp([]);fT(selG.id);};
