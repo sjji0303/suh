@@ -5,8 +5,6 @@ import { supabase } from "@/lib/supabase";
 const Icon=({type,size=20}:{type:string;size?:number})=>{const s:any={width:size,height:size,strokeWidth:1.5,fill:"none",stroke:"currentColor",strokeLinecap:"round",strokeLinejoin:"round"};const i:any={folder:<svg viewBox="0 0 24 24" {...s}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>,test:<svg viewBox="0 0 24 24" {...s}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,settings:<svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09"/></svg>,logout:<svg viewBox="0 0 24 24" {...s}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,user:<svg viewBox="0 0 24 24" {...s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,menu:<svg viewBox="0 0 24 24" {...s}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,close:<svg viewBox="0 0 24 24" {...s}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,left:<svg viewBox="0 0 24 24" {...s}><polyline points="15 18 9 12 15 6"/></svg>,right:<svg viewBox="0 0 24 24" {...s}><polyline points="9 18 15 12 9 6"/></svg>,upload:<svg viewBox="0 0 24 24" {...s}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,plus:<svg viewBox="0 0 24 24" {...s}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,back:<svg viewBox="0 0 24 24" {...s}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,users:<svg viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>,home:<svg viewBox="0 0 24 24" {...s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,search:<svg viewBox="0 0 24 24" {...s}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,bell:<svg viewBox="0 0 24 24" {...s}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,cart:<svg viewBox="0 0 24 24" {...s}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>,msg:<svg viewBox="0 0 24 24" {...s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,coin:<svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8"/></svg>,play:<svg viewBox="0 0 24 24" {...s}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>};return i[type]||null;};
 async function uploadImage(file:File,path:string){const ext=file.name.split(".").pop()||"jpg";const safePath=path.replace(/[^a-zA-Z0-9_-]/g,"_");const fn=`${safePath}_${Date.now()}.${ext}`;const{error}=await supabase.storage.from("images").upload(fn,file,{upsert:true,contentType:file.type});if(error){console.error("Upload error:",error);alert("이미지 업로드 실패: "+error.message);return null;}return supabase.storage.from("images").getPublicUrl(fn).data.publicUrl;}
 async function sendNotif(userId:number,type:string,message:string){await supabase.from("notifications").insert({user_id:userId,type,message});}
-function stripAuthorTag(s:string){return(s||"").replace(/^\[[^\]]*(강사|조교)\]\s*/,"");}
-async function logActivity(admin:any,action:string,targetType:string,targetName:string,detail?:string){const{error}=await supabase.from("admin_activity_log").insert({admin_name:admin?.name||"",admin_position:admin?.position||"",action,target_type:targetType,target_name:targetName||"",detail:detail||""});if(error)console.error("활동 로그 저장 실패:",error.message);}
 
 /* ═══ LOGIN ═══ */
 function LoginScreen({onLogin,settings}:{onLogin:(id:string,pw:string)=>Promise<string>;settings:any}){
@@ -263,10 +261,14 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     }
   },[rankHistory]);
   useEffect(()=>{(async()=>{
-    // 학생이 속한 반의 시험만 가져오기
+    // 학생이 속한 반의 시험만 가져오기 (숨긴 반 제외)
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
     if(!cm||cm.length===0){setTests([]);return;}
-    const gids=cm.map((c:any)=>c.class_group_id);
+    let gids=cm.map((c:any)=>c.class_group_id);
+    // 숨긴 반 필터링
+    const{data:hgSetting}=await supabase.from("site_settings").select("value").eq("key","hidden_groups").single();
+    if(hgSetting?.value){try{const hids=JSON.parse(hgSetting.value);gids=gids.filter((id:number)=>!hids.includes(id));}catch{}}
+    if(gids.length===0){setTests([]);return;}
     const{data}=await supabase.from("tests").select("*").in("class_group_id",gids).order("date",{ascending:false});
     if(data&&data.length>0){setTests(data);ld(data[0]);}
     // 등수 변화 히스토리 로드
@@ -335,7 +337,10 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
     if(tab==="notice"){(async()=>{
     const{data:cm}=await supabase.from("class_members").select("class_group_id").eq("user_id",user.id);
     if(!cm||cm.length===0)return;
-    const gids=cm.map((c:any)=>c.class_group_id);
+    let gids=cm.map((c:any)=>c.class_group_id);
+    const{data:hgS}=await supabase.from("site_settings").select("value").eq("key","hidden_groups").single();
+    if(hgS?.value){try{const hids=JSON.parse(hgS.value);gids=gids.filter((id:number)=>!hids.includes(id));}catch{}}
+    if(gids.length===0)return;
     const{data}=await supabase.from("class_notices").select("*, class_groups(name)").in("class_group_id",gids).order("created_at",{ascending:false});
     if(data)setNotices(data);
   })();}if(tab==="myexam"){(async()=>{const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("exam_date",{ascending:false});if(data)setMyExams(data);})();}if(tab==="inquiry"){(async()=>{const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);})();}if(tab==="shop"){(async()=>{const{data}=await supabase.from("shop_items").select("*").eq("active",true).order("created_at");if(data)setShopItems(data);const{data:p}=await supabase.from("purchases").select("*, shop_items(name)").eq("user_id",user.id).order("created_at",{ascending:false});if(p)setPurchases(p);fTokens();})();}if(tab==="review"){(async()=>{const{data}=await supabase.from("reviews").select("*").eq("user_id",user.id).single();if(data){setMyReview(data);const kws=data.keywords?data.keywords.split(","):[];setReviewForm({best_grade:data.best_grade||"",kw1:kws[0]||"",kw2:kws[1]||"",kw3:kws[2]||"",content:data.content||""});}else{setMyReview(null);setReviewForm({best_grade:"",kw1:"",kw2:"",kw3:"",content:""});}})();}},[tab]);
@@ -353,7 +358,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
   const startEditExam=(ex:any)=>{let memoObj:any={};try{memoObj=JSON.parse(ex.memo||"{}");}catch{}let subjects:any={};try{if(ex.total&&ex.total.startsWith("{"))subjects=JSON.parse(ex.total);}catch{}setEditExamId(ex.id);setEditExamForm({exam_type:ex.exam_type||"모의고사",exam_name:ex.exam_name||"",score:ex.score||"",grade:ex.grade||"",q1:memoObj.q1||"",q2:memoObj.q2||"",q3:memoObj.q3||"",kor_score:subjects["국어"]?.score||"",kor_grade:subjects["국어"]?.grade||"",math_score:subjects["수학"]?.score||ex.score||"",math_grade:subjects["수학"]?.grade||ex.grade||"",eng_score:subjects["영어"]?.score||"",eng_grade:subjects["영어"]?.grade||"",sci_score:subjects["과학"]?.score||"",sci_grade:subjects["과학"]?.grade||"",soc_score:subjects["사회"]?.score||"",soc_grade:subjects["사회"]?.grade||""});};
   const saveEditExam=async()=>{if(!editExamId)return;const isM=editExamForm.exam_type==="모의고사";const subjects=isM?JSON.stringify({국어:{score:editExamForm.kor_score,grade:editExamForm.kor_grade},수학:{score:editExamForm.math_score,grade:editExamForm.math_grade},영어:{score:editExamForm.eng_score,grade:editExamForm.eng_grade},과학:{score:editExamForm.sci_score,grade:editExamForm.sci_grade},사회:{score:editExamForm.soc_score,grade:editExamForm.soc_grade}}):"";const payload={exam_type:editExamForm.exam_type,exam_name:editExamForm.exam_name,subject:isM?"전과목":"수학",score:isM?editExamForm.math_score:editExamForm.score,total:isM?subjects:"",grade:isM?editExamForm.math_grade:editExamForm.grade,memo:JSON.stringify({q1:editExamForm.q1,q2:editExamForm.q2,q3:editExamForm.q3})};await supabase.from("student_exams").update(payload).eq("id",editExamId);setEditExamId(null);const{data}=await supabase.from("student_exams").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setMyExams(data);};
   const addInquiry=async()=>{if(!inqForm.content)return;let imgUrl="";if(inqImg){imgUrl=await uploadImage(inqImg,`inquiry_${user.id}`)||"";}await supabase.from("inquiries").insert({user_id:user.id,title:inqForm.title,content:inqForm.content+(imgUrl?`\n[IMG]${imgUrl}[/IMG]`:"")});setInqForm({title:"",content:""});setInqImg(null);setShowInqAdd(false);const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);};
-  const buyItem=async(item:any)=>{if(myTokens<item.price){alert("서서갈비가 부족합니다!");return;}if(!confirm(`${item.name}을(를) ${item.price} 서서갈비로 구매할까요?`))return;const{error:rpcErr}=await supabase.rpc("increment_tokens",{p_user_id:user.id,p_delta:-item.price});if(rpcErr){alert("구매 실패: "+rpcErr.message);return;}await supabase.from("purchases").insert({user_id:user.id,item_id:item.id,price:item.price});await supabase.from("token_logs").insert({user_id:user.id,amount:-item.price,reason:`상점 구매: ${item.name}`});fTokens();const{data:p}=await supabase.from("purchases").select("*, shop_items(name)").eq("user_id",user.id).order("created_at",{ascending:false});if(p)setPurchases(p);};
+  const buyItem=async(item:any)=>{if(myTokens<item.price){alert("서서갈비가 부족합니다!");return;}if(!confirm(`${item.name}을(를) ${item.price} 서서갈비로 구매할까요?`))return;await supabase.from("users").update({tokens:myTokens-item.price}).eq("id",user.id);await supabase.from("purchases").insert({user_id:user.id,item_id:item.id,price:item.price});await supabase.from("token_logs").insert({user_id:user.id,amount:-item.price,reason:`상점 구매: ${item.name}`});fTokens();const{data:p}=await supabase.from("purchases").select("*, shop_items(name)").eq("user_id",user.id).order("created_at",{ascending:false});if(p)setPurchases(p);};
   const saveReview=async()=>{if(!reviewForm.content)return;const kws=[reviewForm.kw1,reviewForm.kw2,reviewForm.kw3].filter(Boolean);const payload={user_id:user.id,best_grade:reviewForm.best_grade,keywords:kws.join(","),content:reviewForm.content};if(myReview){await supabase.from("reviews").update(payload).eq("id",myReview.id);}else{await supabase.from("reviews").insert(payload);}const{data}=await supabase.from("reviews").select("*").eq("user_id",user.id).single();if(data)setMyReview(data);setShowReviewForm(false);alert("후기가 저장되었습니다!");};
   const deleteReview=async()=>{if(!myReview)return;if(!confirm("후기를 삭제할까요?"))return;await supabase.from("reviews").delete().eq("id",myReview.id);setMyReview(null);setReviewForm({best_grade:"",kw1:"",kw2:"",kw3:"",content:""});setShowReviewForm(false);};
   const deleteInquiry=async(id:number)=>{if(!confirm("문의를 삭제할까요?"))return;await supabase.from("inquiries").delete().eq("id",id);const{data}=await supabase.from("inquiries").select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(data)setInquiries(data);};
@@ -814,7 +819,7 @@ function StudentView({user,logout}:{user:any;logout:()=>void}){
 }
 
 /* ═══ ADMIN: STUDENT MANAGER + EXCEL IMPORT ═══ */
-function AdminStudentManager({users,fetchUsers,groups,currentAdmin}:{users:any[];fetchUsers:()=>void;groups:any[];currentAdmin:any}){
+function AdminStudentManager({users,fetchUsers,groups}:{users:any[];fetchUsers:()=>void;groups:any[]}){
   const[showAdd,setShowAdd]=useState(false);const[form,setForm]=useState({name:"",school:"",parent_phone:"",student_phone:"",class_ids:[] as number[]});
   const[showImport,setShowImport]=useState(false);const[importText,setImportText]=useState("");
   const[editStu,setEditStu]=useState<any>(null);const[editForm,setEditForm]=useState({name:"",school:"",parent_phone:"",student_phone:""});
@@ -834,7 +839,7 @@ function AdminStudentManager({users,fetchUsers,groups,currentAdmin}:{users:any[]
 
   const toggleCheck=(id:number)=>{setChecked(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});};
   const toggleAll=()=>{if(checked.size===sortedStudents.length)setChecked(new Set());else setChecked(new Set(sortedStudents.map((s:any)=>s.id)));};
-  const bulkDelete=async()=>{if(checked.size===0)return;if(!confirm(`선택한 ${checked.size}명의 학생을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`))return;setBulkDeleting(true);const names=students.filter((s:any)=>checked.has(s.id)).map((s:any)=>s.name).join(", ");for(const id of checked){await supabase.from("users").delete().eq("id",id);}await logActivity(currentAdmin,"삭제","학생",`${checked.size}명 일괄삭제`,names);setChecked(new Set());setBulkDeleting(false);fetchUsers();};
+  const bulkDelete=async()=>{if(checked.size===0)return;if(!confirm(`선택한 ${checked.size}명의 학생을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`))return;setBulkDeleting(true);for(const id of checked){await supabase.from("users").delete().eq("id",id);}setChecked(new Set());setBulkDeleting(false);fetchUsers();};
 
   const addStudent=async()=>{
     if(!form.name||!form.parent_phone)return;
@@ -862,8 +867,8 @@ function AdminStudentManager({users,fetchUsers,groups,currentAdmin}:{users:any[]
     alert(`${count}명 추가 완료!`);setImportText("");setShowImport(false);fetchUsers();
   };
 
-  const removeStudent=async(id:number)=>{if(!confirm("삭제?"))return;const name=students.find((s:any)=>s.id===id)?.name||"";await supabase.from("users").delete().eq("id",id);await logActivity(currentAdmin,"삭제","학생",name);fetchUsers();};
-  const saveEditStu=async()=>{if(!editStu)return;const{name,school,parent_phone,student_phone}=editForm;if(!name||!parent_phone){alert("이름과 학부모 연락처는 필수입니다.");return;}const last4=parent_phone.slice(-4);const lid=name+last4;await supabase.from("users").update({name,school,parent_phone,student_phone,phone:student_phone,login_id:lid,password:last4}).eq("id",editStu.id);await logActivity(currentAdmin,"수정","학생",name);setEditStu(null);fetchUsers();};
+  const removeStudent=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("users").delete().eq("id",id);fetchUsers();};
+  const saveEditStu=async()=>{if(!editStu)return;const{name,school,parent_phone,student_phone}=editForm;if(!name||!parent_phone){alert("이름과 학부모 연락처는 필수입니다.");return;}const last4=parent_phone.slice(-4);const lid=name+last4;await supabase.from("users").update({name,school,parent_phone,student_phone,phone:student_phone,login_id:lid,password:last4}).eq("id",editStu.id);setEditStu(null);fetchUsers();};
   const startEdit=(s:any)=>{setEditStu(s);setEditForm({name:s.name||"",school:s.school||"",parent_phone:s.parent_phone||"",student_phone:s.student_phone||s.phone||""});};
   const toggleClass=(cid:number)=>{setForm(p=>({...p,class_ids:p.class_ids.includes(cid)?p.class_ids.filter(x=>x!==cid):[...p.class_ids,cid]}));};
 
@@ -906,119 +911,8 @@ function AdminStudentManager({users,fetchUsers,groups,currentAdmin}:{users:any[]
   </div>);
 }
 
-/* ═══ ADMIN: ACCOUNT MANAGER (관리자 계정) ═══ */
-function AdminAccountManager({users,fetchUsers,currentUserId}:{users:any[];fetchUsers:()=>void;currentUserId:number}){
-  const[showAdd,setShowAdd]=useState(false);const[form,setForm]=useState({name:"",login_id:"",password:"",password2:"",position:"조교"});
-  const[resetId,setResetId]=useState<number|null>(null);const[resetPw,setResetPw]=useState("");
-  const admins=users.filter((u:any)=>u.role==="admin").sort((a:any,b:any)=>(a.name||"").localeCompare(b.name||"",'ko'));
-
-  const addAdmin=async()=>{
-    const name=form.name.trim();const lid=form.login_id.trim();
-    if(!name||!lid||!form.password){alert("이름, 아이디, 비밀번호를 모두 입력하세요");return;}
-    if(form.password!==form.password2){alert("비밀번호가 일치하지 않습니다");return;}
-    const{data:ex}=await supabase.from("users").select("id").eq("login_id",lid).single();
-    if(ex){alert("이미 존재하는 아이디입니다: "+lid);return;}
-    const{error}=await supabase.from("users").insert({login_id:lid,password:form.password,name,role:"admin",status:"approved",position:form.position});
-    if(error){alert("생성 실패: "+error.message);return;}
-    setForm({name:"",login_id:"",password:"",password2:"",position:"조교"});setShowAdd(false);fetchUsers();
-  };
-
-  const removeAdmin=async(id:number,name:string)=>{
-    if(id===currentUserId){alert("현재 로그인한 계정은 삭제할 수 없습니다");return;}
-    if(admins.length<=1){alert("최소 1개의 관리자 계정은 남아있어야 합니다");return;}
-    if(!confirm(`${name} 관리자 계정을 삭제할까요?`))return;
-    const{error}=await supabase.from("users").delete().eq("id",id);
-    if(error){alert("삭제 실패: "+error.message);return;}
-    fetchUsers();
-  };
-
-  const doResetPw=async(id:number)=>{
-    if(!resetPw){alert("새 비밀번호를 입력하세요");return;}
-    const{error}=await supabase.from("users").update({password:resetPw}).eq("id",id);
-    if(error){alert("변경 실패: "+error.message);return;}
-    alert("비밀번호가 변경되었습니다!");setResetId(null);setResetPw("");
-  };
-
-  const changePosition=async(id:number,position:string)=>{const{error}=await supabase.from("users").update({position}).eq("id",id);if(error){alert("변경 실패: "+error.message);return;}fetchUsers();};
-
-  return(<div>
-    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">👤 관리자 계정</h2><button onClick={()=>setShowAdd(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>관리자 추가</button></div>
-
-    {showAdd&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 border border-[#D4AF37]/20">
-      <h3 className="font-semibold text-sm mb-3">새 관리자 계정</h3>
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div><label className="text-[10px] font-semibold text-slate-400">이름 *</label><input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))}/></div>
-        <div><label className="text-[10px] font-semibold text-slate-400">직책</label><select className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.position} onChange={e=>setForm(p=>({...p,position:e.target.value}))}><option value="조교">조교</option><option value="강사">강사</option></select></div>
-        <div><label className="text-[10px] font-semibold text-slate-400">아이디 *</label><input className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.login_id} onChange={e=>setForm(p=>({...p,login_id:e.target.value}))}/></div>
-        <div><label className="text-[10px] font-semibold text-slate-400">비밀번호 *</label><input type="password" className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.password} onChange={e=>setForm(p=>({...p,password:e.target.value}))}/></div>
-        <div><label className="text-[10px] font-semibold text-slate-400">비밀번호 확인 *</label><input type="password" className="w-full bg-slate-50 rounded-lg px-3 py-2 text-sm mt-1 border-0" value={form.password2} onChange={e=>setForm(p=>({...p,password2:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addAdmin()}/></div>
-      </div>
-      <div className="flex gap-2"><button onClick={addAdmin} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">추가</button><button onClick={()=>setShowAdd(false)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
-    </div>}
-
-    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-50">{["이름","직책","아이디",""].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400">{h}</th>)}</tr></thead><tbody>{admins.map((a:any)=>(<tr key={a.id} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors"><td className="px-4 py-3 font-semibold">{a.name}{a.id===currentUserId&&<span className="ml-1.5 text-[10px] font-bold text-[#D4AF37]">(나)</span>}</td><td className="px-4 py-3"><select value={a.position||"조교"} onChange={e=>changePosition(a.id,e.target.value)} className="text-[10px] font-bold pl-2 pr-1 py-1 rounded-full bg-[#D4AF37]/10 text-[#AA8C2C] border-0 cursor-pointer">{["강사","조교"].map(p=><option key={p} value={p}>{p}</option>)}</select></td><td className="px-4 py-3 font-mono text-xs text-[#D4AF37]">{a.login_id}</td><td className="px-4 py-3 text-right">{resetId===a.id?<div className="flex gap-1.5 items-center justify-end"><input type="password" autoFocus className="bg-slate-50 rounded-lg px-2.5 py-1.5 text-xs border-0 w-28" placeholder="새 비밀번호" value={resetPw} onChange={e=>setResetPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doResetPw(a.id)}/><button onClick={()=>doResetPw(a.id)} className="text-xs font-semibold text-white bg-[#D4AF37] px-2.5 py-1.5 rounded-lg">확인</button><button onClick={()=>{setResetId(null);setResetPw("");}} className="text-xs font-semibold text-slate-500 px-2 py-1.5">취소</button></div>:<div className="flex gap-2 justify-end"><button onClick={()=>{setResetId(a.id);setResetPw("");}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10">비밀번호 초기화</button><button onClick={()=>removeAdmin(a.id,a.name)} className="text-xs font-semibold text-slate-700 hover:text-red-500 transition-colors px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50">삭제</button></div>}</td></tr>))}{admins.length===0&&<tr><td colSpan={4} className="text-center py-10 text-slate-400 text-sm">관리자 계정이 없습니다</td></tr>}</tbody></table></div>
-  </div>);
-}
-
-/* ═══ ADMIN: STAFF NOTICE BOARD (관리자 공지, 강사→조교) ═══ */
-function AdminStaffNoticeManager({currentAdmin}:{currentAdmin:any}){
-  const[notices,setNotices]=useState<any[]>([]);const[showAdd,setShowAdd]=useState(false);
-  const[form,setForm]=useState({title:"",content:""});
-  const[editId,setEditId]=useState<number|null>(null);const[editForm,setEditForm]=useState({title:"",content:""});
-  const[openIds,setOpenIds]=useState<Set<number>>(new Set());
-  const canWrite=currentAdmin?.position==="강사";
-  const fN=async()=>{const{data}=await supabase.from("admin_notices").select("*").order("created_at",{ascending:false});if(data)setNotices(data);};
-  useEffect(()=>{fN();},[]);
-  const toggleOpen=(id:number)=>{setOpenIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});};
-  const addNotice=async()=>{if(!canWrite||!form.title.trim()||!form.content.trim())return;const{error}=await supabase.from("admin_notices").insert({title:form.title.trim(),content:form.content.trim(),author_name:currentAdmin?.name||"",author_position:currentAdmin?.position||""});if(error){alert("등록 실패: "+error.message);return;}setForm({title:"",content:""});setShowAdd(false);fN();};
-  const delNotice=async(id:number)=>{if(!canWrite)return;if(!confirm("삭제?"))return;const{error}=await supabase.from("admin_notices").delete().eq("id",id);if(error){alert("삭제 실패: "+error.message);return;}fN();};
-  const startEdit=(n:any)=>{setEditId(n.id);setEditForm({title:n.title||"",content:n.content||""});};
-  const saveEdit=async()=>{if(!canWrite||!editId||!editForm.title.trim()||!editForm.content.trim())return;const{error}=await supabase.from("admin_notices").update({title:editForm.title.trim(),content:editForm.content.trim()}).eq("id",editId);if(error){alert("저장 실패: "+error.message);return;}setEditId(null);fN();};
-  return(<div>
-    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">🔔 관리자 공지</h2>{canWrite&&<button onClick={()=>setShowAdd(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>새 공지</button>}</div>
-    {showAdd&&canWrite&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 space-y-3">
-      <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} placeholder="공지 제목"/></div>
-      <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm mt-1 border-0 resize-none h-28" value={form.content} onChange={e=>setForm(p=>({...p,content:e.target.value}))} placeholder="공지 내용을 입력하세요"/></div>
-      <div className="flex gap-2"><button onClick={addNotice} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">등록</button><button onClick={()=>setShowAdd(false)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
-    </div>}
-    <div className="space-y-3">{notices.map((n:any)=>{const isOpen=openIds.has(n.id);return(<div key={n.id} className="bg-white rounded-2xl p-5 shadow-sm">
-      {editId===n.id?<div className="space-y-3">
-        <div><label className="text-xs font-semibold text-slate-500">제목</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={editForm.title} onChange={e=>setEditForm(p=>({...p,title:e.target.value}))}/></div>
-        <div><label className="text-xs font-semibold text-slate-500">내용</label><textarea className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm mt-1 border-0 resize-none h-28" value={editForm.content} onChange={e=>setEditForm(p=>({...p,content:e.target.value}))}/></div>
-        <div className="flex gap-2"><button onClick={saveEdit} className="bg-[#D4AF37] text-white px-4 py-2 rounded-xl text-xs font-semibold">저장</button><button onClick={()=>setEditId(null)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>
-      </div>:<>
-        <div className="flex items-start justify-between gap-2 cursor-pointer" onClick={()=>toggleOpen(n.id)}><div className="flex items-start gap-2"><span className="text-[10px] text-slate-300 mt-1">{isOpen?"▲":"▼"}</span><div><h3 className="font-semibold text-sm">{n.title}</h3><div className="flex items-center gap-2 mt-1"><span className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg">{n.author_name}{n.author_position}</span><span className="text-xs text-slate-400">{n.created_at?.slice(0,10)}</span></div></div></div>{canWrite&&<div className="flex items-center gap-2 shrink-0" onClick={e=>e.stopPropagation()}><button onClick={()=>startEdit(n)} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button><button onClick={()=>delNotice(n.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button></div>}</div>
-        {isOpen&&<p className="text-sm text-slate-600 whitespace-pre-line mt-3 pt-3" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}>{n.content}</p>}
-      </>}
-    </div>);})}{notices.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">{canWrite?"공지를 작성해보세요":"등록된 공지가 없습니다"}</div>}</div>
-  </div>);
-}
-
-/* ═══ ADMIN: ACTIVITY LOG (수정/삭제 내역, 강사 전용) ═══ */
-function AdminActivityLog(){
-  const[logs,setLogs]=useState<any[]>([]);
-  const fL=async()=>{const{data}=await supabase.from("admin_activity_log").select("*").order("created_at",{ascending:false}).limit(300);if(data)setLogs(data);};
-  useEffect(()=>{fL();},[]);
-  const dateKey=(iso:string)=>{if(!iso)return"날짜 없음";const dt=new Date(iso);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;};
-  const grouped:Record<string,any[]>={};
-  logs.forEach((l:any)=>{const d=dateKey(l.created_at);if(!grouped[d])grouped[d]=[];grouped[d].push(l);});
-  const dates=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
-  return(<div>
-    <h2 className="text-lg font-bold mb-4">📋 활동 내역</h2>
-    {dates.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm">아직 기록이 없습니다</div>}
-    {dates.map(d=>(<div key={d} className="mb-5">
-      <p className="text-xs font-bold text-slate-400 mb-2">{d}</p>
-      <div className="bg-white rounded-2xl shadow-sm divide-y divide-slate-50">{grouped[d].map((l:any)=>(<div key={l.id} className="px-4 py-3 flex items-center gap-3">
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${l.action==="삭제"?"bg-red-50 text-red-500":"bg-[#D4AF37]/10 text-[#AA8C2C]"}`}>{l.action}</span>
-        <span className="text-sm text-slate-600 flex-1"><b className="text-slate-800">{l.admin_name}{l.admin_position}</b>님이 {l.target_type} <b className="text-slate-800">{l.target_name}</b>{l.action==="삭제"?"를 삭제":"를 수정"}했습니다{l.detail&&<span className="text-slate-400"> · {l.detail}</span>}</span>
-        <span className="text-xs text-slate-300 shrink-0">{l.created_at?new Date(l.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):""}</span>
-      </div>))}</div>
-    </div>))}
-  </div>);
-}
-
 /* ═══ ADMIN: CLASS + EXCEL TEST (with auto stats) ═══ */
-function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
+function AdminClassManager({users}:{users:any[]}){
   const[groups,setGroups]=useState<any[]>([]);const[selG,setSelG]=useState<any>(null);const[members,setMembers]=useState<any[]>([]);const[tests,setTests]=useState<any[]>([]);const[selT,setSelT]=useState<any>(null);const[qs,setQs]=useState<any[]>([]);const[grid,setGrid]=useState<any>({});const[ig,setIg]=useState<any>({});const[saving,setSaving]=useState(false);const[saveMsg,setSaveMsg]=useState("");
   // question_number 중복제거 + section 정규화 + 오름차순 정렬
   const normalizeQs=(arr:any[])=>{const seen=new Set<number>();return arr.filter(q=>{if(seen.has(q.question_number))return false;seen.add(q.question_number);return true;}).map((qi:any)=>({...qi,section:qi.section||"common"})).sort((a:any,b:any)=>a.question_number-b.question_number);};
@@ -1083,35 +977,21 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
     setCapId(null);
   };
   const approved=users.filter((u:any)=>u.status==="approved"&&u.role!=="admin");
+  const[hiddenGIds,setHiddenGIds]=useState<Set<number>>(new Set());
+  const fHidden=async()=>{const{data}=await supabase.from("site_settings").select("value").eq("key","hidden_groups").single();if(data?.value){try{setHiddenGIds(new Set(JSON.parse(data.value)));}catch{}}};
+  const toggleHideG=async(gid:number)=>{const nSet=new Set(hiddenGIds);if(nSet.has(gid))nSet.delete(gid);else nSet.add(gid);setHiddenGIds(nSet);const arr=Array.from(nSet);const{error}=await supabase.from("site_settings").upsert({key:"hidden_groups",value:JSON.stringify(arr)},{onConflict:"key"});if(error)console.error(error);};
+  const[showHidden,setShowHidden]=useState(false);
   const fG=async()=>{const{data}=await supabase.from("class_groups").select("*").order("created_at");if(data)setGroups(data);};
   const fM=async(gid:number)=>{const{data}=await supabase.from("class_members").select("*, users:user_id(*)").eq("class_group_id",gid);if(data){const sorted=[...data].sort((a:any,b:any)=>(a.users?.name||"").localeCompare(b.users?.name||"",'ko'));setMembers(sorted);return sorted;}return[];};
   const fT=async(gid:number)=>{const{data}=await supabase.from("tests").select("*").eq("class_group_id",gid).order("date",{ascending:false});if(data)setTests(data);};
-  useEffect(()=>{fG();},[]);
+  useEffect(()=>{fG();fHidden();},[]);
 
   // 반 선택 — useEffect 없이 직접 호출
   const selectGroup=async(g:any)=>{setSelG(g);setSelT(null);setGrid({});setIg({});setQs([]);setMembers([]);setTests([]);if(g){await fM(g.id);await fT(g.id);}};
 
-  const cG=async()=>{if(!newGN)return;const{error}=await supabase.from("class_groups").insert({name:newGN});if(error){alert("생성 실패: "+error.message);return;}setNewGN("");setShowNG(false);fG();};
-  const dG=async(id:number)=>{
-    if(currentAdmin?.position!=="강사"){alert("반 삭제는 강사만 할 수 있습니다");return;}
-    const groupName=groups.find((g:any)=>g.id===id)?.name||"";
-    const{data:groupTests}=await supabase.from("tests").select("id").eq("class_group_id",id);
-    const{data:groupMembers}=await supabase.from("class_members").select("user_id").eq("class_group_id",id);
-    const testCount=groupTests?.length||0;const memberCount=groupMembers?.length||0;
-    const warnMsg=(testCount>0||memberCount>0)?`이 반에는 학생 배정 ${memberCount}명, 시험 ${testCount}개(성적 포함)가 있습니다.\n반을 삭제하면 이 데이터도 함께 삭제됩니다. 계속할까요?`:"이 반을 삭제할까요?";
-    if(!confirm(warnMsg))return;
-    if(groupTests)for(const t of groupTests){await supabase.from("test_student_info").delete().eq("test_id",t.id);await supabase.from("test_results").delete().eq("test_id",t.id);await supabase.from("test_questions").delete().eq("test_id",t.id);}
-    await supabase.from("tests").delete().eq("class_group_id",id);
-    await supabase.from("class_members").delete().eq("class_group_id",id);
-    await supabase.from("class_notices").delete().eq("class_group_id",id);
-    await supabase.from("calendar_events").delete().eq("class_group_id",id);
-    const{error}=await supabase.from("class_groups").delete().eq("id",id);
-    if(error){alert("삭제 실패: "+error.message);return;}
-    await logActivity(currentAdmin,"삭제","반",groupName);
-    if(selG?.id===id){setSelG(null);setMembers([]);setTests([]);setSelT(null);}
-    fG();
-  };
-  const renameG=async(id:number)=>{if(!editGN.trim())return;const oldName=groups.find((g:any)=>g.id===id)?.name||"";const{error}=await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);if(error){alert("수정 실패: "+error.message);return;}await logActivity(currentAdmin,"수정","반",editGN.trim(),oldName&&oldName!==editGN.trim()?`이전 이름: ${oldName}`:undefined);setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>prev?{...prev,name:editGN.trim()}:prev);};
+  const cG=async()=>{if(!newGN)return;await supabase.from("class_groups").insert({name:newGN});setNewGN("");setShowNG(false);fG();};
+  const dG=async(id:number)=>{if(!confirm("삭제?"))return;await supabase.from("class_groups").delete().eq("id",id);if(selG?.id===id){setSelG(null);setMembers([]);setTests([]);setSelT(null);}fG();};
+  const renameG=async(id:number)=>{if(!editGN.trim())return;await supabase.from("class_groups").update({name:editGN.trim()}).eq("id",id);setEditingGId(null);setEditGN("");fG();if(selG?.id===id)setSelG((prev:any)=>prev?{...prev,name:editGN.trim()}:prev);};
   const aM=async(uid:number)=>{if(!selG)return;await supabase.from("class_members").insert({class_group_id:selG.id,user_id:uid});fM(selG.id);};
   const rM=async(id:number)=>{await supabase.from("class_members").delete().eq("id",id);if(selG)fM(selG.id);};
   const cT=async()=>{if(!selG||!ntf.date)return;const title=`${ntf.date} ${selG.name}`;const{data:t}=await supabase.from("tests").insert({date:ntf.date,title,class_group_id:selG.id,class_name:selG.name,assignment:""}).select().single();if(!t)return;const rows=Array.from({length:15},(_,i)=>({test_id:t.id,question_number:i+1,topic:"",correct_rate:0}));await supabase.from("test_questions").insert(rows);setShowNT(false);setNtf({date:"",title:"",qCount:15,assignment:""});setNtp([]);fT(selG.id);};
@@ -1129,7 +1009,7 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
     if(q)setQs(normalizeQs(q));
     const{data:res}=await supabase.from("test_results").select("*").eq("test_id",test.id);const{data:infos}=await supabase.from("test_student_info").select("*").eq("test_id",test.id);const g:any={};const ig2:any={};members.forEach((m:any)=>{const uid=m.user_id;ig2[uid]={attendance:"",clinic_time:"",assignment_score:"",wrong_answer_score:"",comment:"",student_id:uid,selected_section:""};});if(res)res.forEach((r:any)=>{const uid=members.find((m:any)=>m.user_id===r.student_id)?.user_id;if(uid!==undefined)g[`${uid}-${r.question_number}`]=r.is_correct?1:0;});
     // selected_section null 방어
-    if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si,selected_section:si.selected_section||"",comment:stripAuthorTag(si.comment||""),_origComment:si.comment||""};});
+    if(infos)infos.forEach((si:any)=>{const uid=members.find((m:any)=>m.user_id===si.student_id)?.user_id;if(uid!==undefined)ig2[uid]={...ig2[uid],...si,selected_section:si.selected_section||""};});
     setGrid(g);setIg(ig2);
   };
 
@@ -1178,7 +1058,6 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
 
   const saveAll=async()=>{
     if(!selT)return;setSaving(true);setSaveMsg("");
-    const myLabel=`${currentAdmin?.name||"관리자"}${currentAdmin?.position||""}`;
     const errors:string[]=[];
     const testId=selT.id;
     const scores:number[]=[];
@@ -1195,9 +1074,7 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
       const rows:any[]=[];qs.forEach(q=>{const v=grid[`${uid}-${q.question_number}`];if(v!==undefined)rows.push({test_id:testId,student_id:sid,question_number:q.question_number,is_correct:v===1});});
       if(rows.length>0){const{error:insErr}=await supabase.from("test_results").insert(rows);if(insErr)errors.push("결과저장:"+insErr.message);}
       const sc=getS(uid);const inf=ig[uid]||{};
-    const rawNow=(inf.comment||"").trim();const origRaw=stripAuthorTag(inf._origComment||"").trim();
-    const finalComment=rawNow===""?"":(rawNow===origRaw?(inf._origComment||""):`[${myLabel}] ${rawNow}`);
-    const pay={test_id:testId,student_id:sid,total_score:sc,class_average:avgR,class_best:best,std_dev:stdR,attendance:inf.attendance||"",assignment_score:inf.assignment_score||"",wrong_answer_score:inf.wrong_answer_score||"",clinic_time:inf.clinic_time||"",comment:finalComment,selected_section:inf.selected_section||""};
+    const pay={test_id:testId,student_id:sid,total_score:sc,class_average:avgR,class_best:best,std_dev:stdR,attendance:inf.attendance||"",assignment_score:inf.assignment_score||"",wrong_answer_score:inf.wrong_answer_score||"",clinic_time:inf.clinic_time||"",comment:inf.comment||"",selected_section:inf.selected_section||""};
       const{data:ex}=await supabase.from("test_student_info").select("id").eq("test_id",testId).eq("student_id",sid).single();
       if(ex){const{error:upErr}=await supabase.from("test_student_info").update(pay).eq("id",ex.id);if(upErr)errors.push("정보수정:"+upErr.message);}
       else{const{error:inErr}=await supabase.from("test_student_info").insert(pay);if(inErr)errors.push("정보저장:"+inErr.message);}
@@ -1256,7 +1133,8 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
               if(!dupA){totalReward+=assignReward;reasons.push(`과제 ${assignVal}%`);}
             }
             if(totalReward>0){
-              await supabase.rpc("increment_tokens",{p_user_id:uid,p_delta:totalReward});
+              const{data:uData}=await supabase.from("users").select("tokens").eq("id",uid).single();const curTokens=uData?.tokens||0;
+              await supabase.from("users").update({tokens:curTokens+totalReward}).eq("id",uid);
               if(reasons.some(r=>r.startsWith("오답")))await supabase.from("token_logs").insert({user_id:uid,amount:wrongReward,reason:wrongKey});
               if(reasons.some(r=>r.startsWith("과제")))await supabase.from("token_logs").insert({user_id:uid,amount:assignReward,reason:assignKey});
               await sendNotif(uid,"token",`🥩 서서갈비 ${totalReward}개 자동 지급! (${reasons.join(", ")})`);
@@ -1564,10 +1442,12 @@ function AdminClassManager({users,currentAdmin}:{users:any[];currentAdmin:any}){
   }
 
   // Group list
+  const visibleGroups=showHidden?groups:groups.filter(g=>!hiddenGIds.has(g.id));
+  const hiddenCount=groups.filter(g=>hiddenGIds.has(g.id)).length;
   return(<div>
-    <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">📁 반 관리</h2><button onClick={()=>setShowNG(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>새 반</button></div>
+    <div className="flex justify-between items-center mb-4 flex-wrap gap-2"><h2 className="text-lg font-bold">📁 반 관리</h2><div className="flex items-center gap-2">{hiddenCount>0&&<button onClick={()=>setShowHidden(!showHidden)} className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${showHidden?"bg-slate-200 text-slate-700":"bg-slate-100 text-slate-400"}`}>{showHidden?`숨긴 반 숨기기`:`숨긴 반 보기 (${hiddenCount})`}</button>}<button onClick={()=>setShowNG(true)} className="admin-btn px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"><Icon type="plus" size={14}/>새 반</button></div></div>
     {showNG&&<div className="bg-white rounded-2xl p-5 shadow-sm mb-4 flex gap-3 items-end"><div className="flex-1"><label className="text-xs font-semibold text-slate-500">반 이름</label><input className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm mt-1 border-0" value={newGN} onChange={e=>setNewGN(e.target.value)} placeholder="수학 정규반"/></div><button onClick={cG} className="bg-[#D4AF37] text-white px-4 py-2.5 rounded-xl text-xs font-semibold">만들기</button></div>}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{groups.map(g=>(<div key={g.id} className="bg-white rounded-xl p-5 shadow-sm hover:ring-2 hover:ring-[#D4AF37]/20 cursor-pointer" onClick={()=>selectGroup(g)}><div className="flex justify-between items-start"><div className="flex items-center gap-2"><Icon type="folder" size={20}/>{editingGId===g.id?<div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}><input className="bg-slate-50 rounded-lg px-2 py-1 text-sm border border-slate-200 focus:outline-none focus:border-[#D4AF37] w-36" value={editGN} onChange={e=>setEditGN(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")renameG(g.id);if(e.key==="Escape"){setEditingGId(null);setEditGN("");}}} autoFocus/><button onClick={()=>renameG(g.id)} className="text-xs text-[#D4AF37] font-semibold">확인</button><button onClick={()=>{setEditingGId(null);setEditGN("");}} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>:<span className="font-semibold">{g.name}</span>}</div><div className="flex gap-2" onClick={e=>e.stopPropagation()}><button onClick={()=>{setEditingGId(g.id);setEditGN(g.name);}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button>{currentAdmin?.position==="강사"&&<button onClick={()=>dG(g.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button>}</div></div></div>))}{groups.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm col-span-2">반을 만들어 보세요!</div>}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{visibleGroups.map(g=>{const isHidden=hiddenGIds.has(g.id);return(<div key={g.id} className={`bg-white rounded-xl p-5 shadow-sm hover:ring-2 hover:ring-[#D4AF37]/20 cursor-pointer ${isHidden?"opacity-50":""}`} onClick={()=>selectGroup(g)}><div className="flex justify-between items-start"><div className="flex items-center gap-2"><Icon type="folder" size={20}/>{editingGId===g.id?<div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}><input className="bg-slate-50 rounded-lg px-2 py-1 text-sm border border-slate-200 focus:outline-none focus:border-[#D4AF37] w-36" value={editGN} onChange={e=>setEditGN(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")renameG(g.id);if(e.key==="Escape"){setEditingGId(null);setEditGN("");}}} autoFocus/><button onClick={()=>renameG(g.id)} className="text-xs text-[#D4AF37] font-semibold">확인</button><button onClick={()=>{setEditingGId(null);setEditGN("");}} className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-2.5 py-1 rounded-lg bg-slate-100 transition-colors">취소</button></div>:<span className="font-semibold">{g.name}{isHidden&&<span className="text-[10px] text-slate-400 ml-1">(숨김)</span>}</span>}</div><div className="flex gap-2" onClick={e=>e.stopPropagation()}><button onClick={()=>toggleHideG(g.id)} className={`text-xs font-semibold px-2 py-0.5 rounded-lg transition-colors ${isHidden?"bg-green-50 text-green-600 hover:bg-green-100":"bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>{isHidden?"보이기":"숨김"}</button><button onClick={()=>{setEditingGId(g.id);setEditGN(g.name);}} className="text-xs font-semibold text-slate-700 hover:text-[#D4AF37] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-[#D4AF37]/10 transition-colors">수정</button><button onClick={()=>dG(g.id)} className="text-xs font-semibold text-slate-700 hover:text-red-500 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-red-50 transition-colors">삭제</button></div></div></div>);})}{groups.length===0&&<div className="bg-white rounded-2xl p-12 shadow-sm text-center text-slate-400 text-sm col-span-2">반을 만들어 보세요!</div>}</div>
   </div>);
 }
 
@@ -1755,8 +1635,8 @@ function AdminTokenManager({users,fetchUsers}:{users:any[];fetchUsers:()=>void})
   const loadAutoSettings=async()=>{const{data}=await supabase.from("site_settings").select("*");if(data){const s:any={};data.forEach((r:any)=>{s[r.key]=r.value;});setAutoSettings({wrong_pct:s.auto_wrong_pct||"70",wrong_reward:s.auto_wrong_reward||"1",assign_pct:s.auto_assign_pct||"70",assign_reward:s.auto_assign_reward||"1",enabled:s.auto_token_enabled!=="false"});}};
   useEffect(()=>{fLogs();fGroups();loadAutoSettings();},[]);
   const saveAutoSettings=async()=>{const pairs=[["auto_wrong_pct",autoSettings.wrong_pct],["auto_wrong_reward",autoSettings.wrong_reward],["auto_assign_pct",autoSettings.assign_pct],["auto_assign_reward",autoSettings.assign_reward],["auto_token_enabled",autoSettings.enabled?"true":"false"]];for(const[k,v] of pairs){const{data:ex}=await supabase.from("site_settings").select("id").eq("key",k).single();if(ex)await supabase.from("site_settings").update({value:v}).eq("key",k);else await supabase.from("site_settings").insert({key:k,value:v});}setAutoMsg("저장 완료!");setTimeout(()=>setAutoMsg(""),2000);};
-  const giveToken=async(uid:number,subtract?:boolean)=>{const amt=Number(amount[uid]||0);if(!amt||amt<=0)return;const delta=subtract?-amt:amt;const{error:rpcErr}=await supabase.rpc("increment_tokens",{p_user_id:uid,p_delta:delta});if(rpcErr){alert("지급 실패: "+rpcErr.message);return;}const rsn=reason[uid]||(subtract?"관리자 차감":"관리자 지급");await supabase.from("token_logs").insert({user_id:uid,amount:delta,reason:rsn});await sendNotif(uid,"token",subtract?`🥩 서서갈비 ${amt}개 차감 (${rsn})`:`🥩 서서갈비 ${amt}개 지급! (${rsn})`);setAmount(p=>({...p,[uid]:""}));setReason(p=>({...p,[uid]:""}));fetchUsers();fLogs();};
-  const batchGive=async()=>{if(!batchGroup||!batchAmt)return;const amt=Number(batchAmt);if(!amt||amt<=0)return;setBatchLoading(true);const{data:cms}=await supabase.from("class_members").select("user_id").eq("class_group_id",batchGroup);if(cms){const rsn=batchReason||"반 일괄 지급";for(const cm of cms){await supabase.rpc("increment_tokens",{p_user_id:cm.user_id,p_delta:amt});await supabase.from("token_logs").insert({user_id:cm.user_id,amount:amt,reason:rsn});await sendNotif(cm.user_id,"token",`🥩 서서갈비 ${amt}개 지급! (${rsn})`);}alert(`${cms.length}명에게 ${amt}개씩 지급 완료!`);}setBatchGroup(0);setBatchAmt("");setBatchReason("");setBatchLoading(false);fetchUsers();fLogs();};
+  const giveToken=async(uid:number,subtract?:boolean)=>{const amt=Number(amount[uid]||0);if(!amt||amt<=0)return;const u=students.find(s=>s.id===uid);const cur=u?.tokens||0;const newVal=subtract?Math.max(0,cur-amt):cur+amt;await supabase.from("users").update({tokens:newVal}).eq("id",uid);const rsn=reason[uid]||(subtract?"관리자 차감":"관리자 지급");await supabase.from("token_logs").insert({user_id:uid,amount:subtract?-amt:amt,reason:rsn});await sendNotif(uid,"token",subtract?`🥩 서서갈비 ${amt}개 차감 (${rsn})`:`🥩 서서갈비 ${amt}개 지급! (${rsn})`);setAmount(p=>({...p,[uid]:""}));setReason(p=>({...p,[uid]:""}));fetchUsers();fLogs();};
+  const batchGive=async()=>{if(!batchGroup||!batchAmt)return;const amt=Number(batchAmt);if(!amt||amt<=0)return;setBatchLoading(true);const{data:cms}=await supabase.from("class_members").select("user_id").eq("class_group_id",batchGroup);if(cms){const rsn=batchReason||"반 일괄 지급";for(const cm of cms){const u=users.find((u:any)=>u.id===cm.user_id);const cur=u?.tokens||0;await supabase.from("users").update({tokens:cur+amt}).eq("id",cm.user_id);await supabase.from("token_logs").insert({user_id:cm.user_id,amount:amt,reason:rsn});await sendNotif(cm.user_id,"token",`🥩 서서갈비 ${amt}개 지급! (${rsn})`);}alert(`${cms.length}명에게 ${amt}개씩 지급 완료!`);}setBatchGroup(0);setBatchAmt("");setBatchReason("");setBatchLoading(false);fetchUsers();fLogs();};
   return(<div><h2 className="text-lg font-bold mb-4">🥩 서서갈비 관리</h2>
     {/* 자동지급 설정 */}
     <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
@@ -1946,30 +1826,29 @@ export default function Home(){
   if(user.role!=="admin")return<StudentView user={user} logout={logout}/>;
 
   const ADMIN_SECRET="Tjwjddls1!";
-  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site","changepw","admins","activityLog"];
+  const lockedTabs=["exams","tokens","shop","reviews","studentReviews","shorts","notices","inquiries","site","changepw"];
   const tryUnlock=()=>{if(adminPwInput===ADMIN_SECRET){setAdminUnlocked(true);setAdminPwErr("");}else{setAdminPwErr("비밀번호가 틀렸습니다");}};
   const handleAdminTab=(id:string,mob?:boolean)=>{if(lockedTabs.includes(id)&&!adminUnlocked){setTab("unlock");if(mob)setMm(false);return;}setTab(id);if(mob)setMm(false);if(id==="inquiries")fInqCount();if(id==="shop")fOrderCount();};
 
-  const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"},{id:"staffNotices",icon:"bell",label:"관리자 공지"}];
-  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"admins",icon:"user",label:"관리자 계정"},{id:"activityLog",icon:"search",label:"활동 내역",instructorOnly:true},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
+  const miPublic=[{id:"classes",icon:"folder",label:"반 관리"},{id:"students",icon:"users",label:"학생 관리"}];
+  const miLocked=[{id:"exams",icon:"test",label:"시험 성적"},{id:"tokens",icon:"coin",label:"서서갈비"},{id:"shop",icon:"cart",label:"상점 관리"},{id:"reviews",icon:"msg",label:"후기 관리"},{id:"studentReviews",icon:"msg",label:"학생 후기"},{id:"shorts",icon:"play",label:"쇼츠 관리"},{id:"calendar",icon:"home",label:"캘린더 관리"},{id:"notices",icon:"bell",label:"공지사항"},{id:"inquiries",icon:"msg",label:"문의사항"},{id:"site",icon:"upload",label:"로그인 화면"},{id:"changepw",icon:"settings",label:"비밀번호 변경"}];
 
-  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1 min-h-0 overflow-y-auto pr-1"} space-y-0.5`}>
+  const navEl=(mob?:boolean)=>(<nav className={`${mob?"":"flex-1"} space-y-0.5`}>
     {miPublic.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}</button>))}
     <div className="pt-2 mt-2" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}>
       <button onClick={()=>{if(adminUnlocked){setAdminUnlocked(false);setAdminPwInput("");setTab("classes");if(mob)setMm(false);}else{setTab("unlock");if(mob)setMm(false);}}} className="flex items-center gap-2 w-full px-3 py-1.5 mb-1 text-[10px] font-semibold" style={{color:"rgba(212,175,55,0.65)",fontFamily:"'Montserrat',sans-serif"}}>{adminUnlocked?"🔓 관리 메뉴 (잠그기)":"🔒 관리 메뉴 (잠김)"}</button>
-      {adminUnlocked&&miLocked.filter(m=>!m.instructorOnly||user.position==="강사").map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
+      {adminUnlocked&&miLocked.map(m=>(<button key={m.id} onClick={()=>handleAdminTab(m.id,mob)} className={`luxury-nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium relative ${tab===m.id?"admin-active":"text-slate-500"}`}><span className="shimmer-nav"/><Icon type={m.icon} size={18}/>{m.label}{m.id==="inquiries"&&unansweredInq>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{unansweredInq}</span>}{m.id==="shop"&&pendingOrders>0&&<span className="bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ml-auto">{pendingOrders}</span>}</button>))}
     </div>
   </nav>);
 
   return(<div className="min-h-screen flex" style={{background:"linear-gradient(135deg,#faf9f7 0%,#ffffff 40%,#fdfbf6 100%)",fontFamily:"'Montserrat',sans-serif"}}>
-    <aside className="hidden lg:flex flex-col w-56 min-h-screen p-2 fixed left-0 top-0 bottom-0 z-40"><div className="flex flex-col flex-1 rounded-3xl p-5 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}><div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" style={{color:"var(--c-text-primary)",fontFamily:"var(--font-serif)",fontWeight:600,letterSpacing:"-0.02em"}}>서정인 수학</span></div>{navEl()}<div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"rgba(212,175,55,0.15)",color:"var(--c-gold)"}}><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</p><p className="text-[10px]" style={{color:"var(--c-text-muted)"}}>{user.position||"관리자"}</p></div></div><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></div></aside>
+    <aside className="hidden lg:flex flex-col w-56 min-h-screen p-2 fixed left-0 top-0 bottom-0 z-40"><div className="flex flex-col flex-1 rounded-3xl p-5 border" style={{background:"rgba(255,255,255,0.92)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.08)",boxShadow:"var(--c-shadow-card)"}}><div className="flex items-center gap-3 mb-7"><img src="/logo.png" alt="" className="h-7 object-contain"/><span className="font-semibold text-sm" style={{color:"var(--c-text-primary)",fontFamily:"var(--font-serif)",fontWeight:600,letterSpacing:"-0.02em"}}>서정인 수학</span></div>{navEl()}<div className="pt-4 mt-4" style={{borderTop:"1px solid rgba(212,175,55,0.08)"}}><div className="flex items-center gap-3 mb-3 px-1"><div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"rgba(212,175,55,0.15)",color:"var(--c-gold)"}}><Icon type="user" size={14}/></div><div><p className="text-xs font-semibold" style={{color:"var(--c-text-primary)",fontWeight:600}}>{user.name}</p><p className="text-[10px]" style={{color:"var(--c-text-muted)"}}>관리자</p></div></div><button onClick={logout} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></div></aside>
     <div className="lux-topbar lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex justify-between items-center"><div className="flex items-center gap-2"><img src="/logo.png" alt="" className="h-6 object-contain"/><span className="font-bold text-sm" style={{color:"var(--c-text-primary)",fontFamily:"var(--font-serif)",fontWeight:600}}>서정인 수학</span></div><button onClick={()=>setMm(!mm)}><Icon type={mm?"close":"menu"} size={22}/></button></div>
-    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 z-50 p-5 overflow-y-auto" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",boxShadow:"-8px 0 40px rgba(212,175,55,0.1)",borderLeft:"1px solid rgba(212,175,55,0.08)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm mt-3" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
+    {mm&&<><div onClick={()=>setMm(false)} className="lg:hidden fixed inset-0 z-40" style={{background:"rgba(10,8,20,0.4)",backdropFilter:"blur(4px)"}}/><div className="lg:hidden fixed right-0 top-0 bottom-0 w-64 z-50 p-5" style={{background:"rgba(250,249,255,0.98)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",boxShadow:"-8px 0 40px rgba(212,175,55,0.1)",borderLeft:"1px solid rgba(212,175,55,0.08)"}}><div className="flex justify-between items-center mb-6"><span className="font-semibold" style={{fontFamily:"'Playfair Display',serif"}}>메뉴</span><button onClick={()=>setMm(false)}><Icon type="close" size={20}/></button></div>{navEl(true)}<button onClick={()=>{logout();setMm(false);}} className="luxury-nav-btn flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm mt-3" style={{color:"rgba(200,80,80,0.7)"}}><Icon type="logout" size={16}/>로그아웃</button></div></>}
     <main className="flex-1 lg:ml-56 pt-16 lg:pt-0"><div className="max-w-5xl mx-auto p-5 lg:p-8">
       {tab==="unlock"&&<div className="max-w-sm mx-auto mt-20"><div className="rounded-3xl p-8 text-center border" style={{background:"rgba(250,249,255,0.97)",backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",border:"1px solid rgba(212,175,55,0.1)",boxShadow:"var(--c-shadow-card)"}}><div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl" style={{background:"linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.06))"}}>🔒</div><h2 className="text-lg font-semibold mb-1" style={{fontFamily:"'Playfair Display',serif",color:"#1a1628"}}>관리 메뉴</h2><p className="text-xs mb-6" style={{color:"rgba(130,120,150,0.7)",fontFamily:"'Montserrat',sans-serif"}}>접근하려면 비밀번호를 입력하세요</p><input type="password" className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-center mb-3" style={{background:"rgba(245,244,255,0.8)",border:"1px solid rgba(212,175,55,0.15)",fontFamily:"'Montserrat',sans-serif",color:"#1a1628"}} value={adminPwInput} onChange={e=>{setAdminPwInput(e.target.value);setAdminPwErr("");}} placeholder="비밀번호" onKeyDown={e=>e.key==="Enter"&&tryUnlock()}/>{adminPwErr&&<p className="text-xs mb-3" style={{color:"#e05555",fontFamily:"'Montserrat',sans-serif"}}>{adminPwErr}</p>}<button onClick={tryUnlock} className="admin-btn w-full py-3 rounded-2xl font-semibold text-sm" style={{letterSpacing:"0.1em"}}>확인</button></div></div>}
-      {tab==="classes"&&<AdminClassManager users={users} currentAdmin={user}/>}
-      {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups} currentAdmin={user}/>}
-      {tab==="staffNotices"&&<AdminStaffNoticeManager currentAdmin={user}/>}
+      {tab==="classes"&&<AdminClassManager users={users}/>}
+      {tab==="students"&&<AdminStudentManager users={users} fetchUsers={fU} groups={groups}/>}
       {tab==="exams"&&adminUnlocked&&<AdminExamViewer users={users}/>}
       {tab==="tokens"&&adminUnlocked&&<AdminTokenManager users={users} fetchUsers={fU}/>}
       {tab==="shop"&&adminUnlocked&&<AdminShopManager onProcess={fOrderCount}/>}
@@ -1980,8 +1859,6 @@ export default function Home(){
       {tab==="shorts"&&adminUnlocked&&<AdminShortsManager/>}
       {tab==="inquiries"&&adminUnlocked&&<AdminInquiryManager onReply={fInqCount}/>}
       {tab==="site"&&adminUnlocked&&<AdminSiteSettings settings={settings} fetchSettings={fS}/>}
-      {tab==="admins"&&adminUnlocked&&<AdminAccountManager users={users} fetchUsers={fU} currentUserId={user.id}/>}
-      {tab==="activityLog"&&adminUnlocked&&user.position==="강사"&&<AdminActivityLog/>}
       {tab==="changepw"&&adminUnlocked&&<div className="max-w-sm"><h2 className="text-lg font-bold mb-4">🔒 비밀번호 변경</h2><div className="bg-white rounded-2xl p-6 shadow-sm space-y-3"><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw1" placeholder="새 비밀번호"/><input type="password" className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm border-0" id="admin-pw2" placeholder="새 비밀번호 확인"/><button onClick={async()=>{const p1=(document.getElementById("admin-pw1") as HTMLInputElement).value;const p2=(document.getElementById("admin-pw2") as HTMLInputElement).value;if(!p1){alert("비밀번호를 입력하세요");return;}if(p1!==p2){alert("비밀번호가 일치하지 않습니다");return;}await supabase.from("users").update({password:p1}).eq("id",user.id);alert("비밀번호가 변경되었습니다!");(document.getElementById("admin-pw1") as HTMLInputElement).value="";(document.getElementById("admin-pw2") as HTMLInputElement).value="";}} className="admin-btn w-full py-3 rounded-xl font-semibold text-sm">변경</button></div></div>}
     </div></main>
   </div>);
